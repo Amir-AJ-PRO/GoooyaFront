@@ -1,0 +1,76 @@
+/* Map responsive styles */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  min-height: 400px !important;
+  z-index: 0 !important;
+}
+
+/* Mobile specific styles */
+@media (max-width: 768px) {
+  .leaflet-container {
+    min-height: 350px !important;
+    height: 350px !important;
+  }
+  
+  .leaflet-control-zoom {
+    margin: 10px !important;
+  }
+  
+  .leaflet-popup-content-wrapper {
+    max-width: 280px !important;
+  }
+  
+  .leaflet-popup-content {
+    margin: 8px 12px !important;
+    line-height: 1.4 !important;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .leaflet-container {
+    min-height: 450px !important;
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 1025px) {
+  .leaflet-container {
+    min-height: 500px !important;
+  }
+}
+
+/* Fix for touch devices */
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+  border: 2px solid rgba(0,0,0,0.2) !important;
+}
+
+/* Ensure map tiles load properly */
+.leaflet-tile {
+  filter: none !important;
+}
+
+/* Fix for RTL layout */
+.leaflet-popup-content {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+.leaflet-popup-content h3 {
+  margin: 0 0 8px 0 !important;
+  font-size: 14px !important;
+}
+
+.leaflet-popup-content p {
+  margin: 4px 0 !important;
+  font-size: 12px !important;
+}
+
+.leaflet-popup-content button {
+  margin-top: 8px !important;
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+}
+
