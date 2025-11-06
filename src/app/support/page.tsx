@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -213,10 +211,7 @@ export default function Support() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
-      <main className="flex-1 bg-gray-50">
+      <div className="flex-1 bg-gray-50 flex flex-col">
         {/* Page Header */}
         <section className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground py-12">
           <div className="container mx-auto px-4">
@@ -460,9 +455,6 @@ export default function Support() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
   );
 }

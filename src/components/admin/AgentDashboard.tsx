@@ -30,6 +30,7 @@ import {
   Star
 } from 'lucide-react';
 import { useState } from 'react';
+import PropertySubmissionForm from '../PropertySubmissionForm';
 
 const AgentDashboard = () => {
   const { user, logout } = useAuth();
@@ -227,13 +228,10 @@ const AgentDashboard = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+        <Tabs defaultValue="overview" className="space-y-6" dir="rtl">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">نمای کلی</TabsTrigger>
-            <TabsTrigger value="properties">مدیریت املاک</TabsTrigger>
-            <TabsTrigger value="upload">آپلود فایل</TabsTrigger>
-            <TabsTrigger value="analytics">آمار و گزارش</TabsTrigger>
-            <TabsTrigger value="clients">مشتریان</TabsTrigger>
+            <TabsTrigger value="properties">ثبت ملک</TabsTrigger>
             <TabsTrigger value="settings">تنظیمات</TabsTrigger>
           </TabsList>
 
@@ -330,8 +328,13 @@ const AgentDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* Properties Management Tab */}
+          {/* Submit Property Tab */}
           <TabsContent value="properties" className="space-y-6">
+            <PropertySubmissionForm onSuccess={() => toast({ title: "موفق", description: "ملک شما ثبت شد" })} />
+          </TabsContent>
+
+          {/* OLD Properties Management Tab - Hidden
+          <TabsContent value="properties-old" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">مدیریت املاک</h2>
               <Button>

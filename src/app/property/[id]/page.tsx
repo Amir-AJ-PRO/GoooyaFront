@@ -1,8 +1,6 @@
 'use client';
 
 import { use, useState } from 'react';
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MapPin, Bed, Bath, Square, Phone, Mail, Calendar } from "lucide-react";
@@ -64,10 +62,7 @@ export default function PropertyDetail({ params }: { params: Promise<{ id: strin
   const resolvedParams = use(params);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
-      <main className="flex-1">
+    <>
         {/* Image Gallery */}
         <section className="container mx-auto px-4 py-8">
           <Gallery />
@@ -194,9 +189,6 @@ export default function PropertyDetail({ params }: { params: Promise<{ id: strin
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer />
-    </div>
+    </>
   );
 }

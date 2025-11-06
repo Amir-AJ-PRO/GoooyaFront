@@ -3,8 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
 import { ArrowLeft } from "lucide-react";
@@ -41,10 +39,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
-      <main className="flex-1">
+    <>
         {/* Hero Section */}
         <section className="relative min-h-[240px] md:min-h-[320px] overflow-visible mb-12 md:mb-20">
           <div className="absolute inset-0 overflow-hidden">
@@ -120,9 +115,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer />
-    </div>
+    </>
   );
 }

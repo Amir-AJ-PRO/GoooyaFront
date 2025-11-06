@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -243,10 +242,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      
-      <main className="flex-1 bg-gray-50">
+      <div className="flex-1 bg-gray-50 flex flex-col">
         <div className="h-[calc(100vh-4rem)] max-w-7xl mx-auto px-2 md:px-4 py-2 md:py-4 flex flex-col">
           {/* Header */}
           <div className="mb-3 flex-shrink-0">
@@ -481,7 +477,6 @@ export default function Chat() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
   );
 }

@@ -18,8 +18,10 @@ import {
   MapPin,
   DollarSign,
   Home,
-  User
+  User,
+  Plus
 } from 'lucide-react';
+import PropertySubmissionForm from '../PropertySubmissionForm';
 
 const UserDashboard = () => {
   const { user, logout } = useAuth();
@@ -132,14 +134,20 @@ const UserDashboard = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+        <Tabs defaultValue="overview" className="space-y-6" dir="rtl">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">نمای کلی</TabsTrigger>
+            <TabsTrigger value="submit-property">ثبت ملک</TabsTrigger>
             <TabsTrigger value="profile">پروفایل</TabsTrigger>
             <TabsTrigger value="favorites">علاقه‌مندی‌ها</TabsTrigger>
             <TabsTrigger value="history">تاریخچه</TabsTrigger>
             <TabsTrigger value="notifications">اعلان‌ها</TabsTrigger>
           </TabsList>
+
+          {/* Submit Property Tab */}
+          <TabsContent value="submit-property" className="space-y-6">
+            <PropertySubmissionForm onSuccess={() => toast({ title: "موفق", description: "ملک شما ثبت شد" })} />
+          </TabsContent>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">

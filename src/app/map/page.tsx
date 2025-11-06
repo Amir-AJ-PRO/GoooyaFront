@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import { MapPin, Search, Home, ArrowLeft, Info } from 'lucide-react';
 import { Province, City } from '@/data/iranData';
 
@@ -40,10 +38,7 @@ export default function Map() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
-      <main className="flex-1">
+    <>
         {/* Page Header */}
         <section className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground py-8 md:py-12">
           <div className="container mx-auto px-4">
@@ -196,9 +191,6 @@ export default function Map() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer />
-    </div>
+    </>
   );
 }

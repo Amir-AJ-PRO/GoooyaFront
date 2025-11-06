@@ -1,7 +1,5 @@
 'use client';
 
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Home, Users, Award, TrendingUp, Target, Heart, Lightbulb } from "lucide-react";
 import Image from "next/image";
@@ -15,10 +13,7 @@ export default function About() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
-      <main className="flex-1">
+    <>
         {/* Hero Section with Image */}
         <section className="relative h-[400px] md:h-[500px] overflow-hidden">
           <Image
@@ -183,9 +178,6 @@ export default function About() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer />
-    </div>
+    </>
   );
 }
