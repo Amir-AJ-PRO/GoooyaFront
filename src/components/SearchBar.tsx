@@ -1,10 +1,12 @@
 'use client';
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
-import { useState, memo, useCallback } from "react";
+import { useState, memo, useCallback, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const provinces = [
   { value: "tehran", label: "تهران" },
@@ -23,40 +25,86 @@ const propertyTypes = [
 
 const SearchBar = memo(() => {
   const [tab, setTab] = useState<"buy" | "rent">("buy");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [province, setProvince] = useState<string | undefined>(undefined);
   const [city, setCity] = useState<string | undefined>(undefined);
   const [region, setRegion] = useState<string | undefined>(undefined);
   const [type, setType] = useState<string | undefined>(undefined);
   const [price, setPrice] = useState<string | undefined>(undefined);
 
+  // استفاده از debounce برای جستجوی متنی
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // هر بار که debouncedSearchTerm تغییر می‌کند، می‌توان از API استفاده کرد
+  useEffect(() => {
+    if (debouncedSearchTerm) {
+      console.log("جستجو برای:", debouncedSearchTerm);
+      // اینجا می‌توانید API call انجام دهید
+      // مثال: fetchSearchResults(debouncedSearchTerm);
+    }
+  }, [debouncedSearchTerm]);
+
   const submitSearch = useCallback(() => {
-    const payload = { tab, province, city, region, type, price };
+    const payload = { 
+      tab, 
+      searchTerm: debouncedSearchTerm, 
+      province, 
+      city, 
+      region, 
+      type, 
+      price 
+    };
     console.log("search payload", payload);
-    toast({ title: "جستجو ارسال شد", description: "درخواست جستجو ثبت شد (نمونه)." });
-  }, [tab, province, city, region, type, price]);
+    toast({ 
+      title: "جستجو ارسال شد", 
+      description: debouncedSearchTerm 
+        ? `جستجو برای "${debouncedSearchTerm}" انجام شد.`
+        : "درخواست جستجو ثبت شد." 
+    });
+  }, [tab, debouncedSearchTerm, province, city, region, type, price]);
 
   return (
     <div className="bg-card rounded-2xl shadow-large p-3 md:p-6" dir="rtl">
       {/* Tabs */}
       <div className="flex gap-2 mb-3 md:mb-4 justify-start">
         <button
-          className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium ${tab === "buy" ? "bg-primary text-primary-foreground" : "bg-transparent border border-input"}`}
+          className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${
+            tab === "buy" 
+              ? "bg-primary text-primary-foreground" 
+              : "bg-transparent border border-input hover:bg-secondary"
+          }`}
           onClick={() => setTab("buy")}
         >
           خرید ملک
         </button>
         <button
-          className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium ${tab === "rent" ? "bg-primary text-primary-foreground" : "bg-transparent border border-input"}`}
+          className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${
+            tab === "rent" 
+              ? "bg-primary text-primary-foreground" 
+              : "bg-transparent border border-input hover:bg-secondary"
+          }`}
           onClick={() => setTab("rent")}
         >
           رهن و اجاره
         </button>
       </div>
 
-      {/* Content - Mobile: Complete */}
-      <div className="md:hidden">
-        <div className="grid grid-cols-2 gap-2 mb-2">
-          {/* ردیف اول */}
+      {/* Content - Mobile */}
+      <div className="md:hidden space-y-2">
+        {/* جستجوی متنی با debounce */}
+        <div className="relative">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="جستجوی ملک، منطقه، آدرس..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pr-10 h-9 text-xs"
+            dir="rtl"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
           <div>
             <Select>
               <SelectTrigger dir="rtl" className="h-9 text-xs">
@@ -75,20 +123,6 @@ const SearchBar = memo(() => {
           <div>
             <Select>
               <SelectTrigger dir="rtl" className="h-9 text-xs">
-                <SelectValue placeholder="منطقه" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1" onSelect={() => setRegion("1")}>منطقه 1</SelectItem>
-                <SelectItem value="2" onSelect={() => setRegion("2")}>منطقه 2</SelectItem>
-                <SelectItem value="3" onSelect={() => setRegion("3")}>منطقه 3</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* ردیف دوم */}
-          <div>
-            <Select>
-              <SelectTrigger dir="rtl" className="h-9 text-xs">
                 <SelectValue placeholder="نوع ملک" />
               </SelectTrigger>
               <SelectContent>
@@ -100,19 +134,6 @@ const SearchBar = memo(() => {
               </SelectContent>
             </Select>
           </div>
-
-          <div>
-            <Select>
-              <SelectTrigger dir="rtl" className="h-9 text-xs">
-                <SelectValue placeholder="قیمت" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low" onSelect={() => setPrice("low")}>تا ۵ میلیون</SelectItem>
-                <SelectItem value="mid" onSelect={() => setPrice("mid")}>۵ تا ۲۰ میلیون</SelectItem>
-                <SelectItem value="high" onSelect={() => setPrice("high")}>بیشتر از ۲۰ میلیون</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
         
         <Button className="w-full h-9 text-xs" onClick={submitSearch}>
@@ -120,9 +141,25 @@ const SearchBar = memo(() => {
         </Button>
       </div>
 
-      {/* Content - Desktop: Full */}
+      {/* Content - Desktop */}
       <div className="hidden md:block">
-        <div className="grid grid-cols-5 gap-3 items-end">
+        <div className="grid grid-cols-6 gap-3 items-end">
+          {/* جستجوی متنی با debounce */}
+          <div className="col-span-2">
+            <label className="text-sm font-medium mb-2 block text-right">جستجوی سریع</label>
+            <div className="relative">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="جستجوی ملک، منطقه، آدرس..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pr-10"
+                dir="rtl"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="text-sm font-medium mb-2 block text-right">شهر</label>
             <Select>
@@ -135,20 +172,6 @@ const SearchBar = memo(() => {
                     {p.label}
                   </SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium mb-2 block text-right">منطقه</label>
-            <Select>
-              <SelectTrigger dir="rtl">
-                <SelectValue placeholder="انتخاب منطقه" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1" onSelect={() => setRegion("1")}>منطقه 1</SelectItem>
-                <SelectItem value="2" onSelect={() => setRegion("2")}>منطقه 2</SelectItem>
-                <SelectItem value="3" onSelect={() => setRegion("3")}>منطقه 3</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -170,15 +193,15 @@ const SearchBar = memo(() => {
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2 block text-right">فیلتر قیمت</label>
+            <label className="text-sm font-medium mb-2 block text-right">قیمت</label>
             <Select>
               <SelectTrigger dir="rtl">
                 <SelectValue placeholder="قیمت" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="low" onSelect={() => setPrice("low")}>تا ۵ میلیون</SelectItem>
-                <SelectItem value="mid" onSelect={() => setPrice("mid")}>۵ تا ۲۰ میلیون</SelectItem>
-                <SelectItem value="high" onSelect={() => setPrice("high")}>بیشتر از ۲۰ میلیون</SelectItem>
+                <SelectItem value="low" onSelect={() => setPrice("low")}>تا ۵ میلیارد</SelectItem>
+                <SelectItem value="mid" onSelect={() => setPrice("mid")}>۵ تا ۲۰ میلیارد</SelectItem>
+                <SelectItem value="high" onSelect={() => setPrice("high")}>بیشتر از ۲۰ میلیارد</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -1,31 +1,12 @@
-'use client';
-
 import Link from "next/link";
-import { Home, Phone, Mail, Instagram, Twitter, Key } from "lucide-react";
-import { memo } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { Home, Phone, Mail, Instagram, Twitter } from "lucide-react";
+import FooterDevLogin from "./FooterDevLogin";
 
-const Footer = memo(() => {
-  const { login } = useAuth();
-
-  const handleDevLogin = () => {
-    const devUser = {
-      id: '09191192668',
-      name: 'توسعه‌دهنده',
-      email: '',
-      type: 'admin' as const,
-      phone: '09191192668',
-      company: 'گویا',
-      licenseNumber: undefined,
-    };
-    
-    login(devUser);
-    
-    toast.success("ورود موفق", {
-      description: "شما با حساب مدیر وارد شدید"
-    });
-  };
+/**
+ * Footer - Server Component
+ * بخش Dev Login به کامپوننت جداگانه منتقل شد
+ */
+export default function Footer() {
   return (
     <footer className="border-t border-border bg-secondary/30 mt-20">
       <div className="container mx-auto px-4 py-12">
@@ -104,28 +85,10 @@ const Footer = memo(() => {
         <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground text-sm">
           <p>© ۱۴۰۳ گویا. تمامی حقوق محفوظ است.</p>
           
-          {/* Dev Login Button - فقط در Development */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-4">
-              <button
-                onClick={handleDevLogin}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-xs font-medium hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg hover:shadow-xl"
-                title="ورود سریع به حساب مدیر (فقط در Development)"
-              >
-                <Key className="h-3 w-3" />
-                <span>ورود سریع مدیر (Dev)</span>
-              </button>
-              <p className="text-xs text-muted-foreground mt-2">
-                این دکمه فقط در حالت Development نمایش داده می‌شود
-              </p>
-            </div>
-          )}
+          {/* Dev Login Button - Client Component جداگانه */}
+          <FooterDevLogin />
         </div>
       </div>
     </footer>
   );
-});
-
-Footer.displayName = 'Footer';
-
-export default Footer;
+}

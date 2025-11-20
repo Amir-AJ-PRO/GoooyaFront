@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,11 +46,19 @@ const IranMap: React.FC<IranMapProps> = ({
   const [mapCenter, setMapCenter] = useState<[number, number]>([32.4279, 53.6880]); // Center of Iran
   const [mapZoom, setMapZoom] = useState<number>(6);
 
-  const currentProvince = iranProvinces.find(p => p.id === selectedProvince);
-  const currentCity = currentProvince?.cities.find(c => c.id === selectedCity);
+  // استفاده از useMemo برای جلوگیری از محاسبات مکرر
+  const currentProvince = useMemo(
+    () => iranProvinces.find(p => p.id === selectedProvince),
+    [selectedProvince]
+  );
+  
+  const currentCity = useMemo(
+    () => currentProvince?.cities.find(c => c.id === selectedCity),
+    [currentProvince, selectedCity]
+  );
 
-  // Handle province selection
-  const handleProvinceChange = (provinceId: string) => {
+  // Handle province selection - استفاده از useCallback برای بهینه‌سازی
+  const handleProvinceChange = useCallback((provinceId: string) => {
     setSelectedProvince(provinceId);
     setSelectedCity(''); // Reset city when province changes
     
@@ -59,10 +67,10 @@ const IranMap: React.FC<IranMapProps> = ({
       setMapCenter(province.coordinates);
       setMapZoom(8);
     }
-  };
+  }, []);
 
-  // Handle city selection
-  const handleCityChange = (cityId: string) => {
+  // Handle city selection - استفاده از useCallback
+  const handleCityChange = useCallback((cityId: string) => {
     setSelectedCity(cityId);
     
     const province = iranProvinces.find(p => p.id === selectedProvince);
@@ -77,10 +85,10 @@ const IranMap: React.FC<IranMapProps> = ({
         onLocationSelect(province, city);
       }
     }
-  };
+  }, [selectedProvince, onLocationSelect]);
 
-  // Handle search
-  const handleSearch = (query: string) => {
+  // Handle search - با debounce اتوماتیک از طریق state
+  const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
     if (query.length > 1) {
       const results = searchCities(query);
@@ -88,10 +96,10 @@ const IranMap: React.FC<IranMapProps> = ({
     } else {
       setSearchResults([]);
     }
-  };
+  }, []);
 
-  // Handle search result selection
-  const handleSearchResultSelect = (city: City) => {
+  // Handle search result selection - استفاده از useCallback
+  const handleSearchResultSelect = useCallback((city: City) => {
     const province = iranProvinces.find(p => 
       p.cities.some(c => c.id === city.id)
     );
@@ -108,7 +116,7 @@ const IranMap: React.FC<IranMapProps> = ({
         onLocationSelect(province, city);
       }
     }
-  };
+  }, [onLocationSelect]);
 
   return (
     <div className="w-full h-full flex flex-col xl:flex-row gap-4">

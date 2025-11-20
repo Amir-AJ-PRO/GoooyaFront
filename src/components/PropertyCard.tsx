@@ -1,10 +1,7 @@
-'use client';
-
 import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Bed, Square } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { memo } from "react";
 
 interface PropertyCardProps {
   id: number;
@@ -16,7 +13,12 @@ interface PropertyCardProps {
   image: string;
 }
 
-const PropertyCard = memo(({ id, title, price, location, bedrooms, area, image }: PropertyCardProps) => {
+/**
+ * PropertyCard - Server Component
+ * این کامپوننت فقط props می‌گیرد و نمایش می‌دهد
+ * هیچ state یا side effect ندارد
+ */
+export default function PropertyCard({ id, title, price, location, bedrooms, area, image }: PropertyCardProps) {
   return (
     <Link href={`/property/${id}`} prefetch={true}>
       <Card className="overflow-hidden hover:shadow-large transition-smooth cursor-pointer group">
@@ -55,8 +57,4 @@ const PropertyCard = memo(({ id, title, price, location, bedrooms, area, image }
       </Card>
     </Link>
   );
-});
-
-PropertyCard.displayName = 'PropertyCard';
-
-export default PropertyCard;
+}

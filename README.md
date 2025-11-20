@@ -1,6 +1,29 @@
 # گویا - Next.js
 
-این پروژه نسخه Next.js پلتفرم املاک گویا است که از React + Vite به Next.js مهاجرت یافته است.
+این پروژه نسخه Next.js پلتفرم املاک گویا است که از React + Vite به Next.js مهاجرت یافته و با بهینه‌سازی‌های SEO و Performance بهبود یافته است.
+
+## 🎯 بهینه‌سازی‌های اخیر (آبان ۱۴۰۴)
+
+### ✅ SEO و متا تگ‌ها
+- متا تگ‌های کامل در تمام صفحات
+- Open Graph tags برای شبکه‌های اجتماعی
+- Sitemap داینامیک (`/sitemap.xml`)
+- robots.txt بهینه شده
+- Semantic HTML با یک h1 در هر صفحه
+
+### ✅ Performance
+- Dynamic imports برای کامپوننت‌های سنگین (مثل Map)
+- useMemo و useCallback برای بهینه‌سازی re-renders
+- Debounce برای SearchBar (500ms)
+- Code splitting اتوماتیک
+
+### ✅ معماری
+- تفکیک Server Components و Client Components
+- Container یکپارچه برای ساختار صفحات
+- React Query hooks برای data fetching
+- Custom hooks برای debounce و state management
+
+📄 **برای جزئیات بیشتر:** [IMPLEMENTATION-SUMMARY.md](./IMPLEMENTATION-SUMMARY.md)
 
 ## 🚀 تغییرات اصلی
 
