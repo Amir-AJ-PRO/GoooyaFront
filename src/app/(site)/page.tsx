@@ -3,9 +3,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import SearchBar from "@/components/common/SearchBar";
-import PropertyCard from "@/components/cards/PropertyCard";
 import { AIBadge } from "@/components/common/AIBadge";
 import { ArrowLeft, Sparkles } from "lucide-react";
+import HomePageClient from "./HomePageClient";
 
 export const metadata: Metadata = {
   title: "گویا - پلتفرم املاک فارسی | خرید، فروش و اجاره ملک",
@@ -26,35 +26,6 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  const featuredProperties = [
-    {
-      id: 1,
-      title: "آپارتمان مدرن در تهران",
-      price: "۸ میلیارد تومان",
-      location: "تهران، فرشته",
-      bedrooms: 3,
-      area: 120,
-      image: "/assets/property-1.jpg",
-    },
-    {
-      id: 2,
-      title: "ویلا لوکس با باغ",
-      price: "۱۵ میلیارد تومان",
-      location: "تهران، لواسان",
-      bedrooms: 4,
-      area: 300,
-      image: "/assets/property-2.jpg",
-    },
-    {
-      id: 3,
-      title: "تاون‌هاوس مدرن",
-      price: "۶ میلیارد تومان",
-      location: "تهران، پونک",
-      bedrooms: 2,
-      area: 150,
-      image: "/assets/property-3.jpg",
-    },
-  ];
 
   return (
     <>
@@ -97,28 +68,7 @@ export default function Home() {
       </section>
 
       {/* Featured Properties */}
-      <section className="py-2 md:py-4 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h2 className="text-3xl font-bold mb-2">املاک ویژه</h2>
-              <p className="text-muted-foreground">بهترین املاک منتخب برای شما</p>
-            </div>
-            <Link href="/properties">
-              <Button variant="outline" className="gap-2">
-                مشاهده همه
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProperties.map((property) => (
-              <PropertyCard key={property.id} {...property} />
-            ))}
-          </div>
-        </div>
-      </section>
+      <HomePageClient />
 
       {/* About Section Preview */}
       <section className="py-16 bg-secondary/30">

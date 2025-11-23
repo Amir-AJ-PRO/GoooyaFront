@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست API های Options ملک</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .loading {
+            color: #667eea;
+            font-weight: bold;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .error {
+            background: #fee;
+            color: #c00;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #c00;
+        }
+        .success {
+            background: #efe;
+            color: #080;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #080;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-top: 12px;
+            border: 1px solid #ddd;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .stat {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .stat-label {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 تست API های Options ملک - گویا</h1>
+        
+        <div class="grid">
+            <div class="stat">
+                <div class="stat-label">انواع ملک</div>
+                <div class="stat-value" id="types-count">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">شهرها</div>
+                <div class="stat-value" id="cities-count">-</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">مناطق</div>
+                <div class="stat-value" id="locations-count">-</div>
+            </div>
+        </div>
+
+        <!-- تست 1: انواع املاک -->
+        <div class="card">
+            <h2>🏘️ 1. دریافت انواع املاک</h2>
+            <p><strong>Endpoint:</strong> <code>GET /api/properties/options/property-types/</code></p>
+            <button onclick="testPropertyTypes()">🚀 تست انواع املاک</button>
+            <div id="types-result"></div>
+        </div>
+
+        <!-- تست 2: شهرها -->
+        <div class="card">
+            <h2>🌆 2. دریافت شهرها</h2>
+            <p><strong>Endpoint:</strong> <code>GET /api/properties/options/cities/</code></p>
+            <button onclick="testCities()">🚀 تست شهرها</button>
+            <div id="cities-result"></div>
+        </div>
+
+        <!-- تست 3: مناطق -->
+        <div class="card">
+            <h2>📍 3. دریافت مناطق</h2>
+            <p><strong>Endpoint:</strong> <code>GET /api/properties/options/locations/</code></p>
+            
+            <button onclick="testLocations()">🚀 تست همه مناطق</button>
+            
+            <div style="margin-top: 20px;">
+                <label><strong>یا فیلتر بر اساس شهر:</strong></label>
+                <select id="city-select" onchange="testLocationsByCity()">
+                    <option value="">ابتدا شهرها را بارگذاری کنید...</option>
+                </select>
+            </div>
+            
+            <div id="locations-result"></div>
+        </div>
+
+        <!-- تست همه -->
+        <div class="card" style="text-align: center;">
+            <button onclick="testAll()" style="font-size: 18px; padding: 16px 32px;">
+                🎯 تست همه API ها
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://10.188.103.122:8000';
+
+        // تست انواع املاک
+        async function testPropertyTypes() {
+            const resultDiv = document.getElementById('types-result');
+            resultDiv.innerHTML = '<p class="loading">⏳ در حال دریافت...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/properties/options/property-types/`);
+                const data = await response.json();
+                
+                document.getElementById('types-count').textContent = data.length;
+                
+                resultDiv.innerHTML = `
+                    <div class="success">✅ موفق! ${data.length} نوع ملک دریافت شد.</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ خطا: ${error.message}</div>`;
+            }
+        }
+
+        // تست شهرها
+        async function testCities() {
+            const resultDiv = document.getElementById('cities-result');
+            resultDiv.innerHTML = '<p class="loading">⏳ در حال دریافت...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/properties/options/cities/`);
+                const data = await response.json();
+                
+                document.getElementById('cities-count').textContent = data.length;
+                
+                // پر کردن dropdown
+                const select = document.getElementById('city-select');
+                select.innerHTML = '<option value="">همه مناطق</option>';
+                data.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.id;
+                    option.textContent = `${city.name} - ${city.province || ''}`;
+                    select.appendChild(option);
+                });
+                
+                resultDiv.innerHTML = `
+                    <div class="success">✅ موفق! ${data.length} شهر دریافت شد.</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ خطا: ${error.message}</div>`;
+            }
+        }
+
+        // تست مناطق (همه)
+        async function testLocations() {
+            const resultDiv = document.getElementById('locations-result');
+            resultDiv.innerHTML = '<p class="loading">⏳ در حال دریافت...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/properties/options/locations/`);
+                const data = await response.json();
+                
+                document.getElementById('locations-count').textContent = data.length;
+                
+                resultDiv.innerHTML = `
+                    <div class="success">✅ موفق! ${data.length} منطقه دریافت شد.</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ خطا: ${error.message}</div>`;
+            }
+        }
+
+        // تست مناطق بر اساس شهر
+        async function testLocationsByCity() {
+            const cityId = document.getElementById('city-select').value;
+            if (!cityId) {
+                testLocations();
+                return;
+            }
+            
+            const resultDiv = document.getElementById('locations-result');
+            resultDiv.innerHTML = '<p class="loading">⏳ در حال دریافت...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/properties/options/locations/?city=${cityId}`);
+                const data = await response.json();
+                
+                document.getElementById('locations-count').textContent = data.length;
+                
+                resultDiv.innerHTML = `
+                    <div class="success">✅ موفق! ${data.length} منطقه برای شهر انتخاب شده دریافت شد.</div>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ خطا: ${error.message}</div>`;
+            }
+        }
+
+        // تست همه
+        async function testAll() {
+            await testPropertyTypes();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testCities();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testLocations();
+        }
+    </script>
+</body>
+</html>
+

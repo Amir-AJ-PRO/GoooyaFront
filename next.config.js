@@ -8,6 +8,12 @@ const nextConfig = {
         port: '9000',
         pathname: '/**',
       },
+      {
+        protocol: 'http',
+        hostname: '10.188.103.122',
+        port: '8000',
+        pathname: '/media/**',
+      },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
