@@ -5,9 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth, UserType } from '@/contexts/AuthContext';
-import { Home, User, Building, Phone, KeyRound, X } from 'lucide-react';
+import { Home, Phone, KeyRound, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRequestOTP, useVerifyOTP } from '@/hooks/useAuthMutations';
 import {
@@ -27,7 +26,6 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpCode, setOtpCode] = useState('');
-  const [userType, setUserType] = useState<UserType>('user');
   const [countdown, setCountdown] = useState(0);
   const { login } = useAuth();
   const router = useRouter();
@@ -51,7 +49,6 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
         setStep('phone');
         setPhoneNumber('');
         setOtpCode('');
-        setUserType('user');
         setCountdown(0);
       }, 200);
     }
@@ -125,6 +122,9 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
       { phone: phoneNumber, code: otpCode },
       {
         onSuccess: (data) => {
+          // تشخیص نوع کاربر بر اساس is_agent
+          const userType: UserType = data.user.is_agent ? 'agent' : 'user';
+          
           // ساخت آبجکت User برای AuthContext
           const mockUser = {
             id: data.user.phone,
@@ -132,19 +132,25 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
             email: '',
             type: userType,
             phone: data.user.phone,
-            company: undefined,
-            licenseNumber: undefined,
+            company: data.user.agent_profile?.company_name,
+            licenseNumber: data.user.agent_profile?.license_number,
           };
           
           login(mockUser);
           
+          const welcomeMessage = data.created 
+            ? "حساب کاربری شما ایجاد شد. خوش آمدید!"
+            : `خوش آمدید${data.user.is_agent ? ' به پنل مشاور' : ''}!`;
+          
           toast.success("ورود موفقیت‌آمیز", {
-            description: data.created 
-              ? "حساب کاربری شما ایجاد شد. خوش آمدید!"
-              : "خوش آمدید!"
+            description: welcomeMessage
           });
           
           onOpenChange(false);
+          
+          // هدایت به پنل مناسب بر اساس نوع کاربر
+          const redirectPath = data.user.is_agent ? '/agent' : '/user';
+          router.push(redirectPath);
         }
       }
     );
@@ -201,29 +207,6 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
                     required 
                   />
                 </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="user-type" className="text-right block mb-2">نوع کاربر</Label>
-                <Select value={userType} onValueChange={(value: UserType) => setUserType(value)}>
-                  <SelectTrigger className="text-right">
-                    <SelectValue placeholder="نوع کاربر را انتخاب کنید" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        <span>کاربر عادی</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="agent">
-                      <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4" />
-                        <span>مشاور املاک</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <Button 

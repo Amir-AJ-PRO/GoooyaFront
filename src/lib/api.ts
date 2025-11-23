@@ -1,7 +1,8 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { isTokenExpired, isSessionValid, saveTokens, clearTokens, getRefreshToken } from './tokenManager';
+import { API_BASE_URL } from './constants';
 
-const API_BASE = 'http://127.0.0.1:9000';
+const API_BASE = API_BASE_URL;
 
 /**
  * Axios instance برای درخواست‌های API

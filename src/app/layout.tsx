@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Providers } from "@/components/Providers";
 import DevLoginHelper from "@/components/DevLoginHelper";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,6 +8,18 @@ export const metadata: Metadata = {
   description: "بهترین پلتفرم برای خرید، فروش و اجاره املاک در ایران. جستجو و مشاهده هزاران آگهی املاک با امکانات پیشرفته.",
   keywords: ["املاک", "خرید خانه", "فروش ملک", "اجاره آپارتمان", "مشاور املاک", "پلتفرم املاک"],
   authors: [{ name: "گویا" }],
+  icons: {
+    icon: [
+      { url: "/logo.png" },
+      { url: "/logo.png", sizes: "32x32", type: "image/png" },
+      { url: "/logo.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [
+      { url: "/logo.png" },
+      { url: "/logo.png", sizes: "180x180", type: "image/png" },
+    ],
+    shortcut: ["/logo.png"],
+  },
   openGraph: {
     type: "website",
     locale: "fa_IR",
@@ -18,6 +28,12 @@ export const metadata: Metadata = {
     title: "گویا - پلتفرم املاک فارسی",
     description: "بهترین پلتفرم برای خرید، فروش و اجاره املاک در ایران",
     images: [
+      {
+        url: "/logo.png",
+        width: 512,
+        height: 512,
+        alt: "لوگوی گویا",
+      },
       {
         url: "/assets/hero-home.jpg",
         width: 1200,
@@ -30,7 +46,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "گویا - پلتفرم املاک فارسی",
     description: "بهترین پلتفرم برای خرید، فروش و اجاره املاک در ایران",
-    images: ["/assets/hero-home.jpg"],
+    images: ["/logo.png"],
   },
   robots: {
     index: true,
@@ -66,11 +82,7 @@ export default function RootLayout({
         <Providers>
           <DevLoginHelper />
           <div className="min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
+            {children}
           </div>
         </Providers>
       </body>

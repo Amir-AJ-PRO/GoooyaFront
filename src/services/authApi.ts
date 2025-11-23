@@ -1,6 +1,7 @@
 import apiClient from '@/lib/api';
+import { API_BASE_URL } from '@/lib/constants';
 
-const API_BASE = 'http://127.0.0.1:9000';
+const API_BASE = API_BASE_URL;
 
 /**
  * Types برای API های احراز هویت
@@ -21,8 +22,14 @@ export interface VerifyOTPPayload {
 
 export interface UserData {
   phone: string;
+  full_name?: string;
+  email?: string;
   date_joined: string;
   is_active: boolean;
+  is_staff: boolean;
+  is_agent: boolean;
+  user_role: string;
+  agent_profile: any | null;
 }
 
 export interface VerifyOTPResponse {
@@ -38,6 +45,16 @@ export interface RefreshTokenPayload {
 
 export interface RefreshTokenResponse {
   access: string;
+}
+
+export interface UpdateProfilePayload {
+  full_name?: string;
+  email?: string;
+}
+
+export interface UpdateProfileResponse {
+  detail: string;
+  user: UserData;
 }
 
 /**
@@ -102,6 +119,31 @@ export const refreshToken = async (payload: RefreshTokenPayload): Promise<Refres
 
   if (!response.ok) {
     throw new Error(data.detail || 'نشست شما منقضی شده است');
+  }
+
+  return data;
+};
+
+/**
+ * به‌روزرسانی پروفایل کاربر
+ */
+export const updateProfile = async (
+  payload: UpdateProfilePayload,
+  token: string
+): Promise<UpdateProfileResponse> => {
+  const response = await fetch(`${API_BASE}/api/auth/update-profile/`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || 'خطا در به‌روزرسانی پروفایل');
   }
 
   return data;
