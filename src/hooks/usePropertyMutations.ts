@@ -7,13 +7,17 @@ import {
   getPropertyTypes,
   getCities,
   getLocations,
+  getHomepageProperties,
+  PaginatedPropertiesResponse
+} from '@/services/propertyApi';
+import { 
   CreatePropertyPayload,
   Property,
   PropertyListItem,
   PropertyType,
   City,
   Location
-} from '@/services/propertyApi';
+} from '@/types/property';
 import { getAccessToken } from '@/lib/tokenManager';
 
 /**
@@ -24,21 +28,34 @@ export const useCreateProperty = () => {
 
   return useMutation<Property, Error, CreatePropertyPayload>({
     mutationFn: async (payload: CreatePropertyPayload) => {
+      console.log('========== Sending Property Creation Request ==========');
+      console.log('Payload:', payload);
+      console.log('Has Images:', payload.uploaded_images?.length || 0);
+      console.log('=======================================================');
+      
       const token = getAccessToken();
       if (!token) {
         throw new Error('لطفاً ابتدا وارد شوید');
       }
       return createProperty(payload, token);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('========== Property Creation Success ==========');
+      console.log('Created Property:', data);
+      console.log('===============================================');
+      
       queryClient.invalidateQueries({ queryKey: ['agent-properties'] });
       toast.success('ملک با موفقیت ثبت شد', {
         description: 'ملک شما پس از تأیید نمایش داده خواهد شد'
       });
     },
     onError: (error) => {
+      // نمایش خطای serialize شده از سرور
+      const errorMessage = error.message || 'خطای ناشناخته در ثبت ملک';
+      
       toast.error('خطا در ثبت ملک', {
-        description: error.message
+        description: errorMessage,
+        duration: 6000, // 6 ثانیه برای خواندن خطاهای طولانی
       });
     }
   });
@@ -82,13 +99,17 @@ export const useLocations = (cityId?: number) => {
 };
 
 /**
- * Hook برای دریافت لیست املاک
+ * Hook برای دریافت لیست املاک با Pagination
+ * 
+ * @param page - شماره صفحه (پیش‌فرض: 1)
+ * @param pageSize - تعداد نتایج در هر صفحه (پیش‌فرض: 20)
  */
-export const useProperties = () => {
-  return useQuery<PropertyListItem[], Error>({
-    queryKey: ['properties'],
-    queryFn: getProperties,
+export const useProperties = (page: number = 1, pageSize: number = 20) => {
+  return useQuery<PaginatedPropertiesResponse, Error>({
+    queryKey: ['properties', page, pageSize],
+    queryFn: () => getProperties(page, pageSize),
     staleTime: 1000 * 60 * 5, // 5 minutes (همانند cache backend)
+    placeholderData: (previousData) => previousData, // برای جلوگیری از flicker هنگام تغییر صفحه
   });
 };
 
@@ -101,6 +122,19 @@ export const useProperty = (slug: string) => {
     queryFn: () => getPropertyBySlug(slug),
     enabled: !!slug,
     staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+};
+
+/**
+ * Hook برای دریافت املاک صفحه اصلی
+ * حداکثر 6 ملک برگشت میده
+ */
+export const useHomepageProperties = () => {
+  return useQuery<PropertyListItem[], Error>({
+    queryKey: ['homepage-properties'],
+    queryFn: getHomepageProperties,
+    staleTime: 1000 * 60 * 60, // 1 hour (همانند cache backend)
+    refetchOnWindowFocus: false, // چون کش شده، نیازی به refetch نیست
   });
 };
 

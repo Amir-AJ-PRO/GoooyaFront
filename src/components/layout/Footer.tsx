@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, Phone, Mail, Instagram, Twitter } from "lucide-react";
+import { Home, Phone, Mail, Instagram, Twitter, Briefcase } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -46,11 +46,28 @@ export default function Footer() {
 
           <div>
             <h3 className="font-semibold mb-4">خدمات</h3>
-            <ul className="space-y-2 text-muted-foreground text-sm">
-              <li>خرید ملک</li>
-              <li>فروش ملک</li>
-              <li>اجاره ملک</li>
-              <li>مشاوره املاک</li>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link href="/properties" className="text-muted-foreground hover:text-primary transition-smooth">
+                  خرید ملک
+                </Link>
+              </li>
+              <li>
+                <Link href="/properties" className="text-muted-foreground hover:text-primary transition-smooth">
+                  فروش ملک
+                </Link>
+              </li>
+              <li>
+                <Link href="/properties" className="text-muted-foreground hover:text-primary transition-smooth">
+                  اجاره ملک
+                </Link>
+              </li>
+              <li>
+                <Link href="/become-agent" className="text-muted-foreground hover:text-primary transition-smooth flex items-center gap-2">
+                  <Briefcase className="h-4 w-4" />
+                  تبدیل به مشاور
+                </Link>
+              </li>
             </ul>
           </div>
 

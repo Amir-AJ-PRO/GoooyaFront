@@ -63,6 +63,9 @@ export default function AgentPropertiesList() {
     );
   }
 
+  // اطمینان از اینکه allProperties یک آرایه است
+  const propertiesArray = Array.isArray(allProperties) ? allProperties : [];
+
   return (
     <div className="space-y-4">
       <Card>
@@ -79,7 +82,7 @@ export default function AgentPropertiesList() {
         </CardContent>
       </Card>
 
-      {!allProperties || allProperties.length === 0 ? (
+      {propertiesArray.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <Home className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
@@ -98,7 +101,7 @@ export default function AgentPropertiesList() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {allProperties.map((property) => (
+          {propertiesArray.map((property) => (
             <PropertyCard key={property.id} property={property} />
           ))}
         </div>

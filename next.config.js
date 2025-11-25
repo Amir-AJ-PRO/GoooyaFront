@@ -5,6 +5,12 @@ const nextConfig = {
       {
         protocol: 'http',
         hostname: '127.0.0.1',
+        port: '8000',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
         port: '9000',
         pathname: '/**',
       },
@@ -13,6 +19,12 @@ const nextConfig = {
         hostname: '10.188.103.122',
         port: '8000',
         pathname: '/media/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8000',
+        pathname: '/**',
       },
     ],
     formats: ['image/avif', 'image/webp'],

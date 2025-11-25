@@ -2,15 +2,25 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import PropertyCard from '@/components/cards/PropertyCard';
-import { useProperties } from '@/hooks/usePropertyMutations';
+import PropertyCard from '@/components/PropertyCard';
+import { useHomepageProperties } from '@/hooks/usePropertyMutations';
 import { ArrowLeft, Loader2, Building2, AlertCircle } from 'lucide-react';
 
 export default function HomePageClient() {
-  const { data: properties, isLoading, error, isError } = useProperties();
+  const { data: properties, isLoading, error, isError } = useHomepageProperties();
   
-  // فقط 3 ملک اول را نمایش بده
-  const featuredProperties = properties?.slice(0, 3) || [];
+  // املاک صفحه اصلی (حداکثر 6 ملک از API)
+  const featuredProperties = properties || [];
+  
+  // دیباگ: بررسی داده‌های دریافتی
+  console.log('🏠 HomePageClient - داده‌های دریافتی:', {
+    isLoading,
+    isError,
+    error: error?.message,
+    propertiesCount: properties?.length || 0,
+    featuredPropertiesCount: featuredProperties.length,
+    firstProperty: featuredProperties[0]
+  });
   
   // اگر خطا داریم
   if (isError) {
@@ -75,7 +85,7 @@ export default function HomePageClient() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {featuredProperties.map((property) => (
               <PropertyCard key={property.id} property={property} />
             ))}

@@ -15,7 +15,10 @@ export default function AgentDashboard() {
 
   // محاسبه آمار
   const stats = useMemo(() => {
-    if (!properties) {
+    // اطمینان از اینکه properties یک آرایه است
+    const propertiesArray = Array.isArray(properties) ? properties : [];
+    
+    if (propertiesArray.length === 0) {
       return [
         { title: "مجموع املاک", value: "0", icon: Building2, color: "text-blue-600" },
         { title: "املاک فعال", value: "0", icon: CheckCircle, color: "text-green-600" },
@@ -23,9 +26,9 @@ export default function AgentDashboard() {
       ];
     }
 
-    const totalCount = properties.length;
-    const activeCount = properties.filter(p => p.show_status === 'ok').length;
-    const totalImages = properties.reduce((sum, p) => sum + p.images.length, 0);
+    const totalCount = propertiesArray.length;
+    const activeCount = propertiesArray.filter(p => p.show_status === 'ok').length;
+    const totalImages = propertiesArray.reduce((sum, p) => sum + (p.images?.length || 0), 0);
 
     return [
       { title: "مجموع املاک", value: totalCount.toString(), icon: Building2, color: "text-blue-600" },

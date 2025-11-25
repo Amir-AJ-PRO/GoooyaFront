@@ -110,8 +110,30 @@ export const getAgentProfile = async (): Promise<AgentProfile> => {
  * دریافت لیست املاک agent
  */
 export const getAgentProperties = async (): Promise<AgentProperty[]> => {
-  const response = await apiClient.get<AgentProperty[]>('/api/agents/properties/');
-  return response.data;
+  const response = await apiClient.get<any>('/api/agents/properties/');
+  const data = response.data;
+  
+  console.log('📦 پاسخ کامل از API (getAgentProperties):', data);
+  
+  // اگر پاسخ paginated است (دارای results)، results را برگردان
+  if (data && Array.isArray(data.results)) {
+    console.log('✅ دریافت املاک agent (paginated):', {
+      count: data.count,
+      resultsCount: data.results.length,
+      firstProperty: data.results[0]
+    });
+    return data.results as AgentProperty[];
+  }
+  
+  // اگر خود پاسخ یک آرایه است، مستقیماً برگردان
+  if (Array.isArray(data)) {
+    console.log('✅ دریافت املاک agent (آرایه مستقیم):', data.length);
+    return data as AgentProperty[];
+  }
+  
+  // در غیر این صورت آرایه خالی برگردان
+  console.warn('⚠️ پاسخ غیرمنتظره از API (getAgentProperties):', data);
+  return [];
 };
 
 /**

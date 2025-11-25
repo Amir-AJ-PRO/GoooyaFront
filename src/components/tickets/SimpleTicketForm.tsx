@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Send, CheckCircle } from 'lucide-react';
 
 interface SimpleTicketFormProps {
@@ -23,7 +22,6 @@ export default function SimpleTicketForm({ onSuccess }: SimpleTicketFormProps) {
   
   const [fullName, setFullName] = useState(backendUser?.full_name || '');
   const [phone, setPhone] = useState(backendUser?.phone || '');
-  const [isReferral, setIsReferral] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,7 +31,7 @@ export default function SimpleTicketForm({ onSuccess }: SimpleTicketFormProps) {
       const result = await submitMutation.mutateAsync({
         full_name: fullName,
         phone: phone || undefined,
-        is_referral: isReferral,
+        is_referral: false,
       });
       
       setSubmitted(true);
@@ -47,7 +45,6 @@ export default function SimpleTicketForm({ onSuccess }: SimpleTicketFormProps) {
         if (!backendUser?.phone) {
           setPhone('');
         }
-        setIsReferral(false);
         onSuccess?.();
       }, 2000);
     } catch (error) {
@@ -111,7 +108,7 @@ export default function SimpleTicketForm({ onSuccess }: SimpleTicketFormProps) {
               onChange={(e) => setPhone(e.target.value)}
               placeholder="09123456789"
               required
-              disabled={submitMutation.isPending || (user && !!backendUser?.phone)}
+              disabled={submitMutation.isPending || Boolean(user && backendUser?.phone)}
               className={`text-right ${user && backendUser?.phone ? 'bg-muted' : ''}`}
               dir="ltr"
             />
@@ -121,30 +118,6 @@ export default function SimpleTicketForm({ onSuccess }: SimpleTicketFormProps) {
               </p>
             )}
           </div>
-
-          {/* معرف هستم */}
-          <div className="flex items-center space-x-2 space-x-reverse">
-            <Checkbox
-              id="is_referral"
-              checked={isReferral}
-              onCheckedChange={(checked) => setIsReferral(checked as boolean)}
-              disabled={submitMutation.isPending}
-            />
-            <Label
-              htmlFor="is_referral"
-              className="text-sm font-normal cursor-pointer"
-            >
-              مایل به دریافت کد معرف هستم
-            </Label>
-          </div>
-
-          {isReferral && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-right">
-              <p className="text-sm text-blue-800 leading-relaxed">
-                💰 با دریافت کد معرف، می‌توانید از تخفیف‌های ویژه برخوردار شوید و با معرفی دوستان خود، پورسانت دریافت کنید.
-              </p>
-            </div>
-          )}
 
           {/* دکمه ارسال */}
           <Button

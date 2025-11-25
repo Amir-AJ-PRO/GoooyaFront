@@ -34,8 +34,6 @@ export default function AdviserTicketsPage() {
   const statusConfig = {
     pending: { label: 'در انتظار', color: 'bg-gray-500', icon: Clock },
     assigned: { label: 'اختصاص یافته', color: 'bg-blue-500', icon: FileText },
-    reviewing: { label: 'در حال بررسی', color: 'bg-yellow-500', icon: Clock },
-    approved: { label: 'تایید شده', color: 'bg-green-500', icon: CheckCircle },
     rejected: { label: 'رد شده', color: 'bg-red-500', icon: XCircle },
     published: { label: 'منتشر شده', color: 'bg-purple-500', icon: CheckCircle },
   };
@@ -98,7 +96,7 @@ export default function AdviserTicketsPage() {
       </div>
 
       <Tabs value={activeStatus} onValueChange={setActiveStatus} dir="rtl">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
           <TabsTrigger value="assigned">
             اختصاص یافته
             {tickets && activeStatus === 'assigned' && (
@@ -107,8 +105,6 @@ export default function AdviserTicketsPage() {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="reviewing">در حال بررسی</TabsTrigger>
-          <TabsTrigger value="approved">تایید شده</TabsTrigger>
           <TabsTrigger value="rejected">رد شده</TabsTrigger>
           <TabsTrigger value="published">منتشر شده</TabsTrigger>
           <TabsTrigger value="">همه</TabsTrigger>
@@ -133,7 +129,7 @@ export default function AdviserTicketsPage() {
                   {ticket.images && ticket.images.length > 0 && (
                     <div className="relative w-full h-56 overflow-hidden group">
                       <Image
-                        src={getMediaUrl(ticket.images.find(img => img.is_main)?.image || ticket.images[0].image)}
+                        src={getMediaUrl((ticket.images.find(img => img.is_main)?.image || ticket.images[0]?.image)) || '/placeholder.jpg'}
                         alt={ticket.title}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-300"

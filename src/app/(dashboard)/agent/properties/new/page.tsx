@@ -32,6 +32,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import ImageUploader from '@/components/forms/ImageUploader';
+import RichTextEditor from '@/components/forms/RichTextEditor';
 import { 
   useCreateProperty, 
   usePropertyTypes, 
@@ -40,6 +41,8 @@ import {
 } from '@/hooks/usePropertyMutations';
 import { generateSlug } from '@/services/propertyApi';
 import { TransactionType, CreatePropertyPayload } from '@/types/property';
+import { amountToWords } from '@/lib/numberToWords';
+import { toast } from 'sonner';
 
 export default function NewPropertyPage() {
   const router = useRouter();
@@ -57,6 +60,8 @@ export default function NewPropertyPage() {
     price: '',
     mortgage: '',
     rent: '',
+    is_negotiable: false, // قیمت توافقی
+    description: '', // توضیحات حالا اجباری است
     uploaded_images: [] as File[],
     main_image_index: -1,
   });
@@ -65,7 +70,6 @@ export default function NewPropertyPage() {
   const [step2Data, setStep2Data] = useState({
     rooms: 0, // تعداد خواب حالا در step2 است (اختیاری)
     address: '',
-    description: '',
     year_built: '',
     floor: '',
     document_type: '',
@@ -83,48 +87,68 @@ export default function NewPropertyPage() {
     step1Data.city || undefined
   );
   
-  // Auto-generate slug from title
+  // Auto-generate slug from title (همیشه خودکار از عنوان ساخته میشه)
   useEffect(() => {
-    if (step1Data.title && !step1Data.slug) {
-      setStep1Data(prev => ({
-        ...prev,
-        slug: generateSlug(prev.title)
-      }));
-    }
+    setStep1Data(prev => ({
+      ...prev,
+      slug: prev.title ? generateSlug(prev.title) : ''
+    }));
   }, [step1Data.title]);
   
   // Validation Step 1
   const validateStep1 = (): boolean => {
     if (!step1Data.title.trim()) {
-      alert('عنوان ملک الزامی است');
+      toast.error('خطا در اعتبارسنجی', {
+        description: 'عنوان ملک الزامی است'
+      });
       return false;
     }
     if (!step1Data.slug.trim()) {
-      alert('اسلاگ الزامی است');
+      toast.error('خطا در اعتبارسنجی', {
+        description: 'اسلاگ الزامی است'
+      });
       return false;
     }
     if (!step1Data.property_type) {
-      alert('نوع ملک الزامی است');
+      toast.error('خطا در اعتبارسنجی', {
+        description: 'نوع ملک الزامی است'
+      });
       return false;
     }
     if (!step1Data.city) {
-      alert('شهر الزامی است');
+      toast.error('خطا در اعتبارسنجی', {
+        description: 'شهر الزامی است'
+      });
       return false;
     }
     if (!step1Data.measure || parseFloat(step1Data.measure) <= 0) {
-      alert('متراژ معتبر الزامی است');
+      toast.error('خطا در اعتبارسنجی', {
+        description: 'متراژ معتبر الزامی است'
+      });
       return false;
     }
-    if (step1Data.transaction_type === 'sale' && !step1Data.price) {
-      alert('قیمت برای فروش الزامی است');
+    if (!step1Data.description || step1Data.description.trim() === '' || step1Data.description === '<p><br></p>') {
+      toast.error('خطا در اعتبارسنجی', {
+        description: 'توضیحات ملک الزامی است'
+      });
+      return false;
+    }
+    if (step1Data.transaction_type === 'sale' && !step1Data.is_negotiable && !step1Data.price) {
+      toast.error('خطا در اعتبارسنجی', {
+        description: 'قیمت برای فروش الزامی است (یا گزینه قیمت توافقی را فعال کنید)'
+      });
       return false;
     }
     if (step1Data.transaction_type === 'rent' && (!step1Data.mortgage || !step1Data.rent)) {
-      alert('رهن و اجاره برای اجاره الزامی است');
+      toast.error('خطا در اعتبارسنجی', {
+        description: 'رهن و اجاره برای اجاره الزامی است'
+      });
       return false;
     }
     if (step1Data.uploaded_images.length === 0) {
-      alert('حداقل یک تصویر الزامی است');
+      toast.error('خطا در اعتبارسنجی', {
+        description: 'حداقل یک تصویر الزامی است'
+      });
       return false;
     }
     return true;
@@ -147,13 +171,13 @@ export default function NewPropertyPage() {
       transaction_type: step1Data.transaction_type,
       uploaded_images: step1Data.uploaded_images,
       main_image_index: step1Data.main_image_index,
+      description: step1Data.description, // توضیحات از step1 می‌آید
       
       // Step 1 - منطقه
       ...(step1Data.location && { location: step1Data.location }),
       
       // Step 2
       ...(step2Data.address && { address: step2Data.address }),
-      ...(step2Data.description && { description: step2Data.description }),
       ...(step2Data.year_built && { year_built: parseInt(step2Data.year_built) }),
       ...(step2Data.floor && { floor: step2Data.floor }),
       ...(step2Data.document_type && { document_type: step2Data.document_type }),
@@ -165,8 +189,13 @@ export default function NewPropertyPage() {
     };
     
     // اضافه کردن قیمت بر اساس نوع معامله
-    if (step1Data.transaction_type === 'sale' && step1Data.price) {
-      payload.price = parseInt(step1Data.price);
+    if (step1Data.transaction_type === 'sale') {
+      if (step1Data.is_negotiable) {
+        // قیمت توافقی - price رو null میفرستیم
+        payload.price = null;
+      } else if (step1Data.price) {
+        payload.price = parseInt(step1Data.price);
+      }
     } else if (step1Data.transaction_type === 'rent') {
       if (step1Data.mortgage) payload.mortgage = parseInt(step1Data.mortgage);
       if (step1Data.rent) payload.rent = parseInt(step1Data.rent);
@@ -215,16 +244,23 @@ export default function NewPropertyPage() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="slug" className="text-base">اسلاگ (URL) *</Label>
+              <Label htmlFor="slug" className="text-base flex items-center gap-2">
+                <span className="text-gray-400">🔒</span>
+                اسلاگ (URL) *
+                <span className="text-xs font-normal text-muted-foreground">(خودکار)</span>
+              </Label>
               <Input
                 id="slug"
                 value={step1Data.slug}
-                onChange={(e) => setStep1Data({ ...step1Data, slug: e.target.value })}
-                placeholder="apartment-120-meter-tehran"
-                maxLength={250}
+                readOnly
+                placeholder="خودکار از عنوان ساخته می‌شود..."
                 dir="ltr"
-                className="h-12 border-2 focus:border-blue-400"
+                className="h-12 border-2 bg-gray-50 text-gray-600 cursor-not-allowed"
               />
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <span>💡</span>
+                <span>اسلاگ به صورت خودکار از عنوان ملک ساخته می‌شود و قابل ویرایش نیست</span>
+              </p>
             </div>
           </div>
         </CardContent>
@@ -376,18 +412,51 @@ export default function NewPropertyPage() {
           </div>
           
           {step1Data.transaction_type === 'sale' ? (
-            <div className="space-y-2">
-              <Label htmlFor="price" className="text-base">قیمت (تومان) *</Label>
-              <Input
-                id="price"
-                type="number"
-                min="0"
-                value={step1Data.price}
-                onChange={(e) => setStep1Data({ ...step1Data, price: e.target.value })}
-                placeholder="5,000,000,000"
-                dir="ltr"
-                className="h-12 border-2 focus:border-green-400 text-lg font-semibold"
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="price" className="text-base">
+                  قیمت (تومان) {!step1Data.is_negotiable && '*'}
+                </Label>
+                <Input
+                  id="price"
+                  type="number"
+                  min="0"
+                  value={step1Data.price}
+                  onChange={(e) => setStep1Data({ ...step1Data, price: e.target.value })}
+                  placeholder="5,000,000,000"
+                  dir="ltr"
+                  disabled={step1Data.is_negotiable}
+                  className={`h-12 border-2 focus:border-green-400 text-lg font-semibold ${
+                    step1Data.is_negotiable ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''
+                  }`}
+                />
+                {step1Data.price && !step1Data.is_negotiable && (
+                  <p className="text-sm font-medium text-green-700 bg-green-50 px-3 py-2 rounded-lg border border-green-200 mt-2">
+                    💰 {amountToWords(step1Data.price)}
+                  </p>
+                )}
+              </div>
+              
+              {/* چک‌باکس قیمت توافقی */}
+              <div className="flex items-center space-x-3 space-x-reverse p-4 rounded-lg border-2 border-green-100 bg-green-50/50 hover:bg-green-50 transition-all">
+                <Checkbox
+                  id="is_negotiable"
+                  checked={step1Data.is_negotiable}
+                  onCheckedChange={(checked) => {
+                    setStep1Data({ 
+                      ...step1Data, 
+                      is_negotiable: checked as boolean,
+                      price: checked ? '' : step1Data.price // وقتی توافقی فعال میشه، قیمت رو خالی میکنیم
+                    });
+                  }}
+                  className="w-5 h-5"
+                />
+                <Label htmlFor="is_negotiable" className="cursor-pointer text-base font-medium flex-1 flex items-center gap-2">
+                  <span>🤝</span>
+                  <span>قیمت توافقی</span>
+                  <span className="text-xs text-muted-foreground font-normal">(قیمت بعداً با خریدار تعیین می‌شود)</span>
+                </Label>
+              </div>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-6">
@@ -403,6 +472,11 @@ export default function NewPropertyPage() {
                   dir="ltr"
                   className="h-12 border-2 focus:border-green-400"
                 />
+                {step1Data.mortgage && (
+                  <p className="text-sm font-medium text-blue-700 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                    🏦 {amountToWords(step1Data.mortgage)}
+                  </p>
+                )}
               </div>
               
               <div className="space-y-2">
@@ -417,12 +491,43 @@ export default function NewPropertyPage() {
                   dir="ltr"
                   className="h-12 border-2 focus:border-green-400"
                 />
+                {step1Data.rent && (
+                  <p className="text-sm font-medium text-purple-700 bg-purple-50 px-3 py-2 rounded-lg border border-purple-200">
+                    🏘️ {amountToWords(step1Data.rent)}
+                  </p>
+                )}
               </div>
             </div>
           )}
         </CardContent>
       </Card>
       
+      {/* توضیحات */}
+      <Card className="border-2 border-amber-100 hover:border-amber-300 transition-all">
+        <CardHeader className="bg-gradient-to-r from-amber-50 to-yellow-50">
+          <div className="flex items-center gap-3">
+            <div className="bg-amber-100 p-2 rounded-lg">
+              <FileText className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <CardTitle>توضیحات ملک *</CardTitle>
+              <CardDescription>توضیحات کامل و جذاب درباره ملک بنویسید</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <RichTextEditor
+            value={step1Data.description}
+            onChange={(value) => setStep1Data({ ...step1Data, description: value })}
+            placeholder="توضیحات کامل درباره ملک، امکانات، موقعیت جغرافیایی، دسترسی به مراکز خرید و... را بنویسید"
+            minHeight="250px"
+          />
+          <p className="text-xs text-muted-foreground mt-2">
+            💡 نکته: توضیحات جذاب و کامل باعث جلب توجه بیشتر خریداران می‌شود
+          </p>
+        </CardContent>
+      </Card>
+
       {/* آپلود تصاویر */}
       <Card className="border-2 border-orange-100 hover:border-orange-300 transition-all">
         <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50">
@@ -490,19 +595,6 @@ export default function NewPropertyPage() {
               onChange={(e) => setStep2Data({ ...step2Data, address: e.target.value })}
               placeholder="آدرس دقیق ملک را وارد کنید"
               rows={3}
-              className="border-2 focus:border-indigo-400 resize-none"
-            />
-          </div>
-          
-          {/* توضیحات */}
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-base">توضیحات</Label>
-            <Textarea
-              id="description"
-              value={step2Data.description}
-              onChange={(e) => setStep2Data({ ...step2Data, description: e.target.value })}
-              placeholder="توضیحات تکمیلی درباره ملک، امکانات، موقعیت و..."
-              rows={6}
               className="border-2 focus:border-indigo-400 resize-none"
             />
           </div>

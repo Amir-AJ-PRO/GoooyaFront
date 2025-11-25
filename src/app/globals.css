@@ -132,3 +132,26 @@ All colors MUST be HSL.
     transition: var(--transition-smooth);
   }
 }
+
+/* Quill Editor RTL Support */
+.ql-editor {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Vazirmatn', sans-serif !important;
+}
+
+.ql-editor p,
+.ql-editor li {
+  text-align: right;
+  direction: rtl;
+}
+
+.ql-editor ul,
+.ql-editor ol {
+  padding-right: 1.5em !important;
+  padding-left: 0 !important;
+}
+
+.ql-toolbar {
+  font-family: 'Vazirmatn', sans-serif !important;
+}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Home, Search, Info, User, Menu, MapPin, Building, LogOut, MessageCircle, Wrench, Settings, UserCircle, Plus, FileText } from "lucide-react";
+import { Home, Search, Info, User, Menu, MapPin, Building, LogOut, MessageCircle, Wrench, Settings, UserCircle, Plus, FileText, Briefcase } from "lucide-react";
 import { useState, memo, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginModal from "@/components/LoginModal";
@@ -25,10 +25,13 @@ const Header = memo(() => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [submitPropertyModalOpen, setSubmitPropertyModalOpen] = useState(false);
-  const { user, backendUser, logout } = useAuth();
+  const { user, backendUser, logout, isAuthenticated } = useAuth();
   
   // بررسی اینکه آیا کاربر مشاور گویا است
   const isGooyaAdviser = backendUser?.agent_profile?.is_goooya_adviser === true;
+  
+  // بررسی اینکه آیا کاربر agent است یا نه
+  const isAgent = user?.type === 'agent' || !!backendUser?.agent_profile;
   
   // فقط وقتی که کاربر مشاور گویا باشه، تعداد تیکت‌ها رو بگیر
   const { data: ticketsCount } = useAdviserTicketsCount(isGooyaAdviser);
@@ -150,6 +153,15 @@ const Header = memo(() => {
                           </Link>
                         </DropdownMenuItem>
                       )}
+                      {/* لینک تبدیل به مشاور - فقط برای کاربران عادی */}
+                      {isAuthenticated && !isAgent && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/become-agent" className="cursor-pointer">
+                            <Briefcase className="ml-2 h-4 w-4" />
+                            <span>تبدیل به مشاور</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem asChild>
                         <Link href="/user" className="cursor-pointer">
                           <Settings className="ml-2 h-4 w-4" />
@@ -235,6 +247,15 @@ const Header = memo(() => {
             })}
             {user ? (
               <>
+                {/* لینک تبدیل به مشاور در موبایل - فقط برای کاربران عادی */}
+                {isAuthenticated && !isAgent && (
+                  <Link href="/become-agent" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="default" className="w-full justify-start gap-2">
+                      <Briefcase className="h-4 w-4" />
+                      تبدیل به مشاور
+                    </Button>
+                  </Link>
+                )}
                 <Link href={user.type === 'admin' ? '/admin' : user.type === 'agent' ? '/agent' : '/user'} onClick={() => setMobileMenuOpen(false)}>
                   <Button variant="outline" className="w-full justify-start gap-2">
                     {user.type === 'agent' ? (

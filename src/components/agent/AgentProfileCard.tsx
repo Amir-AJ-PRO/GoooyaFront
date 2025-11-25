@@ -15,13 +15,15 @@ import {
   Instagram,
   CheckCircle2,
   XCircle,
-  Settings
+  Settings,
+  Clock
 } from 'lucide-react';
 import { getMediaUrl } from '@/lib/utils';
 import Link from 'next/link';
 
 /**
  * کامپوننت نمایش پروفایل agent
+ * اگر is_verified = false باشد، فقط اطلاعات اولیه نمایش داده می‌شود
  */
 export default function AgentProfileCard() {
   const { data: profile, isLoading, error } = useAgentProfile();
@@ -47,6 +49,8 @@ export default function AgentProfileCard() {
     return null;
   }
 
+  const isVerified = profile.is_verified;
+
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center gap-4">
@@ -59,20 +63,25 @@ export default function AgentProfileCard() {
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <CardTitle className="text-2xl">{profile.full_name}</CardTitle>
-            {profile.is_verified && (
+            {isVerified ? (
               <Badge variant="default" className="gap-1">
                 <CheckCircle2 className="w-3 h-3" />
                 تأیید شده
               </Badge>
+            ) : (
+              <Badge variant="secondary" className="gap-1">
+                <Clock className="w-3 h-3" />
+                در انتظار تأیید
+              </Badge>
             )}
           </div>
-          {profile.license_number && (
+          {isVerified && profile.license_number && (
             <p className="text-sm text-muted-foreground mt-1">
               پروانه کسب: {profile.license_number}
             </p>
           )}
         </div>
-        <Link href="/agent/settings">
+        <Link href={isVerified ? "/agent/settings" : "/user/settings"}>
           <Button variant="outline" size="sm" className="gap-2">
             <Settings className="h-4 w-4" />
             ویرایش پروفایل
@@ -80,9 +89,11 @@ export default function AgentProfileCard() {
         </Link>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* اطلاعات دفتر */}
-        {profile.office_name && (
+      {/* فقط برای agent های تأیید شده اطلاعات کامل نمایش داده می‌شود */}
+      {isVerified && (
+        <CardContent className="space-y-4">
+          {/* اطلاعات دفتر */}
+          {profile.office_name && (
           <div className="flex items-start gap-2">
             <Building2 className="w-5 h-5 text-muted-foreground mt-0.5" />
             <div>
@@ -176,7 +187,8 @@ export default function AgentProfileCard() {
             )}
           </div>
         )}
-      </CardContent>
+        </CardContent>
+      )}
     </Card>
   );
 }

@@ -17,13 +17,6 @@ export const useSubmitSimpleTicket = () => {
     mutationFn: submitSimpleTicket,
     onSuccess: (data) => {
       toast.success(data.detail || 'درخواست شما با موفقیت ثبت شد');
-      
-      if (data.referral_code) {
-        toast.info(`کد معرف شما: ${data.referral_code}`, {
-          duration: 10000,
-          description: 'این کد را برای دوستان خود ارسال کنید',
-        });
-      }
     },
     onError: (error) => {
       toast.error(error.message || 'خطا در ثبت درخواست');

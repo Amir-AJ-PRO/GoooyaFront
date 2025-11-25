@@ -2,9 +2,18 @@
 
 import { useState } from 'react';
 import { useProperty } from '@/hooks/usePropertyMutations';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import Image from 'next/image';
 import { 
   MapPin, 
@@ -22,7 +31,18 @@ import {
   Warehouse,
   ArrowUpDown,
   CheckCircle2,
-  FileText
+  FileText,
+  Waves,
+  Droplets,
+  Zap,
+  Shield,
+  Users,
+  Building,
+  Radio,
+  Wifi,
+  XCircle,
+  CheckCircle,
+  Sparkles
 } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/constants';
 import Link from 'next/link';
@@ -45,7 +65,10 @@ const formatPrice = (price?: number): string => {
 
 export default function PropertyDetailClient({ slug }: PropertyDetailClientProps) {
   const { data: property, isLoading, error } = useProperty(slug);
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showAgentPhoneDialog, setShowAgentPhoneDialog] = useState(false);
   
   if (isLoading) {
     return (
@@ -59,38 +82,69 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
   }
   
   if (error || !property) {
+    const isAuthError = error?.message?.includes('احراز هویت') || 
+                       error?.message?.includes('وارد شوید') ||
+                       error?.message?.includes('نشست');
+    
     return (
       <div className="container mx-auto px-4 py-20">
         <div className="text-center">
           <Home className="h-16 w-16 mx-auto text-red-500 mb-4" />
-          <h1 className="text-3xl font-bold mb-2">ملک یافت نشد</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            {isAuthError ? 'نیاز به ورود' : 'ملک یافت نشد'}
+          </h1>
           <p className="text-muted-foreground mb-6">
             {error?.message || 'ملک مورد نظر یافت نشد یا در حال حاضر قابل نمایش نیست'}
           </p>
-          <Link href="/properties">
-            <Button variant="outline">
-              <ArrowRight className="h-4 w-4 mr-2" />
-              بازگشت به لیست املاک
-            </Button>
-          </Link>
+          <div className="flex gap-4 justify-center">
+            {isAuthError ? (
+              <Link href={`/login?from=${encodeURIComponent(`/properties/${slug}`)}`}>
+                <Button>
+                  ورود به حساب کاربری
+                </Button>
+              </Link>
+            ) : null}
+            <Link href="/properties">
+              <Button variant="outline">
+                <ArrowRight className="h-4 w-4 mr-2" />
+                بازگشت به لیست املاک
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
   
   const mainImage = property.images?.[selectedImageIndex];
-  const imageUrl = mainImage ? `${API_BASE_URL}${mainImage.image}` : '/assets/property-placeholder.jpg';
+  
+  // ساخت URL تصویر - اگر URL کامل است (شروع با http/https)، از همان استفاده می‌کنیم
+  let imageUrl = '/assets/property-placeholder.jpg';
+  if (mainImage?.image) {
+    if (mainImage.image.startsWith('http://') || mainImage.image.startsWith('https://')) {
+      imageUrl = mainImage.image;
+    } else {
+      const imagePath = mainImage.image.startsWith('/') ? mainImage.image : `/${mainImage.image}`;
+      imageUrl = `${API_BASE_URL}${imagePath}`;
+    }
+  }
   
   // محاسبه نوع شهر و منطقه با optional chaining
-  const cityName = typeof property.city === 'object' && property.city?.name 
-    ? property.city.name 
-    : '';
-  const locationName = property.location && typeof property.location === 'object' && property.location?.name
-    ? property.location.name 
-    : '';
-  const propertyTypeName = typeof property.property_type === 'object' && property.property_type?.title
-    ? property.property_type.title 
-    : '';
+  const cityName = typeof property.city === 'string' 
+    ? property.city 
+    : (typeof property.city === 'object' && property.city?.name 
+      ? property.city.name 
+      : '');
+  const locationName = typeof property.location === 'string'
+    ? property.location
+    : (property.location && typeof property.location === 'object' && property.location?.name
+      ? property.location.name 
+      : '');
+  const propertyTypeName = typeof property.property_type === 'string'
+    ? property.property_type
+    : (typeof property.property_type === 'object' && property.property_type?.title
+      ? property.property_type.title 
+      : '');
   
   return (
     <div className="container mx-auto px-4 py-8">
@@ -107,12 +161,12 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
         <div className="lg:col-span-2 space-y-6">
           {/* تصویر اصلی */}
           <Card className="overflow-hidden">
-            <div className="relative h-96 md:h-[500px]">
+            <div className="relative h-96 md:h-[500px] bg-gray-100">
               <Image
                 src={imageUrl}
                 alt={property.title}
                 fill
-                className="object-cover"
+                className="object-contain"
                 priority
               />
               
@@ -121,9 +175,6 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                 <div className="flex gap-2">
                   <div className="bg-primary text-white px-4 py-2 rounded-full text-sm font-bold">
                     {property.transaction_type === 'sale' ? 'فروش' : 'اجاره'}
-                  </div>
-                  <div className="bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm">
-                    {propertyTypeName}
                   </div>
                 </div>
                 
@@ -153,10 +204,14 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                       }`}
                     >
                       <Image
-                        src={`${API_BASE_URL}${img.image}`}
+                        src={
+                          img.image.startsWith('http://') || img.image.startsWith('https://')
+                            ? img.image
+                            : `${API_BASE_URL}${img.image.startsWith('/') ? img.image : `/${img.image}`}`
+                        }
                         alt={`تصویر ${index + 1}`}
                         fill
-                        className="object-cover"
+                        className="object-contain bg-gray-100"
                       />
                     </button>
                   ))}
@@ -189,7 +244,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
           {/* مشخصات کلی */}
           <Card>
             <CardHeader>
-              <CardTitle>مشخصات</CardTitle>
+              <CardTitle>مشخصات کلی</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
@@ -266,36 +321,170 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
             </CardContent>
           </Card>
           
-          {/* امکانات */}
+          {/* امکانات و تجهیزات */}
           <Card>
             <CardHeader>
-              <CardTitle>امکانات و ویژگی‌ها</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                امکانات و تجهیزات
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className={`flex items-center gap-2 ${property.has_parking ? 'text-green-600' : 'text-muted-foreground'}`}>
-                  <Car className="h-5 w-5" />
-                  <span>پارکینگ</span>
-                  {property.has_parking && <CheckCircle2 className="h-4 w-4 mr-auto" />}
-                </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {/* فقط امکاناتی که ملک دارد */}
+                {property.has_parking && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Car className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">پارکینگ</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
                 
-                <div className={`flex items-center gap-2 ${property.has_storage ? 'text-green-600' : 'text-muted-foreground'}`}>
-                  <Warehouse className="h-5 w-5" />
-                  <span>انباری</span>
-                  {property.has_storage && <CheckCircle2 className="h-4 w-4 mr-auto" />}
-                </div>
+                {property.has_storage && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Warehouse className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">انباری</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
                 
-                <div className={`flex items-center gap-2 ${property.has_elevator ? 'text-green-600' : 'text-muted-foreground'}`}>
-                  <ArrowUpDown className="h-5 w-5" />
-                  <span>آسانسور</span>
-                  {property.has_elevator && <CheckCircle2 className="h-4 w-4 mr-auto" />}
-                </div>
+                {property.has_elevator && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <ArrowUpDown className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">آسانسور</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
                 
                 {property.has_balcony && (
-                  <div className="flex items-center gap-2 text-green-600">
-                    <Home className="h-5 w-5" />
-                    <span>بالکن</span>
-                    <CheckCircle2 className="h-4 w-4 mr-auto" />
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Home className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">بالکن</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {/* امکانات تفریحی */}
+                {(property as any).has_pool && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Waves className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">استخر</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {(property as any).has_jacuzzi && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Droplets className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">جکوزی</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {(property as any).has_sauna && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Waves className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">سونا</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {/* امکانات امنیتی */}
+                {(property as any).has_security && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Shield className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">نگهبانی</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {(property as any).has_janitor && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Users className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">سرایدار</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {(property as any).has_conference_hall && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Building className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">سالن کنفرانس</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {/* امکانات زیرساختی */}
+                {(property as any).has_gas && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Zap className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">گاز</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {(property as any).has_electricity && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Zap className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">برق</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {(property as any).has_water && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Droplets className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">آب</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {(property as any).has_phone && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Phone className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">تلفن</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {(property as any).has_wastewater && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Droplets className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">فاضلاب</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {(property as any).has_license && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <FileText className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">پروانه</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {(property as any).has_well && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Droplets className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">چاه</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {/* ویژگی‌های خاص */}
+                {(property as any).double_glazed_windows && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Home className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">پنجره دوجداره</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  </div>
+                )}
+
+                {(property as any).sound_insulation && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
+                    <Shield className="h-5 w-5 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 text-sm font-medium">عایق صوتی</span>
+                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                   </div>
                 )}
               </div>
@@ -353,7 +542,28 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
               
               <Separator />
               
-              <Button className="w-full gap-2" size="lg">
+              <Button 
+                className="w-full gap-2" 
+                size="lg"
+                onClick={() => {
+                  if (isAuthenticated) {
+                    // اگر لاگین بود، شماره agent را نمایش بده
+                    const agentPhone = typeof property.agent === 'object' && property.agent?.phone
+                      ? property.agent.phone
+                      : null;
+                    
+                    if (agentPhone) {
+                      setShowAgentPhoneDialog(true);
+                    } else {
+                      // اگر شماره agent موجود نبود
+                      alert('شماره تماس مشاور در دسترس نیست');
+                    }
+                  } else {
+                    // اگر لاگین نبود، به صفحه login هدایت کن
+                    router.push(`/login?from=${encodeURIComponent(`/properties/${slug}`)}`);
+                  }
+                }}
+              >
                 <Phone className="h-5 w-5" />
                 تماس با مشاور
               </Button>
@@ -394,6 +604,75 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
           </Card>
         </div>
       </div>
+
+      {/* Dialog نمایش شماره تلفن agent */}
+      <Dialog open={showAgentPhoneDialog} onOpenChange={setShowAgentPhoneDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>شماره تماس مشاور</DialogTitle>
+            <DialogDescription>
+              برای تماس با مشاور این ملک، از شماره زیر استفاده کنید
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {typeof property.agent === 'object' && property.agent?.phone ? (
+              <div className="flex flex-col items-center gap-4">
+                {/* اطلاعات agent */}
+                {property.agent.full_name && (
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-1">مشاور</p>
+                    <p className="font-semibold">{property.agent.full_name}</p>
+                  </div>
+                )}
+                
+                {/* شماره تلفن */}
+                <div className="text-3xl font-bold text-primary">
+                  {property.agent.phone}
+                </div>
+                
+                {/* شماره دفتر (اگر موجود باشد) */}
+                {property.agent.office_phone && (
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-1">دفتر</p>
+                    <p className="font-medium">{property.agent.office_phone}</p>
+                  </div>
+                )}
+                
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      const agentPhone = typeof property.agent === 'object' ? property.agent?.phone : null;
+                      if (agentPhone) {
+                        window.location.href = `tel:${agentPhone}`;
+                      }
+                    }}
+                    className="gap-2"
+                  >
+                    <Phone className="h-4 w-4" />
+                    تماس
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const agentPhone = typeof property.agent === 'object' ? property.agent?.phone : null;
+                      if (agentPhone) {
+                        navigator.clipboard.writeText(agentPhone);
+                        alert('شماره تلفن کپی شد');
+                      }
+                    }}
+                  >
+                    کپی شماره
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground">
+                شماره تماس مشاور در دسترس نیست
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
