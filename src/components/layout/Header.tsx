@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Home, Search, Info, User, Menu, MapPin, Building, LogOut, MessageCircle, Bot, Wrench, Settings, UserCircle } from "lucide-react";
-import { useState, memo } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Home, Search, Info, User, Menu, MapPin, Building, LogOut, MessageCircle, Wrench, Settings, UserCircle, Plus, FileText } from "lucide-react";
+import { useState, memo, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginModal from "@/components/LoginModal";
+import SubmitPropertyModal from "@/components/tickets/SubmitPropertyModal";
+import { useAdviserTicketsCount } from "@/hooks/useTicketAdviser";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,12 +24,18 @@ const Header = memo(() => {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const [submitPropertyModalOpen, setSubmitPropertyModalOpen] = useState(false);
+  const { user, backendUser, logout } = useAuth();
+  
+  // بررسی اینکه آیا کاربر مشاور گویا است
+  const isGooyaAdviser = backendUser?.agent_profile?.is_goooya_adviser === true;
+  
+  // فقط وقتی که کاربر مشاور گویا باشه، تعداد تیکت‌ها رو بگیر
+  const { data: ticketsCount } = useAdviserTicketsCount(isGooyaAdviser);
   
   const navItems = [
     { name: "صفحه اصلی", path: "/", icon: Home },
     { name: "املاک", path: "/properties", icon: Search },
-    { name: "جستجوی هوشمند", path: "/ai-search", icon: Bot, highlight: true },
     { name: "خدمات مهندسی", path: "/engineering", icon: Wrench },
     { name: "پشتیبانی", path: "/support", icon: MessageCircle },
     { name: "درباره ما", path: "/about", icon: Info },
@@ -53,7 +62,7 @@ const Header = memo(() => {
                 <Link key={item.path} href={item.path} className="relative" prefetch={true}>
                   <Button
                     variant={isActive(item.path) ? "default" : "ghost"}
-                    className={item.highlight ? "gap-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-700 border border-yellow-500/20" : "gap-2"}
+                    className="gap-2"
                   >
                     <Icon className="h-4 w-4" />
                     {item.name}
@@ -64,6 +73,32 @@ const Header = memo(() => {
           </nav>
 
           <div className="flex items-center gap-2">
+            {/* دکمه تیکت‌ها - فقط برای مشاور گویا */}
+            {isGooyaAdviser && (
+              <Link href="/admin/tickets">
+                <Button variant="default" className="gap-2 hidden md:flex bg-blue-600 hover:bg-blue-700">
+                  <FileText className="h-4 w-4" />
+                  تیکت‌های ثبت ملک
+                  {ticketsCount !== undefined && ticketsCount > 0 && (
+                    <Badge className="mr-1 bg-white text-blue-600">
+                      {ticketsCount}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
+            )}
+            
+            {/* دکمه ثبت ملک - برای همه کاربران */}
+            {(!user || user.type === 'user') && (
+              <Button 
+                className="gap-2 hidden md:flex"
+                onClick={() => setSubmitPropertyModalOpen(true)}
+              >
+                <Plus className="h-4 w-4" />
+                درخواست ثبت آگهی
+              </Button>
+            )}
+
             {user ? (
               <>
                 {/* Desktop User Menu */}
@@ -101,6 +136,20 @@ const Header = memo(() => {
                           <span>پنل کاربری</span>
                         </Link>
                       </DropdownMenuItem>
+                      {/* منوی تیکت‌ها - فقط برای مشاور گویا */}
+                      {isGooyaAdviser && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/tickets" className="cursor-pointer">
+                            <FileText className="ml-2 h-4 w-4" />
+                            <span>تیکت‌های ثبت ملک</span>
+                            {ticketsCount !== undefined && ticketsCount > 0 && (
+                              <Badge className="mr-auto bg-blue-600 text-white">
+                                {ticketsCount}
+                              </Badge>
+                            )}
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem asChild>
                         <Link href="/user" className="cursor-pointer">
                           <Settings className="ml-2 h-4 w-4" />
@@ -141,6 +190,35 @@ const Header = memo(() => {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <nav className="md:hidden border-t border-border py-4 space-y-2">
+            {/* دکمه تیکت‌ها - فقط برای مشاور گویا */}
+            {isGooyaAdviser && (
+              <Link href="/admin/tickets" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full justify-start gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                  <FileText className="h-4 w-4" />
+                  تیکت‌های ثبت ملک
+                  {ticketsCount !== undefined && ticketsCount > 0 && (
+                    <Badge className="mr-auto bg-white text-blue-600">
+                      {ticketsCount}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
+            )}
+            
+            {/* دکمه ثبت ملک در موبایل - برای همه کاربران */}
+            {(!user || user.type === 'user') && (
+              <Button 
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setSubmitPropertyModalOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                درخواست ثبت آگهی
+              </Button>
+            )}
+
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -198,6 +276,9 @@ const Header = memo(() => {
 
       {/* Login Modal */}
       <LoginModal open={loginModalOpen} onOpenChange={setLoginModalOpen} />
+      
+      {/* Submit Property Modal */}
+      <SubmitPropertyModal open={submitPropertyModalOpen} onOpenChange={setSubmitPropertyModalOpen} />
     </header>
   );
 });

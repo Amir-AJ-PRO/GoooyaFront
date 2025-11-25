@@ -128,11 +128,11 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
           // ساخت آبجکت User برای AuthContext
           const mockUser = {
             id: data.user.phone,
-            name: '',
-            email: '',
+            name: data.user.full_name || '',
+            email: data.user.email || '',
             type: userType,
             phone: data.user.phone,
-            company: data.user.agent_profile?.company_name,
+            company: data.user.agent_profile?.office_name,
             licenseNumber: data.user.agent_profile?.license_number,
           };
           

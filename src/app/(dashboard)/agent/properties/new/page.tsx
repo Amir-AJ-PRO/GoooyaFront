@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { 
   Select,
   SelectContent,
@@ -16,7 +17,20 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
-import { ArrowRight, ArrowLeft, Save, Loader2, Home } from 'lucide-react';
+import { 
+  ArrowRight, 
+  ArrowLeft, 
+  Save, 
+  Loader2, 
+  Home,
+  Building2,
+  MapPin,
+  DollarSign,
+  Image as ImageIcon,
+  FileText,
+  CheckCircle2,
+  Sparkles
+} from 'lucide-react';
 import ImageUploader from '@/components/forms/ImageUploader';
 import { 
   useCreateProperty, 
@@ -37,8 +51,8 @@ export default function NewPropertyPage() {
     slug: '',
     property_type: 0,
     city: 0,
+    location: 0, // منطقه حالا در step1 است
     measure: '',
-    rooms: 1,
     transaction_type: 'sale' as TransactionType,
     price: '',
     mortgage: '',
@@ -47,24 +61,21 @@ export default function NewPropertyPage() {
     main_image_index: -1,
   });
   
-  // Step 2: اطلاعات تکمیلی (اختیاری)
+  // Step 2: اطلاعات تکمیلی و امکانات (اختیاری)
   const [step2Data, setStep2Data] = useState({
-    location: 0,
+    rooms: 0, // تعداد خواب حالا در step2 است (اختیاری)
     address: '',
     description: '',
     year_built: '',
     floor: '',
     document_type: '',
-  });
-  
-  // Step 3: امکانات (اختیاری)
-  const [step3Data, setStep3Data] = useState({
+    // امکانات
     has_parking: false,
     has_storage: false,
     has_elevator: false,
   });
   
-  // React Query hooks (بعد از تعریف state ها)
+  // React Query hooks
   const createPropertyMutation = useCreateProperty();
   const { data: propertyTypes, isLoading: loadingTypes } = usePropertyTypes();
   const { data: cities, isLoading: loadingCities } = useCities();
@@ -104,10 +115,6 @@ export default function NewPropertyPage() {
       alert('متراژ معتبر الزامی است');
       return false;
     }
-    if (step1Data.rooms < 0) {
-      alert('تعداد خواب نامعتبر است');
-      return false;
-    }
     if (step1Data.transaction_type === 'sale' && !step1Data.price) {
       alert('قیمت برای فروش الزامی است');
       return false;
@@ -136,23 +143,25 @@ export default function NewPropertyPage() {
       property_type: step1Data.property_type,
       city: step1Data.city,
       measure: step1Data.measure,
-      rooms: step1Data.rooms,
+      rooms: step2Data.rooms || 0, // حالا از step2 می‌آید
       transaction_type: step1Data.transaction_type,
       uploaded_images: step1Data.uploaded_images,
       main_image_index: step1Data.main_image_index,
       
+      // Step 1 - منطقه
+      ...(step1Data.location && { location: step1Data.location }),
+      
       // Step 2
-      ...(step2Data.location && { location: step2Data.location }),
       ...(step2Data.address && { address: step2Data.address }),
       ...(step2Data.description && { description: step2Data.description }),
       ...(step2Data.year_built && { year_built: parseInt(step2Data.year_built) }),
       ...(step2Data.floor && { floor: step2Data.floor }),
       ...(step2Data.document_type && { document_type: step2Data.document_type }),
       
-      // Step 3
-      has_parking: step3Data.has_parking,
-      has_storage: step3Data.has_storage,
-      has_elevator: step3Data.has_elevator,
+      // امکانات
+      has_parking: step2Data.has_parking,
+      has_storage: step2Data.has_storage,
+      has_elevator: step2Data.has_elevator,
     };
     
     // اضافه کردن قیمت بر اساس نوع معامله
@@ -171,378 +180,497 @@ export default function NewPropertyPage() {
   };
   
   const renderStep1 = () => (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* عنوان و اسلاگ */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="title">عنوان ملک *</Label>
-          <Input
-            id="title"
-            value={step1Data.title}
-            onChange={(e) => setStep1Data({ ...step1Data, title: e.target.value })}
-            placeholder="مثال: آپارتمان 120 متری در تهران"
-            maxLength={200}
-          />
-          <p className="text-xs text-muted-foreground">
-            {step1Data.title.length}/200 کاراکتر
-          </p>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="slug">اسلاگ (URL) *</Label>
-          <Input
-            id="slug"
-            value={step1Data.slug}
-            onChange={(e) => setStep1Data({ ...step1Data, slug: e.target.value })}
-            placeholder="apartment-120-meter-tehran"
-            maxLength={250}
-            dir="ltr"
-          />
-        </div>
-      </div>
-      
-      {/* نوع ملک و شهر */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="property_type">نوع ملک *</Label>
-          <Select
-            value={step1Data.property_type.toString()}
-            onValueChange={(value) => setStep1Data({ ...step1Data, property_type: parseInt(value) })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="انتخاب کنید" />
-            </SelectTrigger>
-            <SelectContent>
-              {loadingTypes ? (
-                <SelectItem value="0" disabled>در حال بارگذاری...</SelectItem>
-              ) : (
-                propertyTypes?.map((type) => (
-                  <SelectItem key={type.id} value={type.id.toString()}>
-                    {type.title}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="city">شهر *</Label>
-          <Select
-            value={step1Data.city.toString()}
-            onValueChange={(value) => setStep1Data({ ...step1Data, city: parseInt(value) })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="انتخاب کنید" />
-            </SelectTrigger>
-            <SelectContent>
-              {loadingCities ? (
-                <SelectItem value="0" disabled>در حال بارگذاری...</SelectItem>
-              ) : (
-                cities?.map((city) => (
-                  <SelectItem key={city.id} value={city.id.toString()}>
-                    {city.name}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      {/* متراژ و تعداد خواب */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="measure">متراژ (متر مربع) *</Label>
-          <Input
-            id="measure"
-            type="number"
-            step="0.01"
-            min="0"
-            value={step1Data.measure}
-            onChange={(e) => setStep1Data({ ...step1Data, measure: e.target.value })}
-            placeholder="120"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="rooms">تعداد خواب *</Label>
-          <Input
-            id="rooms"
-            type="number"
-            min="0"
-            value={step1Data.rooms}
-            onChange={(e) => setStep1Data({ ...step1Data, rooms: parseInt(e.target.value) })}
-          />
-        </div>
-      </div>
-      
-      {/* نوع معامله */}
-      <div className="space-y-2">
-        <Label htmlFor="transaction_type">نوع معامله *</Label>
-        <Select
-          value={step1Data.transaction_type}
-          onValueChange={(value) => setStep1Data({ 
-            ...step1Data, 
-            transaction_type: value as TransactionType 
-          })}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="sale">فروش</SelectItem>
-            <SelectItem value="rent">رهن و اجاره</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      {/* قیمت بر اساس نوع معامله */}
-      {step1Data.transaction_type === 'sale' ? (
-        <div className="space-y-2">
-          <Label htmlFor="price">قیمت (تومان) *</Label>
-          <Input
-            id="price"
-            type="number"
-            min="0"
-            value={step1Data.price}
-            onChange={(e) => setStep1Data({ ...step1Data, price: e.target.value })}
-            placeholder="5000000000"
-            dir="ltr"
-          />
-        </div>
-      ) : (
-        <div className="grid md:grid-cols-2 gap-4">
+      <Card className="border-2 border-blue-100 hover:border-blue-300 transition-all">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <FileText className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <CardTitle>اطلاعات شناسایی</CardTitle>
+              <CardDescription>عنوان و شناسه ملک</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6 space-y-4">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-base flex items-center gap-2">
+                <FileText className="w-4 h-4 text-blue-600" />
+                عنوان ملک *
+              </Label>
+              <Input
+                id="title"
+                value={step1Data.title}
+                onChange={(e) => setStep1Data({ ...step1Data, title: e.target.value })}
+                placeholder="مثال: آپارتمان 120 متری در تهران"
+                maxLength={200}
+                className="h-12 border-2 focus:border-blue-400"
+              />
+              <p className="text-xs text-muted-foreground">
+                {step1Data.title.length}/200 کاراکتر
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="slug" className="text-base">اسلاگ (URL) *</Label>
+              <Input
+                id="slug"
+                value={step1Data.slug}
+                onChange={(e) => setStep1Data({ ...step1Data, slug: e.target.value })}
+                placeholder="apartment-120-meter-tehran"
+                maxLength={250}
+                dir="ltr"
+                className="h-12 border-2 focus:border-blue-400"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* نوع ملک و موقعیت */}
+      <Card className="border-2 border-purple-100 hover:border-purple-300 transition-all">
+        <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+          <div className="flex items-center gap-3">
+            <div className="bg-purple-100 p-2 rounded-lg">
+              <Building2 className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <CardTitle>نوع و موقعیت ملک</CardTitle>
+              <CardDescription>مشخصات اصلی ملک</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6 space-y-6">
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="property_type" className="text-base flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-purple-600" />
+                نوع ملک *
+              </Label>
+              <Select
+                value={step1Data.property_type.toString()}
+                onValueChange={(value) => setStep1Data({ ...step1Data, property_type: parseInt(value) })}
+              >
+                <SelectTrigger className="h-12 border-2 focus:border-purple-400">
+                  <SelectValue placeholder="انتخاب کنید" />
+                </SelectTrigger>
+                <SelectContent>
+                  {loadingTypes ? (
+                    <SelectItem value="0" disabled>در حال بارگذاری...</SelectItem>
+                  ) : (
+                    propertyTypes?.map((type) => (
+                      <SelectItem key={type.id} value={type.id.toString()}>
+                        {type.title}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="city" className="text-base flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-purple-600" />
+                شهر *
+              </Label>
+              <Select
+                value={step1Data.city.toString()}
+                onValueChange={(value) => {
+                  setStep1Data({ ...step1Data, city: parseInt(value), location: 0 });
+                }}
+              >
+                <SelectTrigger className="h-12 border-2 focus:border-purple-400">
+                  <SelectValue placeholder="انتخاب کنید" />
+                </SelectTrigger>
+                <SelectContent>
+                  {loadingCities ? (
+                    <SelectItem value="0" disabled>در حال بارگذاری...</SelectItem>
+                  ) : (
+                    cities?.map((city) => (
+                      <SelectItem key={city.id} value={city.id.toString()}>
+                        {city.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="location" className="text-base flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-purple-600" />
+                منطقه/محله
+              </Label>
+              <Select
+                value={step1Data.location.toString()}
+                onValueChange={(value) => setStep1Data({ ...step1Data, location: parseInt(value) })}
+                disabled={!step1Data.city || loadingLocations}
+              >
+                <SelectTrigger className="h-12 border-2 focus:border-purple-400">
+                  <SelectValue placeholder={!step1Data.city ? 'ابتدا شهر را انتخاب کنید' : 'انتخاب کنید (اختیاری)'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {locations?.map((location) => (
+                    <SelectItem key={location.id} value={location.id.toString()}>
+                      {location.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="mortgage">رهن (تومان) *</Label>
+            <Label htmlFor="measure" className="text-base">متراژ (متر مربع) *</Label>
             <Input
-              id="mortgage"
+              id="measure"
               type="number"
+              step="0.01"
               min="0"
-              value={step1Data.mortgage}
-              onChange={(e) => setStep1Data({ ...step1Data, mortgage: e.target.value })}
-              placeholder="500000000"
-              dir="ltr"
+              value={step1Data.measure}
+              onChange={(e) => setStep1Data({ ...step1Data, measure: e.target.value })}
+              placeholder="120"
+              className="h-12 border-2 focus:border-purple-400"
             />
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* نوع معامله و قیمت */}
+      <Card className="border-2 border-green-100 hover:border-green-300 transition-all">
+        <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
+          <div className="flex items-center gap-3">
+            <div className="bg-green-100 p-2 rounded-lg">
+              <DollarSign className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <CardTitle>اطلاعات مالی</CardTitle>
+              <CardDescription>نوع معامله و قیمت</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6 space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="transaction_type" className="text-base flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-green-600" />
+              نوع معامله *
+            </Label>
+            <Select
+              value={step1Data.transaction_type}
+              onValueChange={(value) => setStep1Data({ 
+                ...step1Data, 
+                transaction_type: value as TransactionType 
+              })}
+            >
+              <SelectTrigger className="h-12 border-2 focus:border-green-400">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sale">💰 فروش</SelectItem>
+                <SelectItem value="rent">🏠 رهن و اجاره</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="rent">اجاره (تومان) *</Label>
-            <Input
-              id="rent"
-              type="number"
-              min="0"
-              value={step1Data.rent}
-              onChange={(e) => setStep1Data({ ...step1Data, rent: e.target.value })}
-              placeholder="10000000"
-              dir="ltr"
-            />
-          </div>
-        </div>
-      )}
-      
-      <Separator />
+          {step1Data.transaction_type === 'sale' ? (
+            <div className="space-y-2">
+              <Label htmlFor="price" className="text-base">قیمت (تومان) *</Label>
+              <Input
+                id="price"
+                type="number"
+                min="0"
+                value={step1Data.price}
+                onChange={(e) => setStep1Data({ ...step1Data, price: e.target.value })}
+                placeholder="5,000,000,000"
+                dir="ltr"
+                className="h-12 border-2 focus:border-green-400 text-lg font-semibold"
+              />
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="mortgage" className="text-base">رهن (تومان) *</Label>
+                <Input
+                  id="mortgage"
+                  type="number"
+                  min="0"
+                  value={step1Data.mortgage}
+                  onChange={(e) => setStep1Data({ ...step1Data, mortgage: e.target.value })}
+                  placeholder="500,000,000"
+                  dir="ltr"
+                  className="h-12 border-2 focus:border-green-400"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="rent" className="text-base">اجاره (تومان) *</Label>
+                <Input
+                  id="rent"
+                  type="number"
+                  min="0"
+                  value={step1Data.rent}
+                  onChange={(e) => setStep1Data({ ...step1Data, rent: e.target.value })}
+                  placeholder="10,000,000"
+                  dir="ltr"
+                  className="h-12 border-2 focus:border-green-400"
+                />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
       
       {/* آپلود تصاویر */}
-      <div className="space-y-2">
-        <Label>تصاویر ملک *</Label>
-        <ImageUploader
-          images={step1Data.uploaded_images}
-          mainImageIndex={step1Data.main_image_index}
-          onChange={(images, mainIndex) => setStep1Data({
-            ...step1Data,
-            uploaded_images: images,
-            main_image_index: mainIndex
-          })}
-        />
-      </div>
+      <Card className="border-2 border-orange-100 hover:border-orange-300 transition-all">
+        <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50">
+          <div className="flex items-center gap-3">
+            <div className="bg-orange-100 p-2 rounded-lg">
+              <ImageIcon className="w-5 h-5 text-orange-600" />
+            </div>
+            <div>
+              <CardTitle>تصاویر ملک</CardTitle>
+              <CardDescription>حداقل یک تصویر الزامی است</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <ImageUploader
+            images={step1Data.uploaded_images}
+            mainImageIndex={step1Data.main_image_index}
+            onChange={(images, mainIndex) => setStep1Data({
+              ...step1Data,
+              uploaded_images: images,
+              main_image_index: mainIndex
+            })}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
   
   const renderStep2 = () => (
-    <div className="space-y-6">
-      {/* منطقه */}
-      <div className="space-y-2">
-        <Label htmlFor="location">منطقه/محله</Label>
-        <Select
-          value={step2Data.location.toString()}
-          onValueChange={(value) => setStep2Data({ ...step2Data, location: parseInt(value) })}
-          disabled={!step1Data.city || loadingLocations}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={!step1Data.city ? 'ابتدا شهر را انتخاب کنید' : 'انتخاب کنید (اختیاری)'} />
-          </SelectTrigger>
-          <SelectContent>
-            {locations?.map((location) => (
-              <SelectItem key={location.id} value={location.id.toString()}>
-                {location.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      
-      {/* آدرس */}
-      <div className="space-y-2">
-        <Label htmlFor="address">آدرس کامل</Label>
-        <Textarea
-          id="address"
-          value={step2Data.address}
-          onChange={(e) => setStep2Data({ ...step2Data, address: e.target.value })}
-          placeholder="آدرس دقیق ملک را وارد کنید"
-          rows={3}
-        />
-      </div>
-      
-      {/* توضیحات */}
-      <div className="space-y-2">
-        <Label htmlFor="description">توضیحات</Label>
-        <Textarea
-          id="description"
-          value={step2Data.description}
-          onChange={(e) => setStep2Data({ ...step2Data, description: e.target.value })}
-          placeholder="توضیحات تکمیلی درباره ملک..."
-          rows={6}
-        />
-      </div>
-      
-      {/* سال ساخت و طبقه */}
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="year_built">سال ساخت</Label>
-          <Input
-            id="year_built"
-            type="number"
-            min="1300"
-            max="1450"
-            value={step2Data.year_built}
-            onChange={(e) => setStep2Data({ ...step2Data, year_built: e.target.value })}
-            placeholder="1400"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="floor">طبقه</Label>
-          <Input
-            id="floor"
-            value={step2Data.floor}
-            onChange={(e) => setStep2Data({ ...step2Data, floor: e.target.value })}
-            placeholder="مثال: 3"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="document_type">نوع سند</Label>
-          <Select
-            value={step2Data.document_type}
-            onValueChange={(value) => setStep2Data({ ...step2Data, document_type: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="انتخاب کنید" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ملکی">ملکی</SelectItem>
-              <SelectItem value="اداری">اداری</SelectItem>
-              <SelectItem value="وقفی">وقفی</SelectItem>
-              <SelectItem value="قولنامه‌ای">قولنامه‌ای</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-    </div>
-  );
-  
-  const renderStep3 = () => (
-    <div className="space-y-6">
-      <p className="text-muted-foreground">امکانات و ویژگی‌های ملک را مشخص کنید:</p>
-      
-      <div className="space-y-4">
-        <div className="flex items-center space-x-2 space-x-reverse">
-          <Checkbox
-            id="has_parking"
-            checked={step3Data.has_parking}
-            onCheckedChange={(checked) => setStep3Data({ 
-              ...step3Data, 
-              has_parking: checked as boolean 
-            })}
-          />
-          <Label htmlFor="has_parking" className="cursor-pointer">
-            پارکینگ
-          </Label>
-        </div>
-        
-        <div className="flex items-center space-x-2 space-x-reverse">
-          <Checkbox
-            id="has_storage"
-            checked={step3Data.has_storage}
-            onCheckedChange={(checked) => setStep3Data({ 
-              ...step3Data, 
-              has_storage: checked as boolean 
-            })}
-          />
-          <Label htmlFor="has_storage" className="cursor-pointer">
-            انباری
-          </Label>
-        </div>
-        
-        <div className="flex items-center space-x-2 space-x-reverse">
-          <Checkbox
-            id="has_elevator"
-            checked={step3Data.has_elevator}
-            onCheckedChange={(checked) => setStep3Data({ 
-              ...step3Data, 
-              has_elevator: checked as boolean 
-            })}
-          />
-          <Label htmlFor="has_elevator" className="cursor-pointer">
-            آسانسور
-          </Label>
-        </div>
-      </div>
+    <div className="space-y-8">
+      {/* اطلاعات تکمیلی */}
+      <Card className="border-2 border-indigo-100 hover:border-indigo-300 transition-all">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50">
+          <div className="flex items-center gap-3">
+            <div className="bg-indigo-100 p-2 rounded-lg">
+              <FileText className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <CardTitle>اطلاعات تکمیلی</CardTitle>
+              <CardDescription>جزئیات بیشتر درباره ملک</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6 space-y-6">
+          {/* تعداد خواب */}
+          <div className="space-y-2">
+            <Label htmlFor="rooms" className="text-base">تعداد اتاق خواب</Label>
+            <Input
+              id="rooms"
+              type="number"
+              min="0"
+              value={step2Data.rooms}
+              onChange={(e) => setStep2Data({ ...step2Data, rooms: parseInt(e.target.value) || 0 })}
+              placeholder="2"
+              className="h-12 border-2 focus:border-indigo-400"
+            />
+          </div>
+
+          {/* آدرس */}
+          <div className="space-y-2">
+            <Label htmlFor="address" className="text-base">آدرس کامل</Label>
+            <Textarea
+              id="address"
+              value={step2Data.address}
+              onChange={(e) => setStep2Data({ ...step2Data, address: e.target.value })}
+              placeholder="آدرس دقیق ملک را وارد کنید"
+              rows={3}
+              className="border-2 focus:border-indigo-400 resize-none"
+            />
+          </div>
+          
+          {/* توضیحات */}
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-base">توضیحات</Label>
+            <Textarea
+              id="description"
+              value={step2Data.description}
+              onChange={(e) => setStep2Data({ ...step2Data, description: e.target.value })}
+              placeholder="توضیحات تکمیلی درباره ملک، امکانات، موقعیت و..."
+              rows={6}
+              className="border-2 focus:border-indigo-400 resize-none"
+            />
+          </div>
+          
+          {/* سال ساخت، طبقه و نوع سند */}
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="year_built" className="text-base">سال ساخت</Label>
+              <Input
+                id="year_built"
+                type="number"
+                min="1300"
+                max="1450"
+                value={step2Data.year_built}
+                onChange={(e) => setStep2Data({ ...step2Data, year_built: e.target.value })}
+                placeholder="1400"
+                className="h-12 border-2 focus:border-indigo-400"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="floor" className="text-base">طبقه</Label>
+              <Input
+                id="floor"
+                value={step2Data.floor}
+                onChange={(e) => setStep2Data({ ...step2Data, floor: e.target.value })}
+                placeholder="مثال: 3"
+                className="h-12 border-2 focus:border-indigo-400"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="document_type" className="text-base">نوع سند</Label>
+              <Select
+                value={step2Data.document_type}
+                onValueChange={(value) => setStep2Data({ ...step2Data, document_type: value })}
+              >
+                <SelectTrigger className="h-12 border-2 focus:border-indigo-400">
+                  <SelectValue placeholder="انتخاب کنید" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ملکی">ملکی</SelectItem>
+                  <SelectItem value="اداری">اداری</SelectItem>
+                  <SelectItem value="وقفی">وقفی</SelectItem>
+                  <SelectItem value="قولنامه‌ای">قولنامه‌ای</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* امکانات */}
+      <Card className="border-2 border-teal-100 hover:border-teal-300 transition-all">
+        <CardHeader className="bg-gradient-to-r from-teal-50 to-cyan-50">
+          <div className="flex items-center gap-3">
+            <div className="bg-teal-100 p-2 rounded-lg">
+              <CheckCircle2 className="w-5 h-5 text-teal-600" />
+            </div>
+            <div>
+              <CardTitle>امکانات و ویژگی‌ها</CardTitle>
+              <CardDescription>امکانات موجود در ملک را مشخص کنید</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="flex items-center space-x-3 space-x-reverse p-4 rounded-lg border-2 border-gray-100 hover:border-teal-300 hover:bg-teal-50 transition-all">
+              <Checkbox
+                id="has_parking"
+                checked={step2Data.has_parking}
+                onCheckedChange={(checked) => setStep2Data({ 
+                  ...step2Data, 
+                  has_parking: checked as boolean 
+                })}
+                className="w-5 h-5"
+              />
+              <Label htmlFor="has_parking" className="cursor-pointer text-base font-medium flex-1">
+                🚗 پارکینگ
+              </Label>
+            </div>
+            
+            <div className="flex items-center space-x-3 space-x-reverse p-4 rounded-lg border-2 border-gray-100 hover:border-teal-300 hover:bg-teal-50 transition-all">
+              <Checkbox
+                id="has_storage"
+                checked={step2Data.has_storage}
+                onCheckedChange={(checked) => setStep2Data({ 
+                  ...step2Data, 
+                  has_storage: checked as boolean 
+                })}
+                className="w-5 h-5"
+              />
+              <Label htmlFor="has_storage" className="cursor-pointer text-base font-medium flex-1">
+                📦 انباری
+              </Label>
+            </div>
+            
+            <div className="flex items-center space-x-3 space-x-reverse p-4 rounded-lg border-2 border-gray-100 hover:border-teal-300 hover:bg-teal-50 transition-all">
+              <Checkbox
+                id="has_elevator"
+                checked={step2Data.has_elevator}
+                onCheckedChange={(checked) => setStep2Data({ 
+                  ...step2Data, 
+                  has_elevator: checked as boolean 
+                })}
+                className="w-5 h-5"
+              />
+              <Label htmlFor="has_elevator" className="cursor-pointer text-base font-medium flex-1">
+                🛗 آسانسور
+              </Label>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
   
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.back()}
-        >
-          <ArrowRight className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Home className="h-8 w-8" />
-            ثبت ملک جدید
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            اطلاعات ملک خود را وارد کنید
-          </p>
+    <div className="max-w-5xl mx-auto space-y-8 p-6">
+      {/* Header با Gradient */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 p-8 text-white shadow-2xl">
+        <div className="absolute top-0 right-0 -mt-4 -mr-4 h-32 w-32 rounded-full bg-white/10 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-32 w-32 rounded-full bg-white/10 blur-3xl"></div>
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.back()}
+              className="text-white hover:bg-white/20"
+            >
+              <ArrowRight className="h-6 w-6" />
+            </Button>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold flex items-center gap-3">
+                <Sparkles className="h-8 w-8" />
+                ثبت ملک جدید
+              </h1>
+              <p className="text-blue-100 mt-2 text-lg">
+                اطلاعات ملک خود را با دقت وارد کنید
+              </p>
+            </div>
+          </div>
         </div>
       </div>
       
       {/* Progress Steps */}
-      <div className="flex items-center justify-center gap-2">
-        {[1, 2, 3].map((step) => (
+      <div className="flex items-center justify-center gap-3">
+        {[1, 2].map((step) => (
           <div key={step} className="flex items-center">
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+              className={`relative w-16 h-16 rounded-2xl flex flex-col items-center justify-center font-bold shadow-lg transition-all ${
                 step === currentStep
-                  ? 'bg-primary text-white'
+                  ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white scale-110'
                   : step < currentStep
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-200 text-gray-600'
+                  ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white'
+                  : 'bg-gray-100 text-gray-400'
               }`}
             >
-              {step}
+              <span className="text-2xl">{step}</span>
+              {step < currentStep && (
+                <CheckCircle2 className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full text-green-600" />
+              )}
             </div>
-            {step < 3 && (
+            {step < 2 && (
               <div
-                className={`w-20 h-1 ${
-                  step < currentStep ? 'bg-green-500' : 'bg-gray-200'
+                className={`w-24 h-2 rounded-full mx-2 transition-all ${
+                  step < currentStep ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 'bg-gray-200'
                 }`}
               />
             )}
@@ -550,78 +678,74 @@ export default function NewPropertyPage() {
         ))}
       </div>
       
-      {/* Form Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {currentStep === 1 && 'مرحله 1: اطلاعات اصلی (اجباری)'}
-            {currentStep === 2 && 'مرحله 2: اطلاعات تکمیلی (اختیاری)'}
-            {currentStep === 3 && 'مرحله 3: امکانات (اختیاری)'}
-          </CardTitle>
-          <CardDescription>
-            {currentStep === 1 && 'لطفاً تمام فیلدهای ستاره‌دار را پر کنید'}
-            {currentStep === 2 && 'می‌توانید این مرحله را رد کنید'}
-            {currentStep === 3 && 'می‌توانید این مرحله را رد کنید'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {currentStep === 1 && renderStep1()}
-          {currentStep === 2 && renderStep2()}
-          {currentStep === 3 && renderStep3()}
-          
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8 pt-6 border-t">
+      {/* عنوان مرحله */}
+      <div className="text-center">
+        <Badge className="text-lg px-6 py-2" variant={currentStep === 1 ? "default" : "secondary"}>
+          {currentStep === 1 ? '📋 مرحله 1: اطلاعات اصلی (اجباری)' : '✨ مرحله 2: اطلاعات تکمیلی (اختیاری)'}
+        </Badge>
+        <p className="text-muted-foreground mt-3">
+          {currentStep === 1 ? 'لطفاً تمام فیلدهای ستاره‌دار را پر کنید' : 'می‌توانید این مرحله را رد کنید یا تکمیل کنید'}
+        </p>
+      </div>
+      
+      {/* Form Content */}
+      {currentStep === 1 && renderStep1()}
+      {currentStep === 2 && renderStep2()}
+      
+      {/* Navigation Buttons */}
+      <Card className="border-2 shadow-xl">
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row justify-between gap-4">
             <Button
               variant="outline"
               onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
               disabled={currentStep === 1}
-              className="gap-2"
+              className="gap-2 h-12 hover:bg-gray-100 transition-all"
             >
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-5 w-5" />
               مرحله قبل
             </Button>
             
-            <div className="flex gap-2">
-              {currentStep < 3 ? (
+            <div className="flex flex-col-reverse sm:flex-row gap-3">
+              {currentStep === 1 ? (
+                <Button
+                  onClick={() => {
+                    if (!validateStep1()) return;
+                    setCurrentStep(2);
+                  }}
+                  className="gap-2 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all"
+                >
+                  مرحله بعد
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              ) : (
                 <>
-                  {currentStep > 1 && (
-                    <Button
-                      variant="outline"
-                      onClick={handleSubmit}
-                      disabled={createPropertyMutation.isPending}
-                    >
-                      ثبت سریع
-                    </Button>
-                  )}
                   <Button
-                    onClick={() => {
-                      if (currentStep === 1 && !validateStep1()) return;
-                      setCurrentStep(currentStep + 1);
-                    }}
-                    className="gap-2"
+                    variant="outline"
+                    onClick={handleSubmit}
+                    disabled={createPropertyMutation.isPending}
+                    className="gap-2 h-12"
                   >
-                    مرحله بعد
-                    <ArrowLeft className="h-4 w-4" />
+                    ثبت سریع (بدون تکمیل)
+                  </Button>
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={createPropertyMutation.isPending}
+                    className="gap-2 h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all"
+                  >
+                    {createPropertyMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        در حال ثبت...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-5 w-5" />
+                        ثبت نهایی ملک
+                      </>
+                    )}
                   </Button>
                 </>
-              ) : (
-                <Button
-                  onClick={handleSubmit}
-                  disabled={createPropertyMutation.isPending}
-                  className="gap-2"
-                >
-                  {createPropertyMutation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      در حال ثبت...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4" />
-                      ثبت ملک
-                    </>
-                  )}
-                </Button>
               )}
             </div>
           </div>

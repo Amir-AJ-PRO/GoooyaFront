@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { TrustBar } from "@/components/common/TrustBar";
 
 export const metadata: Metadata = {
   title: "گویا - پلتفرم املاک فارسی",
@@ -16,7 +15,6 @@ export default function SiteLayout({
   return (
     <>
       <Header />
-      <TrustBar />
       <main className="flex-1">
         {children}
       </main>

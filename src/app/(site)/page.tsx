@@ -3,8 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import SearchBar from "@/components/common/SearchBar";
-import { AIBadge } from "@/components/common/AIBadge";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import HomePageClient from "./HomePageClient";
 
 export const metadata: Metadata = {
@@ -43,16 +42,11 @@ export default function Home() {
         </div>
         <div className="relative container mx-auto px-4 pt-8 md:pt-16">
           <div className="max-w-4xl mx-auto text-center">
-            {/* AI Badge */}
-            <div className="mb-3 md:mb-4">
-              <AIBadge variant="hero" />
-            </div>
-            
             <h1 className="text-lg md:text-3xl font-bold text-white mb-1.5 md:mb-3">
               خانه رویایی خود را با هوش مصنوعی پیدا کنید
             </h1>
             <p className="text-xs md:text-base text-white/90 mb-2 md:mb-4">
-              متصل به شهر GPT - پیشرفته‌ترین موتور جستجوی هوش مصنوعی املاک ایران
+              با شهر GPT، به زبان طبیعی جستجو کنید و بهترین املاک را پیدا کنید
             </p>
           </div>
         </div>

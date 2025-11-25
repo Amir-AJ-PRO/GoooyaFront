@@ -11,7 +11,7 @@ import {
   VerifyOTPResponse,
   RefreshTokenResponse
 } from '@/services/authApi';
-import { saveTokens } from '@/lib/tokenManager';
+import { saveTokens, saveUserData } from '@/lib/tokenManager';
 
 /**
  * Hook برای درخواست کد OTP
@@ -44,7 +44,9 @@ export const useVerifyOTP = () => {
     onSuccess: (data) => {
       // ذخیره توکن‌ها با استفاده از tokenManager
       saveTokens(data.access, data.refresh);
-      localStorage.setItem('user_data', JSON.stringify(data.user));
+      
+      // ذخیره اطلاعات کامل کاربر شامل agent_profile
+      saveUserData(data.user);
 
       const message = data.created 
         ? '🎉 حساب کاربری شما با موفقیت ایجاد شد'

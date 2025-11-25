@@ -134,7 +134,11 @@ interface PropertySubmissionFormProps {
 
 export default function PropertySubmissionForm({ onSuccess }: PropertySubmissionFormProps) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, backendUser } = useAuth();
+  
+  // استفاده از اطلاعات کاربر لاگین‌شده (اگر موجود باشد)
+  const userPhone = user?.phone || backendUser?.phone || '';
+  const userName = backendUser?.full_name || user?.name || '';
   
   const [currentStep, setCurrentStep] = useState(1); // 1 or 2
   const [formData, setFormData] = useState<PropertyFormData>({
@@ -152,8 +156,8 @@ export default function PropertySubmissionForm({ onSuccess }: PropertySubmission
     documentOwnership: '',
     documentType: '',
     introducerType: '',
-    ownerPhone: user?.phone || '',
-    ownerName: user?.name || '',
+    ownerPhone: userPhone,
+    ownerName: userName,
     introducerPhone: '',
     introducerName: '',
     description: '',
@@ -297,8 +301,8 @@ export default function PropertySubmissionForm({ onSuccess }: PropertySubmission
         documentOwnership: '',
         documentType: '',
         introducerType: '',
-        ownerPhone: user?.phone || '',
-        ownerName: user?.name || '',
+        ownerPhone: userPhone,
+        ownerName: userName,
         introducerPhone: '',
         introducerName: '',
         description: '',
@@ -625,7 +629,20 @@ export default function PropertySubmissionForm({ onSuccess }: PropertySubmission
 
       {/* اطلاعات مالک */}
       <Card>
-        <CardHeader><CardTitle>اطلاعات مالک</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>اطلاعات مالک</CardTitle>
+          {user && (
+            <CardDescription className="flex items-center gap-2 text-green-600">
+              <CheckCircle2 className="h-4 w-4" />
+              اطلاعات شما از پروفایل کاربری بارگذاری شده است
+            </CardDescription>
+          )}
+          {!user && (
+            <CardDescription className="text-amber-600">
+              برای تسهیل در ثبت آگهی، می‌توانید ابتدا وارد حساب کاربری خود شوید
+            </CardDescription>
+          )}
+        </CardHeader>
         <CardContent className="space-y-4">
           <div>
             <Label>طریقه معرفی *</Label>
@@ -640,13 +657,24 @@ export default function PropertySubmissionForm({ onSuccess }: PropertySubmission
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>نام مالک *</Label>
-              <Input value={formData.ownerName} onChange={(e) => handleInputChange('ownerName', e.target.value)} placeholder="نام و نام خانوادگی" className={errors.ownerName ? 'border-red-500' : ''} />
+              <Label>نام و نام خانوادگی مالک *</Label>
+              <Input 
+                value={formData.ownerName} 
+                onChange={(e) => handleInputChange('ownerName', e.target.value)} 
+                placeholder="نام و نام خانوادگی" 
+                className={errors.ownerName ? 'border-red-500' : ''}
+              />
               {errors.ownerName && <p className="text-xs text-red-500 mt-1">{errors.ownerName}</p>}
             </div>
             <div>
-              <Label>شماره مالک *</Label>
-              <Input type="tel" value={formData.ownerPhone} onChange={(e) => handleInputChange('ownerPhone', e.target.value)} placeholder="09123456789" className={errors.ownerPhone ? 'border-red-500' : ''} />
+              <Label>شماره تماس مالک *</Label>
+              <Input 
+                type="tel" 
+                value={formData.ownerPhone} 
+                onChange={(e) => handleInputChange('ownerPhone', e.target.value)} 
+                placeholder="09123456789" 
+                className={errors.ownerPhone ? 'border-red-500' : ''}
+              />
               {errors.ownerPhone && <p className="text-xs text-red-500 mt-1">{errors.ownerPhone}</p>}
             </div>
           </div>

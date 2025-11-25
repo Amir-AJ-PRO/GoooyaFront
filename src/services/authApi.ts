@@ -6,6 +6,21 @@ const API_BASE = API_BASE_URL;
 /**
  * Types برای API های احراز هویت
  */
+
+/**
+ * اطلاعات پروفایل Agent
+ */
+export interface AgentProfile {
+  id: number;
+  full_name: string;
+  is_verified: boolean;
+  is_goooya_adviser: boolean;
+  license_number?: string;
+  profile_image?: string;
+  office_name?: string;
+  city?: string;
+}
+
 export interface RequestOTPPayload {
   phone: string;
 }
@@ -29,7 +44,7 @@ export interface UserData {
   is_staff: boolean;
   is_agent: boolean;
   user_role: string;
-  agent_profile: any | null;
+  agent_profile?: AgentProfile | null;
 }
 
 export interface VerifyOTPResponse {
@@ -105,14 +120,20 @@ export const verifyOTP = async (payload: VerifyOTPPayload): Promise<VerifyOTPRes
 
 /**
  * رفرش کردن Access Token
+ * 
+ * توجه: این تابع مستقیماً فراخوانی نمی‌شود.
+ * از tokenRefreshManager برای رفرش امن استفاده کنید.
  */
 export const refreshToken = async (payload: RefreshTokenPayload): Promise<RefreshTokenResponse> => {
   const response = await fetch(`${API_BASE}/api/token/refresh/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
     },
     body: JSON.stringify(payload),
+    // تنظیم timeout
+    signal: AbortSignal.timeout(10000), // 10 seconds
   });
 
   const data = await response.json();
