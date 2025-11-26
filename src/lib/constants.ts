@@ -37,3 +37,11 @@ export const PAGINATION = {
   MAX_LIMIT: 100,
 } as const;
 
+export const BRAND_COLORS = {
+  PRIMARY: "#4ECDC4", // رنگ سبز-آبی لوگو
+  SECONDARY: "#4A5568", // رنگ خاکستری تیره لوگو
+  SUCCESS: "#4ECDC4",
+  WARNING: "#F6AD55",
+  ERROR: "#E53E3E",
+} as const;
+

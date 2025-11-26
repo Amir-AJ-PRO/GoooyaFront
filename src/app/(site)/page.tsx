@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import SearchBar from "@/components/common/SearchBar";
 import { ArrowLeft } from "lucide-react";
-import HomePageClient from "./HomePageClient";
+import FeaturedProperties from "@/components/home/FeaturedProperties";
 
 export const metadata: Metadata = {
   title: "گویا - پلتفرم املاک فارسی | خرید، فروش و اجاره ملک",
@@ -62,7 +62,7 @@ export default function Home() {
       </section>
 
       {/* Featured Properties */}
-      <HomePageClient />
+      <FeaturedProperties />
 
       {/* About Section Preview */}
       <section className="py-16 bg-secondary/30">

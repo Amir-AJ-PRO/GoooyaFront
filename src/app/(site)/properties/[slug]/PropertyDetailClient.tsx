@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { useProperty } from '@/hooks/usePropertyMutations';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useVisitTickets } from '@/hooks/useVisitTickets';
+import { useToast } from '@/hooks/use-toast';
+import { DuplicateVisitTicketError } from '@/types/property';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -44,6 +47,7 @@ import {
   CheckCircle,
   Sparkles
 } from 'lucide-react';
+import { FavoriteButtonLarge } from '@/components/favorites/FavoriteButton';
 import { API_BASE_URL } from '@/lib/constants';
 import Link from 'next/link';
 
@@ -67,8 +71,104 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
   const { data: property, isLoading, error } = useProperty(slug);
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
+  const { 
+    createVisitTicket, 
+    isCreating, 
+    createVisitTicketBySlug, 
+    isCreatingBySlug 
+  } = useVisitTickets();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showAgentPhoneDialog, setShowAgentPhoneDialog] = useState(false);
+
+  // هندل کردن درخواست بازدید (روش اول: با slug در body)
+  const handleVisitRequest = async () => {
+    if (!isAuthenticated) {
+      router.push(`/login?from=${encodeURIComponent(`/properties/${slug}`)}`);
+      return;
+    }
+
+
+    try {
+      const result = await createVisitTicket.mutateAsync({
+        property_slug: slug,
+      });
+
+      toast({
+        title: "درخواست بازدید ثبت شد",
+        description: result.message,
+        variant: "default",
+      });
+    } catch (error: any) {
+      // بررسی اینکه آیا خطای تیکت تکراری است
+      if (error.existing_ticket) {
+        const duplicateError = error as DuplicateVisitTicketError;
+        const existingDate = new Date(duplicateError.existing_ticket.created_at);
+        const formattedDate = existingDate.toLocaleDateString('fa-IR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        toast({
+          title: "درخواست تکراری",
+          description: `شما قبلاً در تاریخ ${formattedDate} برای این ملک درخواست بازدید ثبت کرده‌اید.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "خطا در ثبت درخواست",
+          description: error.message || "خطای نامشخص رخ داده است",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // هندل کردن درخواست بازدید (روش دوم: با slug در URL)
+  const handleVisitRequestBySlug = async () => {
+    if (!isAuthenticated) {
+      router.push(`/login?from=${encodeURIComponent(`/properties/${slug}`)}`);
+      return;
+    }
+
+    try {
+      const result = await createVisitTicketBySlug.mutateAsync(slug);
+
+      toast({
+        title: "درخواست بازدید ثبت شد",
+        description: result.message,
+        variant: "default",
+      });
+    } catch (error: any) {
+      // بررسی اینکه آیا خطای تیکت تکراری است
+      if (error.existing_ticket) {
+        const duplicateError = error as DuplicateVisitTicketError;
+        const existingDate = new Date(duplicateError.existing_ticket.created_at);
+        const formattedDate = existingDate.toLocaleDateString('fa-IR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        toast({
+          title: "درخواست تکراری",
+          description: `شما قبلاً در تاریخ ${formattedDate} برای این ملک درخواست بازدید ثبت کرده‌اید.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "خطا در ثبت درخواست",
+          description: error.message || "خطای نامشخص رخ داده است",
+          variant: "destructive",
+        });
+      }
+    }
+  };
   
   if (isLoading) {
     return (
@@ -568,9 +668,27 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                 تماس با مشاور
               </Button>
               
-              <Button variant="outline" className="w-full">
-                درخواست بازدید
-              </Button>
+              <div className="space-y-3">
+                <Button 
+                  variant="outline" 
+                  className="w-full gap-2" 
+                  onClick={handleVisitRequest}
+                  disabled={isCreating || isCreatingBySlug}
+                >
+                  {(isCreating || isCreatingBySlug) ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Calendar className="h-4 w-4" />
+                  )}
+                  {(isCreating || isCreatingBySlug) ? 'در حال ثبت...' : 'درخواست بازدید'}
+                </Button>
+                
+                <FavoriteButtonLarge
+                  propertyId={property.id}
+                  isFavorite={property.is_favorite}
+                  className="w-full"
+                />
+              </div>
             </CardContent>
           </Card>
           

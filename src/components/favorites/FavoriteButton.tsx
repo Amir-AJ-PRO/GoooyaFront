@@ -1,0 +1,143 @@
+'use client';
+
+import React from 'react';
+import { Heart, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToggleFavorite } from '@/hooks/useFavorites';
+import { cn } from '@/lib/utils';
+
+interface FavoriteButtonProps {
+  propertyId: number;
+  isFavorite: boolean;
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'default' | 'ghost' | 'outline';
+  className?: string;
+  showText?: boolean;
+  disabled?: boolean;
+}
+
+/**
+ * کامپوننت دکمه علاقه‌مندی (قلب)
+ * برای toggle کردن وضعیت علاقه‌مندی املاک
+ */
+export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
+  propertyId,
+  isFavorite,
+  size = 'md',
+  variant = 'ghost',
+  className,
+  showText = false,
+  disabled = false,
+}) => {
+  const toggleFavoriteMutation = useToggleFavorite();
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (disabled) return;
+    
+    toggleFavoriteMutation.mutate(propertyId);
+  };
+
+  const isLoading = toggleFavoriteMutation.isPending;
+
+  const sizeClasses = {
+    sm: 'h-8 w-8',
+    md: 'h-10 w-10',
+    lg: 'h-12 w-12',
+  };
+
+  const iconSizes = {
+    sm: 16,
+    md: 20,
+    lg: 24,
+  };
+
+  return (
+    <Button
+      variant={variant}
+      size="icon"
+      className={cn(
+        sizeClasses[size],
+        'relative transition-all duration-200 hover:scale-105',
+        isFavorite && variant === 'ghost' && 'text-red-500 hover:text-red-600',
+        !isFavorite && variant === 'ghost' && 'text-gray-400 hover:text-red-500',
+        className
+      )}
+      onClick={handleToggle}
+      disabled={disabled || isLoading}
+      title={isFavorite ? 'حذف از علاقه‌مندی‌ها' : 'اضافه به علاقه‌مندی‌ها'}
+    >
+      {isLoading ? (
+        <Loader2 
+          size={iconSizes[size]} 
+          className="animate-spin text-gray-400" 
+        />
+      ) : (
+        <Heart
+          size={iconSizes[size]}
+          className={cn(
+            'transition-all duration-200',
+            isFavorite ? 'fill-current text-red-500' : 'text-gray-400'
+          )}
+        />
+      )}
+      
+      {showText && (
+        <span className="mr-2 text-sm">
+          {isFavorite ? 'علاقه‌مند' : 'علاقه‌مندی'}
+        </span>
+      )}
+    </Button>
+  );
+};
+
+/**
+ * نسخه کوچک دکمه علاقه‌مندی برای استفاده در کارت‌های ملک
+ */
+export const FavoriteButtonSmall: React.FC<{
+  propertyId: number;
+  isFavorite: boolean;
+  className?: string;
+}> = ({ propertyId, isFavorite, className }) => {
+  return (
+    <FavoriteButton
+      propertyId={propertyId}
+      isFavorite={isFavorite}
+      size="sm"
+      variant="ghost"
+      className={cn(
+        'absolute top-2 left-2 z-10 bg-white/80 backdrop-blur-sm hover:bg-white/90',
+        'shadow-sm border border-gray-200/50',
+        className
+      )}
+    />
+  );
+};
+
+/**
+ * نسخه بزرگ دکمه علاقه‌مندی با متن برای صفحه جزئیات ملک
+ */
+export const FavoriteButtonLarge: React.FC<{
+  propertyId: number;
+  isFavorite: boolean;
+  className?: string;
+}> = ({ propertyId, isFavorite, className }) => {
+  return (
+    <FavoriteButton
+      propertyId={propertyId}
+      isFavorite={isFavorite}
+      size="lg"
+      variant="outline"
+      showText={true}
+      className={cn(
+        'px-6 py-3 h-auto w-auto',
+        isFavorite 
+          ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100' 
+          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
+        className
+      )}
+    />
+  );
+};

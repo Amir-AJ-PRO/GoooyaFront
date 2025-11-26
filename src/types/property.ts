@@ -33,14 +33,18 @@ export interface Property {
   id: number;
   title: string;
   slug: string;
-  address?: string;
+  
+  // فیلدهای محاسبه شده (Computed Fields)
+  address?: string | null; // محاسبه شده: "شهر، منطقه"
+  location_iframe?: string | null; // محاسبه شده: iframe از منطقه
+  
   measure: string | number;
   year_built?: number;
   floor?: string;
   rooms: number;
   document_type?: string;
   transaction_type: TransactionType;
-  price?: number;
+  price?: number | null;
   price_per_meter?: number;
   mortgage?: number;
   rent?: number;
@@ -55,12 +59,15 @@ export interface Property {
   description?: string;
   show_status: ShowStatus;
   
-  // Relations (می‌تواند ID، Object یا String باشد)
-  city: number | City | string;
-  location?: number | Location | string;
-  property_type: number | PropertyType | string;
-  agent?: number | AgentInfo;
+  // Relations
+  city: string; // نام شهر
+  location?: string; // نام منطقه
+  property_type: string; // نام نوع ملک
+  agent: AgentInfo; // اطلاعات کامل مشاور
   agent_image?: string; // URL تصویر agent (برای backward compatibility)
+  
+  // فیلد جدید برای وضعیت علاقه‌مندی
+  is_favorite: boolean;
   
   images: PropertyImage[];
   created_at: string;
@@ -100,22 +107,22 @@ export interface PropertyListItem {
 export interface AgentInfo {
   id: number;
   full_name: string;
-  phone: string;
-  profile_image?: string;
-  office_name?: string;
-  office_address?: string;
-  office_phone?: string;
-  city?: number;
-  city_name?: string;
-  region?: number;
-  region_name?: string;
-  years_of_experience?: number;
-  specialties?: string;
-  bio?: string;
-  website?: string;
-  instagram?: string;
-  is_verified?: boolean;
-  is_goooya_adviser?: boolean;
+  phone?: string | null;
+  profile_image?: string | null;
+  office_name?: string | null;
+  office_address?: string | null;
+  office_phone?: string | null;
+  city?: number | null;
+  city_name?: string | null;
+  region?: number | null;
+  region_name?: string | null;
+  years_of_experience: number; // پیش‌فرض: 0
+  specialties?: string | null;
+  bio?: string | null;
+  website?: string | null;
+  instagram?: string | null;
+  is_verified: boolean;
+  is_goooya_adviser: boolean;
 }
 
 /**

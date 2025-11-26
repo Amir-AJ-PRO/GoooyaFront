@@ -33,9 +33,9 @@ export default function AdviserTicketsPage() {
 
   const statusConfig = {
     pending: { label: 'در انتظار', color: 'bg-gray-500', icon: Clock },
-    assigned: { label: 'اختصاص یافته', color: 'bg-blue-500', icon: FileText },
+    assigned: { label: 'اختصاص یافته', color: 'bg-primary', icon: FileText },
     rejected: { label: 'رد شده', color: 'bg-red-500', icon: XCircle },
-    published: { label: 'منتشر شده', color: 'bg-purple-500', icon: CheckCircle },
+    published: { label: 'منتشر شده', color: 'bg-green-500', icon: CheckCircle },
   };
 
   const getStatusBadge = (status: string) => {
@@ -81,11 +81,11 @@ export default function AdviserTicketsPage() {
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8" dir="rtl">
         <div className="flex items-center gap-3 mb-3">
-          <div className="p-3 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl shadow-lg">
+          <div className="p-3 bg-gradient-to-br from-primary to-primary/80 rounded-2xl shadow-lg">
             <FileText className="h-7 w-7 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
               تیکت‌های ثبت ملک
             </h1>
             <p className="text-muted-foreground mt-1">

@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useProperties } from '@/hooks/usePropertyMutations';
+import { useSearchProperties } from '@/hooks/useSearch';
+import { useCities } from '@/hooks/useCities';
 import PropertyCard from '@/components/cards/PropertyCard';
 import Pagination from '@/components/common/Pagination';
 import { Button } from '@/components/ui/button';
@@ -15,32 +18,203 @@ import {
 import { Input } from '@/components/ui/input';
 import { Loader2, Search, Building2, SlidersHorizontal, X, Sparkles } from 'lucide-react';
 import { PropertyListItem } from '@/types/property';
+import { SearchParams } from '@/types/search';
 
 export default function PropertiesPageClient() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(12); // پیش‌فرض 12 برای نمایش بهتر
-  const { data: propertiesData, isLoading, error } = useProperties(page, pageSize);
+  const [pageSize, setPageSize] = useState(12);
   
+  // پارامترهای جستجوی پیشرفته از URL
+  const [advancedSearchParams, setAdvancedSearchParams] = useState<SearchParams>({});
+  const [useAdvancedSearch, setUseAdvancedSearch] = useState(false);
+  
+  // فیلترهای محلی (برای نمایش)
   const [searchTerm, setSearchTerm] = useState('');
+  const [cityFilter, setCityFilter] = useState<string>('all');
   const [transactionFilter, setTransactionFilter] = useState<string>('all');
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('newest');
   const [showFilters, setShowFilters] = useState(true);
   
+  // دریافت شهرها
+  const { data: cities = [], isLoading: citiesLoading } = useCities();
+  
+  // استخراج پارامترهای جستجو از URL
+  useEffect(() => {
+    const params: SearchParams = {};
+    let hasAdvancedParams = false;
+    
+    const q = searchParams.get('q');
+    if (q) {
+      params.q = q;
+      setSearchTerm(q);
+      hasAdvancedParams = true;
+    }
+    
+    const city = searchParams.get('city');
+    if (city) {
+      params.city = parseInt(city);
+      setCityFilter(city);
+      hasAdvancedParams = true;
+    }
+    
+    const location = searchParams.get('location');
+    if (location) {
+      params.location = parseInt(location);
+      hasAdvancedParams = true;
+    }
+    
+    const propertyType = searchParams.get('property_type');
+    if (propertyType) {
+      params.property_type = parseInt(propertyType);
+      setPropertyTypeFilter(propertyType);
+      hasAdvancedParams = true;
+    }
+    
+    const transactionType = searchParams.get('transaction_type');
+    if (transactionType && (transactionType === 'sale' || transactionType === 'rent')) {
+      params.transaction_type = transactionType;
+      setTransactionFilter(transactionType);
+      hasAdvancedParams = true;
+    }
+    
+    const minPrice = searchParams.get('min_price');
+    if (minPrice) {
+      params.min_price = parseInt(minPrice);
+      hasAdvancedParams = true;
+    }
+    
+    const maxPrice = searchParams.get('max_price');
+    if (maxPrice) {
+      params.max_price = parseInt(maxPrice);
+      hasAdvancedParams = true;
+    }
+    
+    // سایر پارامترهای پیشرفته
+    const minMeasure = searchParams.get('min_measure');
+    if (minMeasure) {
+      params.min_measure = parseFloat(minMeasure);
+      hasAdvancedParams = true;
+    }
+    
+    const maxMeasure = searchParams.get('max_measure');
+    if (maxMeasure) {
+      params.max_measure = parseFloat(maxMeasure);
+      hasAdvancedParams = true;
+    }
+    
+    const rooms = searchParams.get('rooms');
+    if (rooms) {
+      params.rooms = parseInt(rooms);
+      hasAdvancedParams = true;
+    }
+    
+    // Boolean parameters
+    const booleanParams = [
+      'has_parking', 'has_storage', 'has_elevator', 'has_balcony',
+      'has_pool', 'has_security', 'urgent', 'under_price', 'exchange'
+    ];
+    
+    booleanParams.forEach(param => {
+      const value = searchParams.get(param);
+      if (value === 'true') {
+        params[param as keyof SearchParams] = true;
+        hasAdvancedParams = true;
+      }
+    });
+    
+    // Pagination
+    const pageParam = searchParams.get('page');
+    if (pageParam) {
+      params.page = parseInt(pageParam);
+      setPage(parseInt(pageParam));
+    }
+    
+    const pageSizeParam = searchParams.get('page_size');
+    if (pageSizeParam) {
+      params.page_size = parseInt(pageSizeParam);
+      setPageSize(parseInt(pageSizeParam));
+    }
+    
+    const sortByParam = searchParams.get('sort_by');
+    if (sortByParam) {
+      params.sort_by = sortByParam as SearchParams['sort_by'];
+    }
+    
+    setAdvancedSearchParams(params);
+    setUseAdvancedSearch(hasAdvancedParams);
+  }, [searchParams]);
+  
+  // استفاده از API مناسب بر اساس نوع جستجو
+  const { data: propertiesData, isLoading: propertiesLoading, error: propertiesError } = useProperties(page, pageSize, {
+    enabled: !useAdvancedSearch
+  });
+  
+  const { data: searchData, isLoading: searchLoading, error: searchError } = useSearchProperties(advancedSearchParams, {
+    enabled: useAdvancedSearch
+  });
+  
+  // انتخاب داده‌های مناسب
+  const isLoading = useAdvancedSearch ? searchLoading : propertiesLoading;
+  const error = useAdvancedSearch ? searchError : propertiesError;
+  const data = useAdvancedSearch ? searchData : propertiesData;
+  
   // Reset به صفحه اول هنگام تغییر فیلترها
   useEffect(() => {
+    if (!useAdvancedSearch) {
     setPage(1);
-  }, [searchTerm, transactionFilter, propertyTypeFilter]);
+    }
+  }, [searchTerm, cityFilter, transactionFilter, propertyTypeFilter, useAdvancedSearch]);
+  
+  // تابع اعمال فیلترهای محلی
+  const applyLocalFilters = () => {
+    const params = new URLSearchParams();
+    
+    if (searchTerm.trim()) {
+      params.set('q', searchTerm.trim());
+    }
+    
+    if (cityFilter !== 'all') {
+      params.set('city', cityFilter);
+    }
+    
+    if (transactionFilter !== 'all') {
+      params.set('transaction_type', transactionFilter);
+    }
+    
+    if (propertyTypeFilter !== 'all') {
+      params.set('property_type', propertyTypeFilter);
+    }
+    
+    // مرتب‌سازی
+    if (sortBy !== 'newest') {
+      const sortMap: Record<string, string> = {
+        'oldest': 'created_at',
+        'price-high': '-price',
+        'price-low': 'price'
+      };
+      if (sortMap[sortBy]) {
+        params.set('sort_by', sortMap[sortBy]);
+      }
+    }
+    
+    params.set('page', '1');
+    params.set('page_size', pageSize.toString());
+    
+    const newUrl = params.toString() ? `/properties?${params.toString()}` : '/properties';
+    router.push(newUrl);
+  };
   
   // اطمینان از اینکه properties یک آرایه است
-  const propertiesArray: PropertyListItem[] = propertiesData?.results || [];
+  const propertiesArray: PropertyListItem[] = data?.results || [];
   
-  // فیلتر و مرتب‌سازی املاک (فیلترها در client-side اعمال می‌شوند)
-  // توجه: فیلترها فقط برای نمایش استفاده می‌شوند، pagination بر اساس API است
-  const filteredProperties = propertiesArray
+  // فیلتر و مرتب‌سازی املاک (فقط برای حالت عادی)
+  const filteredProperties = useAdvancedSearch ? propertiesArray : propertiesArray
     .filter((property: PropertyListItem) => {
       // اگر فیلتری فعال نیست، همه را نمایش بده
-      if (!searchTerm && transactionFilter === 'all' && propertyTypeFilter === 'all') {
+      if (!searchTerm && cityFilter === 'all' && transactionFilter === 'all' && propertyTypeFilter === 'all') {
         return true;
       }
       
@@ -53,6 +227,12 @@ export default function PropertiesPageClient() {
                            cityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            locationName.toLowerCase().includes(searchTerm.toLowerCase());
       
+      // فیلتر شهر
+      const propertyCityId = typeof property.city === 'object' && property.city?.id 
+        ? property.city.id.toString() 
+        : '';
+      const matchesCity = cityFilter === 'all' || propertyCityId === cityFilter;
+      
       // فیلتر نوع معامله
       const matchesTransaction = transactionFilter === 'all' || 
                                  property.transaction_type === transactionFilter;
@@ -63,7 +243,7 @@ export default function PropertiesPageClient() {
         : '';
       const matchesType = propertyTypeFilter === 'all' || propertyTypeId === propertyTypeFilter;
       
-      return matchesSearch && matchesTransaction && matchesType;
+      return matchesSearch && matchesCity && matchesTransaction && matchesType;
     })
     .sort((a: PropertyListItem, b: PropertyListItem) => {
       switch (sortBy) {
@@ -80,8 +260,7 @@ export default function PropertiesPageClient() {
       }
     });
   
-  // استخراج انواع املاک یکتا (از تمام صفحات)
-  // برای این کار باید تمام املاک را داشته باشیم، اما فعلاً از همان صفحه فعلی استفاده می‌کنیم
+  // استخراج انواع املاک یکتا
   const uniquePropertyTypes = Array.from(
     new Set(
       propertiesArray
@@ -91,12 +270,12 @@ export default function PropertiesPageClient() {
   ).map((str: string) => JSON.parse(str));
   
   // اطلاعات pagination
-  const paginationInfo = propertiesData ? {
-    currentPage: propertiesData.page,
-    totalPages: propertiesData.total_pages,
-    totalCount: propertiesData.count,
-    pageSize: propertiesData.page_size,
-    resultsCount: propertiesData.results.length
+  const paginationInfo = data ? {
+    currentPage: data.page,
+    totalPages: data.total_pages,
+    totalCount: data.count,
+    pageSize: data.page_size,
+    resultsCount: data.results.length
   } : null;
   
   if (error) {
@@ -112,6 +291,7 @@ export default function PropertiesPageClient() {
   // تعداد فیلترهای فعال
   const activeFiltersCount = [
     searchTerm && 1,
+    cityFilter !== 'all' && 1,
     transactionFilter !== 'all' && 1,
     propertyTypeFilter !== 'all' && 1,
     sortBy !== 'newest' && 1
@@ -138,6 +318,11 @@ export default function PropertiesPageClient() {
                   <Sparkles className="h-4 w-4 text-primary" />
                   <span className="font-semibold text-primary">{paginationInfo.totalCount}</span>
                   <span>ملک موجود</span>
+                  {useAdvancedSearch && (
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                      جستجوی پیشرفته
+                    </span>
+                  )}
                   {paginationInfo.totalPages > 1 && (
                     <>
                       <span className="mx-2">•</span>
@@ -177,7 +362,9 @@ export default function PropertiesPageClient() {
           </Button>
         </div>
         
-        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 transition-all duration-300 ${showFilters ? 'block' : 'hidden md:grid'}`}>
+        <div className={`space-y-4 transition-all duration-300 ${showFilters ? 'block' : 'hidden md:block'}`}>
+          {/* ردیف اول فیلترها */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* جستجو */}
           <div className="relative md:col-span-2 lg:col-span-1">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
@@ -196,6 +383,25 @@ export default function PropertiesPageClient() {
               </button>
             )}
           </div>
+            
+            {/* شهر */}
+            <Select value={cityFilter} onValueChange={setCityFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="شهر" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">همه شهرها</SelectItem>
+                {citiesLoading ? (
+                  <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
+                ) : (
+                  cities.map((city) => (
+                    <SelectItem key={city.id} value={city.id.toString()}>
+                      {city.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
           
           {/* نوع معامله */}
           <Select value={transactionFilter} onValueChange={setTransactionFilter}>
@@ -223,7 +429,10 @@ export default function PropertiesPageClient() {
               ))}
             </SelectContent>
           </Select>
+          </div>
           
+          {/* ردیف دوم فیلترها */}
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {/* مرتب‌سازی */}
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger>
@@ -242,7 +451,7 @@ export default function PropertiesPageClient() {
             value={pageSize.toString()} 
             onValueChange={(value) => {
               setPageSize(Number(value));
-              setPage(1); // Reset به صفحه اول
+                setPage(1);
             }}
           >
             <SelectTrigger>
@@ -255,6 +464,24 @@ export default function PropertiesPageClient() {
               <SelectItem value="50">50 ملک</SelectItem>
             </SelectContent>
           </Select>
+            
+            {/* دکمه اعمال فیلترها */}
+            <Button 
+              onClick={applyLocalFilters}
+              className="bg-primary hover:bg-primary-hover text-white"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Search className="h-4 w-4 mr-2" />
+              )}
+              اعمال فیلترها
+            </Button>
+            
+            {/* فضای خالی برای تراز */}
+            <div className="hidden lg:block"></div>
+          </div>
         </div>
         
         {/* دکمه پاک کردن فیلترها */}
@@ -265,9 +492,12 @@ export default function PropertiesPageClient() {
               size="sm"
               onClick={() => {
                 setSearchTerm('');
+                setCityFilter('all');
                 setTransactionFilter('all');
                 setPropertyTypeFilter('all');
                 setSortBy('newest');
+                // پاک کردن URL params
+                router.push('/properties');
               }}
               className="gap-2"
             >
@@ -303,9 +533,11 @@ export default function PropertiesPageClient() {
               variant="outline"
               onClick={() => {
                 setSearchTerm('');
+                setCityFilter('all');
                 setTransactionFilter('all');
                 setPropertyTypeFilter('all');
                 setSortBy('newest');
+                router.push('/properties');
               }}
               className="gap-2"
             >
@@ -343,15 +575,21 @@ export default function PropertiesPageClient() {
             ))}
           </div>
           
-          {/* Pagination - نمایش بر اساس API */}
+          {/* Pagination */}
           {paginationInfo && (
             <div className="mt-8">
               <Pagination
                 currentPage={paginationInfo.currentPage}
                 totalPages={paginationInfo.totalPages}
                 onPageChange={(newPage) => {
+                  if (useAdvancedSearch) {
+                    // برای جستجوی پیشرفته، URL را بروزرسانی کن
+                    const newParams = new URLSearchParams(window.location.search);
+                    newParams.set('page', newPage.toString());
+                    router.push(`/properties?${newParams.toString()}`);
+                  } else {
                   setPage(newPage);
-                  // Scroll به بالا هنگام تغییر صفحه
+                  }
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
               />
@@ -362,4 +600,3 @@ export default function PropertiesPageClient() {
     </div>
   );
 }
-

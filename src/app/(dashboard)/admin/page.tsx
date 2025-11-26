@@ -86,8 +86,8 @@ export default function AdminPage() {
 
       {/* کارت تیکت‌ها - بزرگ و برجسته برای مشاور گویا */}
       {isGooyaAdviser && (
-        <Card className="mb-8 border-0 shadow-xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 text-white overflow-hidden relative group hover:shadow-2xl transition-all duration-300" dir="rtl">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <Card className="mb-8 border-0 shadow-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-white overflow-hidden relative group hover:shadow-2xl transition-all duration-300" dir="rtl">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <CardContent className="pt-8 pb-8 relative z-10">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div className="flex-1">
@@ -99,16 +99,16 @@ export default function AdminPage() {
                     <h2 className="text-3xl font-bold mb-1 flex items-center gap-2">
                       تیکت‌های ثبت ملک
                       {ticketsCount !== undefined && ticketsCount > 0 && (
-                        <Badge className="bg-white text-blue-600 text-lg px-4 py-1 shadow-lg">
+                        <Badge className="bg-white text-primary text-lg px-4 py-1 shadow-lg">
                           {ticketsCount} جدید
                         </Badge>
                       )}
                     </h2>
-                    <p className="text-blue-100">مدیریت و بررسی درخواست‌های ثبت ملک کاربران</p>
+                    <p className="text-white/80">مدیریت و بررسی درخواست‌های ثبت ملک کاربران</p>
                   </div>
                 </div>
                 {ticketsCount !== undefined && ticketsCount > 0 && (
-                  <div className="flex items-center gap-2 text-blue-100">
+                  <div className="flex items-center gap-2 text-white/80">
                     <Clock className="h-4 w-4" />
                     <span className="text-sm">در انتظار بررسی شما</span>
                   </div>
@@ -117,7 +117,7 @@ export default function AdminPage() {
               <Link href="/admin/tickets">
                 <Button 
                   size="lg" 
-                  className="bg-white text-blue-600 hover:bg-blue-50 shadow-xl gap-2 px-8 py-6 text-lg font-bold group-hover:scale-105 transition-transform duration-300"
+                  className="bg-white text-primary hover:bg-gray-50 shadow-xl gap-2 px-8 py-6 text-lg font-bold group-hover:scale-105 transition-transform duration-300"
                 >
                   <FileText className="h-5 w-5" />
                   مشاهده تیکت‌ها

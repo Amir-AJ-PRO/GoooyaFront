@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Home, Search, Info, User, Menu, MapPin, Building, LogOut, MessageCircle, Wrench, Settings, UserCircle, Plus, FileText, Briefcase } from "lucide-react";
+import { Home, Search, Info, User, Menu, MapPin, Building, LogOut, MessageCircle, Wrench, Settings, UserCircle, Plus, FileText, Briefcase, BookOpen, Heart } from "lucide-react";
 import { useState, memo, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginModal from "@/components/LoginModal";
@@ -39,6 +39,7 @@ const Header = memo(() => {
   const navItems = [
     { name: "صفحه اصلی", path: "/", icon: Home },
     { name: "املاک", path: "/properties", icon: Search },
+    { name: "مقالات", path: "/blog", icon: BookOpen },
     { name: "خدمات مهندسی", path: "/engineering", icon: Wrench },
     { name: "پشتیبانی", path: "/support", icon: MessageCircle },
     { name: "درباره ما", path: "/about", icon: Info },
@@ -51,21 +52,25 @@ const Header = memo(() => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Home className="h-6 w-6" />
+            <div className="h-10 w-10">
+              <img 
+                src="/logo-gooya.svg" 
+                alt="گویا" 
+                className="h-full w-full object-contain"
+              />
             </div>
             <span className="text-2xl font-bold text-foreground">گویا</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-2">
+          <nav className="hidden lg:flex items-center gap-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
                 <Link key={item.path} href={item.path} className="relative" prefetch={true}>
                   <Button
                     variant={isActive(item.path) ? "default" : "ghost"}
-                    className="gap-2"
+                    className="gap-2 text-sm px-3"
                   >
                     <Icon className="h-4 w-4" />
                     {item.name}
@@ -79,11 +84,12 @@ const Header = memo(() => {
             {/* دکمه تیکت‌ها - فقط برای مشاور گویا */}
             {isGooyaAdviser && (
               <Link href="/admin/tickets">
-                <Button variant="default" className="gap-2 hidden md:flex bg-blue-600 hover:bg-blue-700">
+                <Button variant="default" className="gap-2 hidden lg:flex bg-primary hover:bg-primary/90 text-sm px-3">
                   <FileText className="h-4 w-4" />
-                  تیکت‌های ثبت ملک
+                  <span className="hidden xl:inline">تیکت‌های ثبت ملک</span>
+                  <span className="xl:hidden">تیکت‌ها</span>
                   {ticketsCount !== undefined && ticketsCount > 0 && (
-                    <Badge className="mr-1 bg-white text-blue-600">
+                    <Badge className="mr-1 bg-white text-primary">
                       {ticketsCount}
                     </Badge>
                   )}
@@ -94,27 +100,28 @@ const Header = memo(() => {
             {/* دکمه ثبت ملک - برای همه کاربران */}
             {(!user || user.type === 'user') && (
               <Button 
-                className="gap-2 hidden md:flex"
+                className="gap-2 hidden lg:flex text-sm px-3"
                 onClick={() => setSubmitPropertyModalOpen(true)}
               >
                 <Plus className="h-4 w-4" />
-                درخواست ثبت آگهی
+                <span className="hidden xl:inline">درخواست ثبت آگهی</span>
+                <span className="xl:hidden">ثبت آگهی</span>
               </Button>
             )}
 
             {user ? (
               <>
                 {/* Desktop User Menu */}
-                <div className="hidden md:block">
+                <div className="hidden lg:block">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="gap-2">
+                      <Button variant="outline" className="gap-2 text-sm px-3">
                         <Avatar className="h-6 w-6">
                           <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                             {user.phone ? user.phone.slice(-2) : (user.name ? user.name.charAt(0) : 'U')}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="max-w-[100px] truncate">
+                        <span className="max-w-[80px] xl:max-w-[100px] truncate">
                           {user.name || user.phone || 'کاربر'}
                         </span>
                       </Button>
@@ -139,6 +146,15 @@ const Header = memo(() => {
                           <span>پنل کاربری</span>
                         </Link>
                       </DropdownMenuItem>
+                      {/* لینک علاقه‌مندی‌ها - برای کاربران عادی */}
+                      {user.type !== 'admin' && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/user/favorites" className="cursor-pointer">
+                            <Heart className="ml-2 h-4 w-4" />
+                            <span>علاقه‌مندی‌ها</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       {/* منوی تیکت‌ها - فقط برای مشاور گویا */}
                       {isGooyaAdviser && (
                         <DropdownMenuItem asChild>
@@ -146,7 +162,7 @@ const Header = memo(() => {
                             <FileText className="ml-2 h-4 w-4" />
                             <span>تیکت‌های ثبت ملک</span>
                             {ticketsCount !== undefined && ticketsCount > 0 && (
-                              <Badge className="mr-auto bg-blue-600 text-white">
+                              <Badge className="mr-auto bg-primary text-white">
                                 {ticketsCount}
                               </Badge>
                             )}
@@ -180,18 +196,19 @@ const Header = memo(() => {
             ) : (
               <Button 
                 variant="outline" 
-                className="gap-2 hidden md:flex"
+                className="gap-2 hidden lg:flex text-sm px-3"
                 onClick={() => setLoginModalOpen(true)}
               >
                 <User className="h-4 w-4" />
-                ورود / ثبت نام
+                <span className="hidden xl:inline">ورود / ثبت نام</span>
+                <span className="xl:hidden">ورود</span>
               </Button>
             )}
             
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="lg:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <Menu className="h-5 w-5" />
@@ -201,15 +218,15 @@ const Header = memo(() => {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <nav className="md:hidden border-t border-border py-4 space-y-2">
+          <nav className="lg:hidden border-t border-border py-4 space-y-2">
             {/* دکمه تیکت‌ها - فقط برای مشاور گویا */}
             {isGooyaAdviser && (
               <Link href="/admin/tickets" onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full justify-start gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                <Button className="w-full justify-start gap-2 bg-primary hover:bg-primary/90 text-white">
                   <FileText className="h-4 w-4" />
                   تیکت‌های ثبت ملک
                   {ticketsCount !== undefined && ticketsCount > 0 && (
-                    <Badge className="mr-auto bg-white text-blue-600">
+                    <Badge className="mr-auto bg-white text-primary">
                       {ticketsCount}
                     </Badge>
                   )}

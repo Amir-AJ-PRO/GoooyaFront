@@ -5,9 +5,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PropertyListItem } from "@/types/property";
 import { API_BASE_URL } from "@/lib/constants";
+import { FavoriteButtonSmall } from "@/components/favorites/FavoriteButton";
 
 interface PropertyCardProps {
   property: PropertyListItem;
+  showFavoriteButton?: boolean;
 }
 
 // فرمت قیمت به تومان
@@ -22,7 +24,7 @@ const formatPrice = (price?: number): string => {
   return price.toLocaleString('fa-IR');
 };
 
-export default function PropertyCard({ property }: PropertyCardProps) {
+export default function PropertyCard({ property, showFavoriteButton = true }: PropertyCardProps) {
   // چک کردن وجود property
   if (!property) {
     return null;
@@ -77,6 +79,14 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           >
             {property.transaction_type === 'sale' ? '💰 فروش' : '🏠 اجاره'}
           </Badge>
+          
+          {/* دکمه علاقه‌مندی */}
+          {showFavoriteButton && (
+            <FavoriteButtonSmall
+              propertyId={property.id}
+              isFavorite={Boolean((property as any).is_favorite)}
+            />
+          )}
           
           {/* تعداد تصاویر */}
           {property.images && property.images.length > 1 && (

@@ -9,10 +9,17 @@ import { Button } from '@/components/ui/button';
 
 /**
  * کامپوننت نمایش املاک ویژه در صفحه اصلی
- * حداکثر 6 ملک نمایش داده می‌شود
+ * فقط املاک واقعی از API نمایش داده می‌شود
  */
 export default function FeaturedProperties() {
   const { data: properties, isLoading, error } = useHomepageProperties();
+  
+  console.log('🏠 FeaturedProperties - داده‌های دریافتی:', {
+    isLoading,
+    error: error?.message,
+    propertiesCount: properties?.length || 0,
+    properties: properties
+  });
 
   return (
     <section className="py-16 bg-gradient-to-b from-white to-gray-50">
@@ -38,7 +45,7 @@ export default function FeaturedProperties() {
             <p className="text-gray-600 text-lg">در حال بارگذاری املاک...</p>
           </div>
         ) : error ? (
-          // حالت خطا
+          // حالت خطا - نمایش پیام خطا
           <Card className="p-8 text-center border-2 border-red-200 bg-red-50">
             <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-red-800 mb-2">خطا در بارگذاری املاک</h3>
@@ -54,7 +61,7 @@ export default function FeaturedProperties() {
             </Button>
           </Card>
         ) : properties && properties.length > 0 ? (
-          // نمایش املاک
+          // نمایش املاک واقعی از API
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {properties.map((property) => (
@@ -76,7 +83,7 @@ export default function FeaturedProperties() {
             </div>
           </>
         ) : (
-          // حالت خالی
+          // حالت خالی - هیچ ملکی موجود نیست
           <Card className="p-12 text-center border-2 border-dashed">
             <Home className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-700 mb-2">هنوز ملکی ثبت نشده</h3>

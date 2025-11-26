@@ -296,48 +296,63 @@ export const getProperties = async (
 /**
  * دریافت جزئیات یک ملک با slug
  * 
- * این endpoint نیاز به احراز هویت دارد و برای هر بازدید، یک تیکت بازدید ثبت می‌شود.
+ * مطابق داکیومنت: GET /api/properties/<slug>/
+ * این endpoint برای کاربران غیراحراز هویت شده نیز قابل دسترسی است و تیکت بازدید ثبت نمی‌کند.
  * 
  * @param slug - اسلاگ یکتای ملک (مثال: apartment-120-meter-region-1)
- * @returns جزئیات کامل ملک
- * @throws Error در صورت خطا (404: ملک یافت نشد، 401: نیاز به احراز هویت)
+ * @returns جزئیات کامل ملک شامل فیلدهای محاسبه شده
+ * @throws Error در صورت خطا (404: ملک یافت نشد یا وضعیت نمایش آن ok نیست)
  */
 export const getPropertyBySlug = async (slug: string): Promise<Property> => {
   try {
     console.log('📥 در حال دریافت جزئیات ملک:', slug);
     
-    const response = await apiClient.get<Property>(`/api/properties/${slug}/`);
-    
-    console.log('✅ دریافت جزئیات ملک موفق:', {
-      id: response.data.id,
-      title: response.data.title,
-      agent: response.data.agent ? 'دارد' : 'ندارد'
+    // استفاده مستقیم از fetch برای دسترسی عمومی (بدون نیاز به احراز هویت)
+    const response = await fetch(`${API_BASE_URL}/api/properties/${slug}/`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // کش کردن برای بهبود عملکرد
+      next: { revalidate: 300 }, // 5 دقیقه
     });
     
-    return response.data;
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('ملک یافت نشد یا وضعیت نمایش آن مناسب نیست');
+      }
+      
+      const errorText = await response.text();
+      console.error('❌ خطا در دریافت جزئیات ملک:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
+      
+      throw new Error('خطا در دریافت جزئیات ملک');
+    }
+    
+    const propertyData: Property = await response.json();
+    
+    console.log('✅ دریافت جزئیات ملک موفق:', {
+      id: propertyData.id,
+      title: propertyData.title,
+      slug: propertyData.slug,
+      agent: propertyData.agent?.full_name || 'نامشخص',
+      address: propertyData.address,
+      location_iframe: propertyData.location_iframe ? 'دارد' : 'ندارد',
+      is_favorite: propertyData.is_favorite
+    });
+    
+    return propertyData;
   } catch (error: any) {
     console.error('❌ خطا در دریافت جزئیات ملک:', {
       slug,
-      status: error.response?.status,
-      message: error.response?.data || error.message
+      message: error.message
     });
     
-    // مدیریت خطاهای مختلف
-    if (error.response?.status === 404) {
-      throw new Error('ملک مورد نظر یافت نشد یا در حال حاضر قابل نمایش نیست');
-    }
-    
-    if (error.response?.status === 401) {
-      throw new Error('برای مشاهده جزئیات ملک، لطفاً وارد شوید');
-    }
-    
-    // خطاهای دیگر
-    const errorMessage = error.response?.data?.detail || 
-                        error.response?.data?.message || 
-                        error.message || 
-                        'خطا در دریافت جزئیات ملک';
-    
-    throw new Error(errorMessage);
+    // ارسال خطای مناسب
+    throw error;
   }
 };
 
