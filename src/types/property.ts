@@ -29,6 +29,11 @@ export interface Location {
   city_name: string;
 }
 
+// فیلترهای کلی برای سرویس قدیمی املاک
+export interface PropertyFilters {
+  [key: string]: string | number | boolean | undefined;
+}
+
 export interface Property {
   id: number;
   title: string;
@@ -72,6 +77,12 @@ export interface Property {
   images: PropertyImage[];
   created_at: string;
   updated_at: string;
+}
+
+// پاسخ کلی سرویس قدیمی املاک
+export interface PropertyResponse {
+  success: boolean;
+  data: Property[];
 }
 
 export interface PropertyListItem {
@@ -187,4 +198,30 @@ export interface PropertyFormStep3 {
   has_parking: boolean;
   has_storage: boolean;
   has_elevator: boolean;
+}
+
+/**
+ * Payload برای ایجاد تیکت بازدید ملک
+ */
+export interface CreateVisitTicketPayload {
+  property_slug: string;
+}
+
+/**
+ * پاسخ موفق برای ایجاد تیکت بازدید
+ */
+export interface CreateVisitTicketResponse {
+  message: string;
+  [key: string]: any;
+}
+
+/**
+ * خطای اختصاصی برای زمانی که کاربر قبلاً تیکت بازدید برای یک ملک ثبت کرده است
+ */
+export interface DuplicateVisitTicketError {
+  error: string;
+  existing_ticket: {
+    created_at: string;
+    [key: string]: any;
+  };
 }

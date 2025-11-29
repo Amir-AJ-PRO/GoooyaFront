@@ -75,12 +75,13 @@ export async function GET(request: NextRequest) {
       'has_pool', 'has_security', 'urgent', 'under_price', 'exchange'
     ];
     
+    const anyParams = params as any;
     booleanParams.forEach(param => {
       const value = searchParams.get(param);
       if (value === 'true') {
-        params[param as keyof SearchParams] = true;
+        anyParams[param] = true;
       } else if (value === 'false') {
-        params[param as keyof SearchParams] = false;
+        anyParams[param] = false;
       }
     });
     

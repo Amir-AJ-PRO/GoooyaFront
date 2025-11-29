@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 type RouteContext = {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 };
 
 /**
@@ -13,7 +13,7 @@ export async function POST(
   context: RouteContext
 ) {
   try {
-    const { slug } = context.params;
+    const { slug } = await context.params;
     const body = await request.json();
     
     const { name, email, body: commentBody } = body;

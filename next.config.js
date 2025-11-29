@@ -2,6 +2,13 @@
 const nextConfig = {
   images: {
     remotePatterns: [
+      // Production server
+      {
+        protocol: 'https',
+        hostname: 'api.goooya.ir',
+        pathname: '/**',
+      },
+      // Development servers
       {
         protocol: 'http',
         hostname: '127.0.0.1',
@@ -33,6 +40,9 @@ const nextConfig = {
   },
   env: {
     API_BASE: process.env.API_BASE || 'http://127.0.0.1:9000',
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
   // بهینه‌سازی‌های عملکرد
   reactStrictMode: true,

@@ -91,7 +91,7 @@ export default function AgentProfileSettings() {
   }, [profile, locations, selectedRegionId]);
 
   // Handle تغییرات فرم
-  const handleChange = (field: keyof UpdateAgentProfilePayload, value: string | number) => {
+  const handleChange = (field: keyof UpdateAgentProfilePayload, value: string | number | undefined) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,

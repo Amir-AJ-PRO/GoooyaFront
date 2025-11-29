@@ -111,7 +111,7 @@ export default function TicketDetailPage() {
       </div>
     );
   }
-  
+
   // عدم دسترسی
   if (!isGooyaAdviser) {
     return (
@@ -138,6 +138,8 @@ export default function TicketDetailPage() {
       </div>
     );
   }
+
+  const mainImage = ticket.images?.find(img => img.is_main);
 
   const canReview = ticket.status === 'assigned' || ticket.status === 'reviewing';
 
@@ -187,7 +189,7 @@ export default function TicketDetailPage() {
           </CardHeader>
           <CardContent className="pt-8 pb-8">
             {/* تصویر اصلی - بزرگ */}
-            {ticket.images.find(img => img.is_main) && (
+            {mainImage && (
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
                   <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
@@ -195,7 +197,7 @@ export default function TicketDetailPage() {
                 </div>
                 <div className="relative w-full h-[500px] rounded-2xl overflow-hidden shadow-2xl group">
                   <Image
-                    src={getMediaUrl(ticket.images.find(img => img.is_main)!.image)}
+                    src={getMediaUrl(mainImage.image)}
                     alt="تصویر اصلی ملک"
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"

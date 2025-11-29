@@ -5,7 +5,7 @@
 export const APP_NAME = "گویا";
 export const APP_DESCRIPTION = "پلتفرم املاک فارسی";
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://10.188.103.122:8000";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.goooya.ir";
 
 export const PHONE_REGEX = /^09\d{9}$/;
 export const OTP_LENGTH = 6;

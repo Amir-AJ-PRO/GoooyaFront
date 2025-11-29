@@ -43,34 +43,40 @@ export default function UserDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
-          const CardWrapper = stat.href ? Link : 'div';
-          const cardProps = stat.href ? { href: stat.href } : {};
-          
-          return (
-            <CardWrapper key={index} {...cardProps}>
-              <Card className={stat.href ? "hover:shadow-lg transition-shadow cursor-pointer" : ""}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </CardTitle>
-                  <Icon className={`h-4 w-4 ${stat.href ? 'text-[--primary]' : 'text-muted-foreground'}`} />
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="text-2xl font-bold">
-                      {(countLoading || statsLoading) && stat.title.includes('علاقه‌مند') ? (
-                        <Skeleton className="h-8 w-8" />
-                      ) : (
-                        stat.value
-                      )}
-                    </div>
-                    {stat.href && (
-                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+
+          const card = (
+            <Card className={stat.href ? "hover:shadow-lg transition-shadow cursor-pointer" : ""}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {stat.title}
+                </CardTitle>
+                <Icon className={`h-4 w-4 ${stat.href ? 'text-[--primary]' : 'text-muted-foreground'}`} />
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold">
+                    {(countLoading || statsLoading) && stat.title.includes('علاقه‌مند') ? (
+                      <Skeleton className="h-8 w-8" />
+                    ) : (
+                      stat.value
                     )}
                   </div>
-                </CardContent>
-              </Card>
-            </CardWrapper>
+                  {stat.href && (
+                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+
+          return stat.href ? (
+            <Link key={index} href={stat.href}>
+              {card}
+            </Link>
+          ) : (
+            <div key={index}>
+              {card}
+            </div>
           );
         })}
       </div>

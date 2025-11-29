@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useFavorites } from '@/hooks/useFavorites';
 import { FavoritePropertyCard, EmptyFavorites } from './FavoritePropertyCard';
 import { FavoritesStats } from './FavoritesStats';
-import { Pagination } from '@/components/common/Pagination';
+import Pagination from '@/components/common/Pagination';
 import { FavoritesSearchParams } from '@/types/favorites';
 
 /**

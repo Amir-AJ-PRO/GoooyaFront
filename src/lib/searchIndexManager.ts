@@ -16,26 +16,28 @@ import { apiClient } from './api';
  * تبدیل Property به سند Elasticsearch
  */
 export const propertyToElasticsearchDocument = (property: Property): any => {
+  const anyProperty = property as any;
+
   return {
-    id: property.id,
-    title: property.title,
-    slug: property.slug,
-    address: property.address || '',
-    description: property.description || '',
-    measure: parseFloat(property.measure.toString()),
-    rooms: property.rooms,
-    price: property.price || 0,
-    transaction_type: property.transaction_type,
-    year_built: property.year_built,
-    floor: property.floor,
+    id: anyProperty.id,
+    title: anyProperty.title,
+    slug: anyProperty.slug,
+    address: anyProperty.address || '',
+    description: anyProperty.description || '',
+    measure: parseFloat(anyProperty.measure.toString()),
+    rooms: anyProperty.rooms,
+    price: anyProperty.price || 0,
+    transaction_type: anyProperty.transaction_type,
+    year_built: anyProperty.year_built,
+    floor: anyProperty.floor,
     
     // Relations - استخراج ID و نام
-    city_id: typeof property.city === 'object' ? property.city.id : property.city,
-    city_name: typeof property.city === 'object' ? property.city.name : property.city,
-    location_id: typeof property.location === 'object' ? property.location?.id : property.location,
-    location_name: typeof property.location === 'object' ? property.location?.city_name : property.location,
-    property_type_id: typeof property.property_type === 'object' ? property.property_type.id : property.property_type,
-    property_type_name: typeof property.property_type === 'object' ? property.property_type.name : property.property_type,
+    city_id: typeof anyProperty.city === 'object' ? anyProperty.city.id : anyProperty.city,
+    city_name: typeof anyProperty.city === 'object' ? anyProperty.city.name : anyProperty.city,
+    location_id: typeof anyProperty.location === 'object' ? anyProperty.location?.id : anyProperty.location,
+    location_name: typeof anyProperty.location === 'object' ? anyProperty.location?.city_name : anyProperty.location,
+    property_type_id: typeof anyProperty.property_type === 'object' ? anyProperty.property_type.id : anyProperty.property_type,
+    property_type_name: typeof anyProperty.property_type === 'object' ? anyProperty.property_type.name : anyProperty.property_type,
     
     // Boolean fields
     has_parking: property.has_parking || false,

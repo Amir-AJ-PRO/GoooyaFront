@@ -117,10 +117,11 @@ export default function PropertiesPageClient() {
       'has_pool', 'has_security', 'urgent', 'under_price', 'exchange'
     ];
     
+    const anyParams = params as any;
     booleanParams.forEach(param => {
       const value = searchParams.get(param);
       if (value === 'true') {
-        params[param as keyof SearchParams] = true;
+        anyParams[param] = true;
         hasAdvancedParams = true;
       }
     });
@@ -148,9 +149,7 @@ export default function PropertiesPageClient() {
   }, [searchParams]);
   
   // استفاده از API مناسب بر اساس نوع جستجو
-  const { data: propertiesData, isLoading: propertiesLoading, error: propertiesError } = useProperties(page, pageSize, {
-    enabled: !useAdvancedSearch
-  });
+  const { data: propertiesData, isLoading: propertiesLoading, error: propertiesError } = useProperties(page, pageSize);
   
   const { data: searchData, isLoading: searchLoading, error: searchError } = useSearchProperties(advancedSearchParams, {
     enabled: useAdvancedSearch

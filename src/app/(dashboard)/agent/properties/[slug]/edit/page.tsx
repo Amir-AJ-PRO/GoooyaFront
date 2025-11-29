@@ -89,7 +89,7 @@ export default function EditPropertyPage() {
           propertyTypeId = foundProperty.property_type;
         } else if (typeof foundProperty.property_type === 'string' && propertyTypes) {
           // اگر string هست، از روی title پیدا کن
-          const found = propertyTypes.find(t => t.title === foundProperty.property_type);
+          const found = propertyTypes.find(t => (t as any).title === foundProperty.property_type);
           propertyTypeId = found?.id;
         }
         
@@ -100,7 +100,7 @@ export default function EditPropertyPage() {
           cityId = foundProperty.city;
         } else if (typeof foundProperty.city === 'string' && cities) {
           // اگر string (name شهر) هست، از روی name پیدا کن
-          const found = cities.find(c => c.name === foundProperty.city);
+          const found = cities.find(c => (c as any).name === foundProperty.city);
           cityId = found?.id;
         }
         

@@ -8,17 +8,18 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * تبدیل مسیر نسبی به URL کامل
  * برای استفاده با تصاویر و فایل‌های backend
+ * همیشه یک رشته معتبر برمی‌گرداند (در صورت نبود تصویر، placeholder)
  */
-export function getMediaUrl(path: string | null | undefined): string | undefined {
-  if (!path) return undefined;
-  
+export function getMediaUrl(path: string | null | undefined): string {
+  if (!path) return '/placeholder-image.jpg';
+
   // اگر قبلاً URL کامل است، همون رو برگردان
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
   
   // اضافه کردن BASE_URL به مسیر نسبی
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://10.188.103.122:8000';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.goooya.ir';
   
   // اطمینان از اینکه path با / شروع می‌شود
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;

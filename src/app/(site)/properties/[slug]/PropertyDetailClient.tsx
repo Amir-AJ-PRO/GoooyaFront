@@ -56,7 +56,7 @@ interface PropertyDetailClientProps {
 }
 
 // فرمت قیمت
-const formatPrice = (price?: number): string => {
+const formatPrice = (price?: number | null): string => {
   if (!price) return 'توافقی';
   
   if (price >= 1000000000) {
@@ -229,21 +229,22 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
     }
   }
   
-  // محاسبه نوع شهر و منطقه با optional chaining
-  const cityName = typeof property.city === 'string' 
-    ? property.city 
-    : (typeof property.city === 'object' && property.city?.name 
-      ? property.city.name 
+  // محاسبه نوع شهر و منطقه با optional chaining (استفاده از any برای سازگاری با انواع مختلف backend)
+  const anyProperty = property as any;
+  const cityName = typeof anyProperty.city === 'string' 
+    ? anyProperty.city 
+    : (anyProperty.city && anyProperty.city.name
+      ? anyProperty.city.name 
       : '');
-  const locationName = typeof property.location === 'string'
-    ? property.location
-    : (property.location && typeof property.location === 'object' && property.location?.name
-      ? property.location.name 
+  const locationName = typeof anyProperty.location === 'string'
+    ? anyProperty.location
+    : (anyProperty.location && anyProperty.location.name
+      ? anyProperty.location.name 
       : '');
-  const propertyTypeName = typeof property.property_type === 'string'
-    ? property.property_type
-    : (typeof property.property_type === 'object' && property.property_type?.title
-      ? property.property_type.title 
+  const propertyTypeName = typeof anyProperty.property_type === 'string'
+    ? anyProperty.property_type
+    : (anyProperty.property_type && anyProperty.property_type.title
+      ? anyProperty.property_type.title 
       : '');
   
   return (

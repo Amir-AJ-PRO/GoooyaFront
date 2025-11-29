@@ -56,13 +56,14 @@ export const searchInElasticsearch = async (
 ): Promise<ElasticsearchResponse> => {
   try {
     const client = getElasticsearchClient();
-    
+
+    // در نسخه‌های جدید Elasticsearch JS client، پارامترهای جستجو به صورت مستقیم ارسال می‌شوند
     const response = await client.search({
       index: defaultConfig.index,
-      body: query,
-    });
+      ...(query as any),
+    } as any);
 
-    return response.body as ElasticsearchResponse;
+    return response as unknown as ElasticsearchResponse;
   } catch (error) {
     console.error('خطا در جستجوی Elasticsearch:', error);
     throw error;
@@ -80,7 +81,7 @@ export const createIndex = async (): Promise<void> => {
       index: defaultConfig.index,
     });
 
-    if (!indexExists.body) {
+    if (!indexExists) {
       await client.indices.create({
         index: defaultConfig.index,
         body: {
@@ -159,7 +160,7 @@ export const createIndex = async (): Promise<void> => {
             }
           }
         }
-      });
+      } as any);
       
       console.log(`Index ${defaultConfig.index} ایجاد شد`);
     }
@@ -224,7 +225,8 @@ export const deleteDocument = async (id: number): Promise<void> => {
   } catch (error) {
     console.error('خطا در حذف سند:', error);
     // اگر سند وجود نداشت، خطا نده
-    if (error.meta?.statusCode !== 404) {
+    const err = error as any;
+    if (err?.meta?.statusCode !== 404) {
       throw error;
     }
   }

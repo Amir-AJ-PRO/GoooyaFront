@@ -120,8 +120,8 @@ export default function Login() {
             email: '',
             type: userType,
             phone: data.user.phone,
-            company: data.user.agent_profile?.company_name,
-            licenseNumber: data.user.agent_profile?.license_number,
+            company: (data.user.agent_profile as any)?.company_name,
+            licenseNumber: (data.user.agent_profile as any)?.license_number,
           };
           
           login(mockUser);

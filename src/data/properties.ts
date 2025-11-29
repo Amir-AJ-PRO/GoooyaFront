@@ -2,9 +2,17 @@
  * داده‌های ساختگی برای تست
  */
 
-import { PropertyListItem } from "@/types/property";
+interface MockProperty {
+  id: number;
+  title: string;
+  price: string;
+  location: string;
+  bedrooms: number;
+  area: number;
+  image: string;
+}
 
-export const mockProperties: PropertyListItem[] = [
+export const mockProperties: MockProperty[] = [
   {
     id: 1,
     title: "آپارتمان مدرن در تهران",

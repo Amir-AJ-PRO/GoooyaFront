@@ -82,6 +82,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // اگر به هر دلیلی پاسخی از backend نداریم
+    if (!backendResponse) {
+      return NextResponse.json(
+        { error: 'پاسخی از سرور دریافت نشد' },
+        { status: 502 }
+      );
+    }
+
     // بررسی Content-Type قبل از parse کردن JSON
     const contentType = backendResponse.headers.get('content-type');
     let responseData;
