@@ -9,14 +9,7 @@ import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchSuggestions } from "@/hooks/useSearch";
 import { useCities } from "@/hooks/useCities";
-
-
-const propertyTypes = [
-  { value: "apartment", label: "آپارتمان" },
-  { value: "villa", label: "ویلا" },
-  { value: "townhouse", label: "تاونهاوس" },
-  { value: "commercial", label: "تجاری" },
-];
+import { usePropertyTypes } from "@/hooks/usePropertyMutations";
 
 const SearchBar = memo(() => {
   const router = useRouter();
@@ -31,6 +24,9 @@ const SearchBar = memo(() => {
 
   // دریافت شهرها
   const { data: cities = [], isLoading: citiesLoading } = useCities();
+  
+  // دریافت انواع ملک از دیتابیس
+  const { data: propertyTypes = [], isLoading: propertyTypesLoading } = usePropertyTypes();
 
   // دریافت پیشنهادات
   const { data: suggestionsData } = useSearchSuggestions(debouncedSearchTerm, {
@@ -53,16 +49,8 @@ const SearchBar = memo(() => {
     }
     
     if (type) {
-      // تبدیل نوع ملک به ID
-      const typeMap: Record<string, string> = {
-        'apartment': '1',
-        'villa': '2',
-        'townhouse': '3', 
-        'commercial': '4'
-      };
-      if (typeMap[type]) {
-        searchParams.set('property_type', typeMap[type]);
-      }
+      // type حالا ID است (از دیتابیس)
+      searchParams.set('property_type', type);
     }
     
     if (price) {
@@ -175,11 +163,15 @@ const SearchBar = memo(() => {
                 <SelectValue placeholder="نوع ملک" />
               </SelectTrigger>
               <SelectContent>
-                {propertyTypes.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.label}
-                  </SelectItem>
-                ))}
+                {propertyTypesLoading ? (
+                  <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
+                ) : (
+                  propertyTypes.map((pt) => (
+                    <SelectItem key={pt.id} value={pt.id.toString()}>
+                      {pt.title}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -251,11 +243,15 @@ const SearchBar = memo(() => {
                 <SelectValue placeholder="نوع ملک" />
               </SelectTrigger>
               <SelectContent>
-                {propertyTypes.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.label}
-                  </SelectItem>
-                ))}
+                {propertyTypesLoading ? (
+                  <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
+                ) : (
+                  propertyTypes.map((pt) => (
+                    <SelectItem key={pt.id} value={pt.id.toString()}>
+                      {pt.title}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>

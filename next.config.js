@@ -8,6 +8,17 @@ const nextConfig = {
         hostname: 'api.goooya.ir',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'api.goooya.ir',
+        pathname: '/**',
+      },
+      // CDN/Storage servers
+      {
+        protocol: 'https',
+        hostname: 'c133408.parspack.net',
+        pathname: '/**',
+      },
       // Development servers
       {
         protocol: 'http',

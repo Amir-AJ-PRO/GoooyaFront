@@ -294,30 +294,81 @@ export const getProperties = async (
 };
 
 /**
- * دریافت جزئیات یک ملک با slug
+ * دریافت جزئیات یک ملک با slug یا ID
  * 
  * مطابق داکیومنت: GET /api/properties/<slug>/
  * این endpoint برای کاربران غیراحراز هویت شده نیز قابل دسترسی است و تیکت بازدید ثبت نمی‌کند.
  * 
- * @param slug - اسلاگ یکتای ملک (مثال: apartment-120-meter-region-1)
+ * @param slugOrId - اسلاگ یکتای ملک (مثال: apartment-120-meter-region-1) یا ID عددی
  * @returns جزئیات کامل ملک شامل فیلدهای محاسبه شده
  * @throws Error در صورت خطا (404: ملک یافت نشد یا وضعیت نمایش آن ok نیست)
  */
-export const getPropertyBySlug = async (slug: string): Promise<Property> => {
+export const getPropertyBySlug = async (slugOrId: string | number): Promise<Property> => {
   try {
-    console.log('📥 در حال دریافت جزئیات ملک:', slug);
+    console.log('📥 در حال دریافت جزئیات ملک:', slugOrId);
+    
+    // تبدیل به string برای استفاده در URL
+    const identifier = String(slugOrId);
+    
+    // بررسی اینکه آیا identifier یک عدد است (ID) یا slug
+    const isNumericId = !isNaN(Number(identifier)) && identifier.trim() !== '';
     
     // استفاده مستقیم از fetch برای دسترسی عمومی (بدون نیاز به احراز هویت)
-    const response = await fetch(`${API_BASE_URL}/api/properties/${slug}/`, {
+    // توجه: next: { revalidate } فقط در server-side کار می‌کند
+    const response = await fetch(`${API_BASE_URL}/api/properties/${identifier}/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      // کش کردن برای بهبود عملکرد
-      next: { revalidate: 300 }, // 5 دقیقه
+      // برای client-side، cache را از طریق React Query مدیریت می‌کنیم
+      cache: 'no-store'
     });
     
     if (!response.ok) {
+      // اگر با ID کار نکرد و identifier یک عدد است، از لیست properties استفاده کنیم
+      if (response.status === 404 && isNumericId) {
+        console.log('⚠️ ملک با ID پیدا نشد، در حال جستجو در لیست properties...');
+        
+        try {
+          // جستجو در لیست properties برای پیدا کردن slug
+          const propertyId = Number(identifier);
+          let foundSlug: string | null = null;
+          let page = 1;
+          const pageSize = 100; // حداکثر تعداد در هر صفحه
+          
+          // جستجو در چند صفحه (حداکثر 5 صفحه)
+          while (page <= 5 && !foundSlug) {
+            const propertiesList = await getProperties(page, pageSize);
+            
+            // جستجو در نتایج
+            const foundProperty = propertiesList.results.find(p => p.id === propertyId);
+            if (foundProperty && foundProperty.slug) {
+              foundSlug = foundProperty.slug;
+              console.log('✅ Slug پیدا شد:', foundSlug);
+              break;
+            }
+            
+            // اگر صفحه آخر بود، جستجو را متوقف کن
+            if (page >= propertiesList.total_pages) {
+              break;
+            }
+            
+            page++;
+          }
+          
+          // اگر slug پیدا شد، دوباره تلاش کن
+          if (foundSlug) {
+            console.log('🔄 تلاش مجدد با slug:', foundSlug);
+            return await getPropertyBySlug(foundSlug);
+          } else {
+            throw new Error('ملک یافت نشد یا وضعیت نمایش آن مناسب نیست');
+          }
+        } catch (searchError: any) {
+          console.error('❌ خطا در جستجوی slug:', searchError);
+          throw new Error('ملک یافت نشد یا وضعیت نمایش آن مناسب نیست');
+        }
+      }
+      
       if (response.status === 404) {
         throw new Error('ملک یافت نشد یا وضعیت نمایش آن مناسب نیست');
       }
@@ -326,10 +377,11 @@ export const getPropertyBySlug = async (slug: string): Promise<Property> => {
       console.error('❌ خطا در دریافت جزئیات ملک:', {
         status: response.status,
         statusText: response.statusText,
-        error: errorText
+        error: errorText,
+        identifier
       });
       
-      throw new Error('خطا در دریافت جزئیات ملک');
+      throw new Error(`خطا در دریافت جزئیات ملک: ${response.status} ${response.statusText}`);
     }
     
     const propertyData: Property = await response.json();
@@ -346,13 +398,51 @@ export const getPropertyBySlug = async (slug: string): Promise<Property> => {
     
     return propertyData;
   } catch (error: any) {
-    console.error('❌ خطا در دریافت جزئیات ملک:', {
-      slug,
-      message: error.message
-    });
+    // لاگ کردن جزئیات بیشتر برای خطایابی
+    const errorDetails: Record<string, unknown> = {
+      slugOrId,
+      identifier: String(slugOrId),
+      url: `${API_BASE_URL}/api/properties/${String(slugOrId)}/`,
+    };
+    
+    // اضافه کردن تمام فیلدهای error
+    if (error) {
+      if (error.message) errorDetails.message = error.message;
+      if (error.name) errorDetails.name = error.name;
+      if (error.stack) errorDetails.stack = error.stack;
+      if (error.cause) errorDetails.cause = error.cause;
+      
+      // اگر error response دارد (axios style)
+      if (error.response) {
+        errorDetails.status = error.response.status;
+        errorDetails.statusText = error.response.statusText;
+        errorDetails.data = error.response.data;
+      }
+      
+      // اگر fetch error است
+      if (error.name === 'TypeError') {
+        errorDetails.type = 'TypeError';
+        if (error.message) {
+          errorDetails.message = error.message;
+        }
+      }
+      
+      // اگر AbortError است
+      if (error.name === 'AbortError') {
+        errorDetails.type = 'AbortError';
+        errorDetails.message = 'درخواست لغو شد';
+      }
+    } else {
+      errorDetails.error = 'خطای نامشخص - error object خالی است';
+    }
+    
+    // لاگ کردن با JSON.stringify برای نمایش کامل
+    console.error('❌ خطا در دریافت جزئیات ملک:', JSON.stringify(errorDetails, null, 2));
+    console.error('❌ Error object:', error);
     
     // ارسال خطای مناسب
-    throw error;
+    const errorMessage = error?.message || `خطا در دریافت جزئیات ملک: ${slugOrId}`;
+    throw new Error(errorMessage);
   }
 };
 

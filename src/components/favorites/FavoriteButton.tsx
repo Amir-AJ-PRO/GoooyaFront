@@ -134,8 +134,8 @@ export const FavoriteButtonLarge: React.FC<{
       className={cn(
         'px-6 py-3 h-auto w-auto',
         isFavorite 
-          ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100' 
-          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
+          ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-600' 
+          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-600',
         className
       )}
     />

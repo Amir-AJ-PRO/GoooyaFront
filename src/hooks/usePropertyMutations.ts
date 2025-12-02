@@ -115,12 +115,13 @@ export const useProperties = (page: number = 1, pageSize: number = 20) => {
 
 /**
  * Hook برای دریافت جزئیات یک ملک
+ * @param slugOrId - اسلاگ یا ID ملک
  */
-export const useProperty = (slug: string) => {
+export const useProperty = (slugOrId: string | number) => {
   return useQuery<Property, Error>({
-    queryKey: ['property', slug],
-    queryFn: () => getPropertyBySlug(slug),
-    enabled: !!slug,
+    queryKey: ['property', slugOrId],
+    queryFn: () => getPropertyBySlug(slugOrId),
+    enabled: !!slugOrId,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };

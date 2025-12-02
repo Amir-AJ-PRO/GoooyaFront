@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { API_BASE_URL } from "./constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -18,8 +19,8 @@ export function getMediaUrl(path: string | null | undefined): string {
     return path;
   }
   
-  // اضافه کردن BASE_URL به مسیر نسبی
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.goooya.ir';
+  // استفاده از API_BASE_URL از constants
+  const baseUrl = API_BASE_URL;
   
   // اطمینان از اینکه path با / شروع می‌شود
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;

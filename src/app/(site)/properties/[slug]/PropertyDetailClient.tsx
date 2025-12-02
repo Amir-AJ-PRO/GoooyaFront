@@ -47,7 +47,7 @@ import {
   CheckCircle,
   Sparkles
 } from 'lucide-react';
-import { FavoriteButtonLarge } from '@/components/favorites/FavoriteButton';
+import { FavoriteButtonLarge, FavoriteButtonSmall } from '@/components/favorites/FavoriteButton';
 import { API_BASE_URL } from '@/lib/constants';
 import Link from 'next/link';
 
@@ -280,10 +280,41 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                 </div>
                 
                 <div className="flex gap-2">
-                  <Button size="icon" variant="secondary" className="rounded-full">
-                    <Heart className="h-5 w-5" />
-                  </Button>
-                  <Button size="icon" variant="secondary" className="rounded-full">
+                  <FavoriteButtonSmall
+                    propertyId={property.id}
+                    isFavorite={Boolean(property.is_favorite)}
+                    className="bg-white/90 backdrop-blur-sm"
+                  />
+                  <Button 
+                    size="icon" 
+                    variant="secondary" 
+                    className="rounded-full bg-white/90 backdrop-blur-sm"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (navigator.share) {
+                        navigator.share({
+                          title: property.title,
+                          text: property.description || '',
+                          url: window.location.href,
+                        }).catch(() => {
+                          // Fallback: copy to clipboard
+                          navigator.clipboard.writeText(window.location.href);
+                          toast({
+                            title: "لینک کپی شد",
+                            description: "لینک ملک در کلیپ‌بورد کپی شد",
+                          });
+                        });
+                      } else {
+                        // Fallback: copy to clipboard
+                        navigator.clipboard.writeText(window.location.href);
+                        toast({
+                          title: "لینک کپی شد",
+                          description: "لینک ملک در کلیپ‌بورد کپی شد",
+                        });
+                      }
+                    }}
+                  >
                     <Share2 className="h-5 w-5" />
                   </Button>
                 </div>
@@ -726,7 +757,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
 
       {/* Dialog نمایش شماره تلفن agent */}
       <Dialog open={showAgentPhoneDialog} onOpenChange={setShowAgentPhoneDialog}>
-        <DialogContent>
+        <DialogContent dir="rtl" className="text-right">
           <DialogHeader>
             <DialogTitle>شماره تماس مشاور</DialogTitle>
             <DialogDescription>

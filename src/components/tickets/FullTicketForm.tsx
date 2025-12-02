@@ -74,6 +74,12 @@ export default function FullTicketForm({ onSuccess }: FullTicketFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // بررسی اینکه حداقل یک تصویر آپلود شده باشد
+    if (images.length === 0) {
+      alert('لطفاً حداقل یک تصویر برای ملک آپلود کنید');
+      return;
+    }
+    
     const payload: FullTicketPayload = {
       title: formData.title!,
       property_type: formData.property_type!,
@@ -445,7 +451,10 @@ export default function FullTicketForm({ onSuccess }: FullTicketFormProps) {
       {/* تصاویر */}
       <Card dir="rtl">
         <CardHeader>
-          <CardTitle>تصاویر (اختیاری)</CardTitle>
+          <CardTitle>تصاویر *</CardTitle>
+          <CardDescription className="text-amber-600">
+            آپلود حداقل یک تصویر الزامی است
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 text-right">
           {images.length > 0 && (

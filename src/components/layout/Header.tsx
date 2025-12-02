@@ -194,15 +194,47 @@ const Header = memo(() => {
                 </div>
               </>
             ) : (
-              <Button 
-                variant="outline" 
-                className="gap-2 hidden lg:flex text-sm px-3"
-                onClick={() => setLoginModalOpen(true)}
-              >
-                <User className="h-4 w-4" />
-                <span className="hidden xl:inline">ورود / ثبت نام</span>
-                <span className="xl:hidden">ورود</span>
-              </Button>
+              <>
+                <Button 
+                  variant="outline" 
+                  className="gap-2 hidden lg:flex text-sm px-3"
+                  onClick={() => setLoginModalOpen(true)}
+                >
+                  <User className="h-4 w-4" />
+                  <span className="hidden xl:inline">ورود / ثبت نام</span>
+                  <span className="xl:hidden">ورود</span>
+                </Button>
+                {/* نمایش منوی تغییر نقش برای کاربران بدون لاگین */}
+                <div className="hidden lg:block">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <UserCircle className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">کاربر مهمان</p>
+                          <p className="text-xs leading-none text-muted-foreground">
+                            برای دسترسی کامل وارد شوید
+                          </p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setLoginModalOpen(true)} className="cursor-pointer">
+                        <User className="ml-2 h-4 w-4" />
+                        <span>ورود / ثبت نام</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-muted-foreground cursor-not-allowed" disabled>
+                        <LogOut className="ml-2 h-4 w-4" />
+                        <span>خروج</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </>
             )}
             
             <Button

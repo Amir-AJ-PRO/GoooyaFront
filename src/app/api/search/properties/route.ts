@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchProperties } from '@/services/searchService';
-import { SearchParams } from '@/types/search';
+import { SearchParams, SearchResult } from '@/types/search';
+
+// در server-side باید از process.env مستقیماً استفاده کنیم
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://goooya.api.ir";
 
 /**
  * جستجوی پیشرفته املاک
@@ -121,10 +123,81 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // انجام جستجو
-    const result = await searchProperties(params);
+    // انجام جستجو - مستقیماً به Django backend
+    const queryParams = new URLSearchParams();
     
-    return NextResponse.json(result);
+    // ساخت query string
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        if (typeof value === 'boolean' && value === true) {
+          queryParams.append(key, 'true');
+        } else if (typeof value !== 'boolean') {
+          queryParams.append(key, value.toString());
+        }
+      }
+    });
+    
+    // درخواست به Django backend
+    const backendUrl = `${API_BASE_URL}/api/search/properties/?${queryParams.toString()}`;
+    
+    console.log('🔍 [SERVER] درخواست به backend:', backendUrl);
+    console.log('📋 [SERVER] پارامترها:', Object.fromEntries(queryParams));
+    console.log('🌐 [SERVER] API_BASE_URL:', API_BASE_URL);
+    
+    try {
+      const response = await fetch(backendUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // در server-side fetch، cache را تنظیم می‌کنیم
+        cache: 'no-store' // برای جستجو، cache نمی‌کنیم
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ خطا از backend:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText,
+          url: backendUrl
+        });
+        
+        return NextResponse.json(
+          { 
+            error: 'خطا در انجام جستجو',
+            details: errorText,
+            status: response.status
+          },
+          { status: response.status }
+        );
+      }
+      
+      const result: SearchResult = await response.json();
+      
+      console.log('✅ جستجو موفق:', {
+        count: result.count,
+        page: result.page,
+        total_pages: result.total_pages,
+        results_count: result.results?.length || 0
+      });
+      
+      return NextResponse.json(result);
+    } catch (fetchError: any) {
+      console.error('❌ خطا در fetch:', {
+        error: fetchError.message,
+        stack: fetchError.stack,
+        url: backendUrl
+      });
+      
+      return NextResponse.json(
+        { 
+          error: 'خطا در اتصال به سرور',
+          details: fetchError.message || 'خطای ناشناخته در ارتباط با backend'
+        },
+        { status: 500 }
+      );
+    }
     
   } catch (error) {
     console.error('خطا در جستجوی املاک:', error);

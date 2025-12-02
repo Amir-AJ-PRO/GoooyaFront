@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useProperties } from '@/hooks/usePropertyMutations';
 import { useSearchProperties } from '@/hooks/useSearch';
-import { useCities } from '@/hooks/useCities';
+import { useCities, usePropertyTypes } from '@/hooks/usePropertyMutations';
 import PropertyCard from '@/components/cards/PropertyCard';
 import Pagination from '@/components/common/Pagination';
 import { Button } from '@/components/ui/button';
@@ -28,7 +27,6 @@ export default function PropertiesPageClient() {
   
   // پارامترهای جستجوی پیشرفته از URL
   const [advancedSearchParams, setAdvancedSearchParams] = useState<SearchParams>({});
-  const [useAdvancedSearch, setUseAdvancedSearch] = useState(false);
   
   // فیلترهای محلی (برای نمایش)
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,6 +38,9 @@ export default function PropertiesPageClient() {
   
   // دریافت شهرها
   const { data: cities = [], isLoading: citiesLoading } = useCities();
+  
+  // دریافت انواع ملک از دیتابیس
+  const { data: propertyTypes = [], isLoading: propertyTypesLoading } = usePropertyTypes();
   
   // استخراج پارامترهای جستجو از URL
   useEffect(() => {
@@ -142,30 +143,56 @@ export default function PropertiesPageClient() {
     const sortByParam = searchParams.get('sort_by');
     if (sortByParam) {
       params.sort_by = sortByParam as SearchParams['sort_by'];
+      // تبدیل sort_by به format محلی برای نمایش
+      const reverseSortMap: Record<string, string> = {
+        '-created_at': 'newest',
+        'created_at': 'oldest',
+        '-price': 'price-high',
+        'price': 'price-low'
+      };
+      if (reverseSortMap[sortByParam]) {
+        setSortBy(reverseSortMap[sortByParam]);
+      }
     }
     
     setAdvancedSearchParams(params);
-    setUseAdvancedSearch(hasAdvancedParams);
   }, [searchParams]);
   
-  // استفاده از API مناسب بر اساس نوع جستجو
-  const { data: propertiesData, isLoading: propertiesLoading, error: propertiesError } = useProperties(page, pageSize);
+  // همیشه از Search API استفاده می‌کنیم (طبق داکیومنت)
+  // اگر پارامتر جستجو وجود نداشت، یک جستجوی خالی انجام می‌دهیم (همه املاک)
+  const searchParamsWithPagination: SearchParams = {
+    ...advancedSearchParams,
+  };
   
-  const { data: searchData, isLoading: searchLoading, error: searchError } = useSearchProperties(advancedSearchParams, {
-    enabled: useAdvancedSearch
-  });
+  // همیشه page و page_size را تنظیم می‌کنیم
+  if (!searchParamsWithPagination.page) {
+    searchParamsWithPagination.page = page || 1;
+  }
   
-  // انتخاب داده‌های مناسب
-  const isLoading = useAdvancedSearch ? searchLoading : propertiesLoading;
-  const error = useAdvancedSearch ? searchError : propertiesError;
-  const data = useAdvancedSearch ? searchData : propertiesData;
+  if (!searchParamsWithPagination.page_size) {
+    searchParamsWithPagination.page_size = pageSize || 20;
+  }
+  
+  // مرتب‌سازی پیش‌فرض
+  if (!searchParamsWithPagination.sort_by) {
+    searchParamsWithPagination.sort_by = '-created_at';
+  }
+  
+  const { data: searchData, isLoading: searchLoading, error: searchError } = useSearchProperties(
+    searchParamsWithPagination,
+    {
+      enabled: true // همیشه فعال
+    }
+  );
+  
+  const isLoading = searchLoading;
+  const error = searchError;
+  const data = searchData;
   
   // Reset به صفحه اول هنگام تغییر فیلترها
   useEffect(() => {
-    if (!useAdvancedSearch) {
     setPage(1);
-    }
-  }, [searchTerm, cityFilter, transactionFilter, propertyTypeFilter, useAdvancedSearch]);
+  }, [searchTerm, cityFilter, transactionFilter, propertyTypeFilter]);
   
   // تابع اعمال فیلترهای محلی
   const applyLocalFilters = () => {
@@ -187,16 +214,15 @@ export default function PropertiesPageClient() {
       params.set('property_type', propertyTypeFilter);
     }
     
-    // مرتب‌سازی
-    if (sortBy !== 'newest') {
-      const sortMap: Record<string, string> = {
-        'oldest': 'created_at',
-        'price-high': '-price',
-        'price-low': 'price'
-      };
-      if (sortMap[sortBy]) {
-        params.set('sort_by', sortMap[sortBy]);
-      }
+    // مرتب‌سازی (طبق داکیومنت: created_at, -created_at, price, -price, measure, -measure, _score)
+    const sortMap: Record<string, string> = {
+      'newest': '-created_at',
+      'oldest': 'created_at',
+      'price-high': '-price',
+      'price-low': 'price'
+    };
+    if (sortMap[sortBy]) {
+      params.set('sort_by', sortMap[sortBy]);
     }
     
     params.set('page', '1');
@@ -207,66 +233,15 @@ export default function PropertiesPageClient() {
   };
   
   // اطمینان از اینکه properties یک آرایه است
+  // Search API خودش فیلتر و مرتب‌سازی را انجام می‌دهد، نیازی به فیلتر محلی نیست
   const propertiesArray: PropertyListItem[] = data?.results || [];
   
-  // فیلتر و مرتب‌سازی املاک (فقط برای حالت عادی)
-  const filteredProperties = useAdvancedSearch ? propertiesArray : propertiesArray
-    .filter((property: PropertyListItem) => {
-      // اگر فیلتری فعال نیست، همه را نمایش بده
-      if (!searchTerm && cityFilter === 'all' && transactionFilter === 'all' && propertyTypeFilter === 'all') {
-        return true;
-      }
-      
-      // فیلتر جستجو
-      const cityName = typeof property.city === 'object' && property.city?.name ? property.city.name : '';
-      const locationName = typeof property.location === 'object' && property.location?.name ? property.location.name : '';
-      
-      const matchesSearch = !searchTerm || 
-                           property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           cityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           locationName.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      // فیلتر شهر
-      const propertyCityId = typeof property.city === 'object' && property.city?.id 
-        ? property.city.id.toString() 
-        : '';
-      const matchesCity = cityFilter === 'all' || propertyCityId === cityFilter;
-      
-      // فیلتر نوع معامله
-      const matchesTransaction = transactionFilter === 'all' || 
-                                 property.transaction_type === transactionFilter;
-      
-      // فیلتر نوع ملک
-      const propertyTypeId = typeof property.property_type === 'object' && property.property_type?.id 
-        ? property.property_type.id.toString() 
-        : '';
-      const matchesType = propertyTypeFilter === 'all' || propertyTypeId === propertyTypeFilter;
-      
-      return matchesSearch && matchesCity && matchesTransaction && matchesType;
-    })
-    .sort((a: PropertyListItem, b: PropertyListItem) => {
-      switch (sortBy) {
-        case 'newest':
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        case 'oldest':
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-        case 'price-high':
-          return (b.price || 0) - (a.price || 0);
-        case 'price-low':
-          return (a.price || 0) - (b.price || 0);
-        default:
-          return 0;
-      }
-    });
-  
-  // استخراج انواع املاک یکتا
-  const uniquePropertyTypes = Array.from(
-    new Set(
-      propertiesArray
-        .filter((p: PropertyListItem) => typeof p.property_type === 'object' && p.property_type?.id)
-        .map((p: PropertyListItem) => JSON.stringify(p.property_type))
-    )
-  ).map((str: string) => JSON.parse(str));
+  // نمایش warning در صورت وجود (fallback به database)
+  useEffect(() => {
+    if (data?.warning) {
+      console.warn('⚠️ Search API Warning:', data.warning);
+    }
+  }, [data?.warning]);
   
   // اطلاعات pagination
   const paginationInfo = data ? {
@@ -317,7 +292,7 @@ export default function PropertiesPageClient() {
                   <Sparkles className="h-4 w-4 text-primary" />
                   <span className="font-semibold text-primary">{paginationInfo.totalCount}</span>
                   <span>ملک موجود</span>
-                  {useAdvancedSearch && (
+                  {Object.keys(advancedSearchParams).length > 0 && (
                     <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
                       جستجوی پیشرفته
                     </span>
@@ -421,11 +396,15 @@ export default function PropertiesPageClient() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">همه</SelectItem>
-              {uniquePropertyTypes.map((type) => (
-                <SelectItem key={type.id} value={type.id.toString()}>
-                  {type.title}
-                </SelectItem>
-              ))}
+              {propertyTypesLoading ? (
+                <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
+              ) : (
+                propertyTypes.map((type) => (
+                  <SelectItem key={type.id} value={type.id.toString()}>
+                    {type.title}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
           </div>
@@ -515,7 +494,7 @@ export default function PropertiesPageClient() {
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
-      ) : filteredProperties.length === 0 ? (
+      ) : propertiesArray.length === 0 ? (
         <div className="text-center py-20">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-muted mb-6">
             <Building2 className="h-12 w-12 text-muted-foreground" />
@@ -551,7 +530,7 @@ export default function PropertiesPageClient() {
           {paginationInfo && (
             <div className="mb-6 flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                نمایش <span className="font-semibold text-foreground">{filteredProperties.length}</span> ملک از <span className="font-semibold text-foreground">{paginationInfo.totalCount}</span> ملک
+                نمایش <span className="font-semibold text-foreground">{propertiesArray.length}</span> ملک از <span className="font-semibold text-foreground">{paginationInfo.totalCount}</span> ملک
                 {paginationInfo.totalPages > 1 && (
                   <span className="mr-2">
                     (صفحه {paginationInfo.currentPage} از {paginationInfo.totalPages})
@@ -563,7 +542,7 @@ export default function PropertiesPageClient() {
           
           {/* Grid املاک */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {filteredProperties.map((property: PropertyListItem, index: number) => (
+            {propertiesArray.map((property: PropertyListItem, index: number) => (
               <div
                 key={property.id}
                 className="animate-in fade-in slide-in-from-bottom-4"
@@ -581,14 +560,10 @@ export default function PropertiesPageClient() {
                 currentPage={paginationInfo.currentPage}
                 totalPages={paginationInfo.totalPages}
                 onPageChange={(newPage) => {
-                  if (useAdvancedSearch) {
-                    // برای جستجوی پیشرفته، URL را بروزرسانی کن
-                    const newParams = new URLSearchParams(window.location.search);
-                    newParams.set('page', newPage.toString());
-                    router.push(`/properties?${newParams.toString()}`);
-                  } else {
-                  setPage(newPage);
-                  }
+                  // همیشه URL را بروزرسانی کن (چون از search API استفاده می‌کنیم)
+                  const newParams = new URLSearchParams(window.location.search);
+                  newParams.set('page', newPage.toString());
+                  router.push(`/properties?${newParams.toString()}`);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
               />
