@@ -217,9 +217,27 @@ export interface PaginatedPropertiesResponse {
 /**
  * دریافت لیست تمام املاک با پشتیبانی از Pagination
  * 
- * @param page - شماره صفحه (پیش‌فرض: 1)
+ * Endpoint: GET /api/properties/list/
+ * 
+ * دریافت لیست تمام املاک‌هایی که وضعیت نمایش آن‌ها ok است.
+ * این endpoint برای کاربران غیراحراز هویت شده نیز قابل دسترسی است.
+ * 
+ * @param page - شماره صفحه (پیش‌فرض: 1، شروع از 1)
  * @param pageSize - تعداد نتایج در هر صفحه (پیش‌فرض: 20، حداکثر: 100)
  * @returns پاسخ paginated شامل results و metadata
+ * 
+ * @example
+ * // دریافت صفحه اول (20 نتیجه)
+ * const properties = await getProperties(1, 20);
+ * 
+ * // دریافت صفحه دوم با 10 نتیجه در هر صفحه
+ * const properties = await getProperties(2, 10);
+ * 
+ * نکات مهم:
+ * - این endpoint از کش (Cache) استفاده می‌کند (مدت زمان: 5 دقیقه)
+ * - فقط املاک با show_status='ok' نمایش داده می‌شوند
+ * - نتایج به ترتیب تاریخ ایجاد (جدیدترین اول) مرتب می‌شوند
+ * - فیلدهای address و location_iframe به صورت خودکار محاسبه می‌شوند
  */
 export const getProperties = async (
   page: number = 1,
@@ -228,7 +246,8 @@ export const getProperties = async (
   // محدود کردن pageSize به حداکثر 100
   const validPageSize = Math.min(pageSize, 100);
   
-  const url = new URL(`${API_BASE_URL}/api/properties/list/`);
+  // استفاده از Next.js API route
+  const url = new URL('/api/properties/list/', window.location.origin);
   url.searchParams.append('page', page.toString());
   url.searchParams.append('page_size', validPageSize.toString());
   
@@ -237,6 +256,7 @@ export const getProperties = async (
     headers: {
       'Content-Type': 'application/json',
     },
+    // برای client-side fetch، cache را از طریق React Query مدیریت می‌کنیم
     cache: 'no-store'
   });
   

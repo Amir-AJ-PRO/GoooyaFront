@@ -44,7 +44,12 @@ export const useCreateProperty = () => {
       console.log('Created Property:', data);
       console.log('===============================================');
       
+      // Invalidate کردن تمام query های مربوط به املاک
       queryClient.invalidateQueries({ queryKey: ['agent-properties'] });
+      queryClient.invalidateQueries({ queryKey: ['searchProperties'] });
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['homepage-properties'] });
+      
       toast.success('ملک با موفقیت ثبت شد', {
         description: 'ملک شما پس از تأیید نمایش داده خواهد شد'
       });
@@ -103,11 +108,17 @@ export const useLocations = (cityId?: number) => {
  * 
  * @param page - شماره صفحه (پیش‌فرض: 1)
  * @param pageSize - تعداد نتایج در هر صفحه (پیش‌فرض: 20)
+ * @param enabled - آیا query باید فعال باشد (پیش‌فرض: true)
  */
-export const useProperties = (page: number = 1, pageSize: number = 20) => {
+export const useProperties = (
+  page: number = 1, 
+  pageSize: number = 20,
+  enabled: boolean = true
+) => {
   return useQuery<PaginatedPropertiesResponse, Error>({
     queryKey: ['properties', page, pageSize],
     queryFn: () => getProperties(page, pageSize),
+    enabled: enabled,
     staleTime: 1000 * 60 * 5, // 5 minutes (همانند cache backend)
     placeholderData: (previousData) => previousData, // برای جلوگیری از flicker هنگام تغییر صفحه
   });

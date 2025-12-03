@@ -89,10 +89,11 @@ export interface PropertyListItem {
   id: number;
   title: string;
   slug: string;
-  address?: string;
+  address?: string | null; // فیلد محاسبه شده: "شهر، منطقه"
+  location_iframe?: string | null; // فیلد محاسبه شده: iframe از منطقه
   measure: string;
   rooms: number;
-  price?: number;
+  price?: number | null;
   mortgage?: number;
   rent?: number;
   transaction_type: TransactionType;
@@ -108,11 +109,12 @@ export interface PropertyListItem {
     id: number;
     title: string;
   };
-  agent?: string;
-  agent_image?: string;
+  agent?: string | AgentInfo; // می‌تواند string یا object کامل باشد
+  agent_image?: string | null;
   images: PropertyImage[];
   created_at: string;
   updated_at: string;
+  is_favorite?: boolean; // فیلد اضافی از backend
 }
 
 export interface AgentInfo {

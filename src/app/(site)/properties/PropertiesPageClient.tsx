@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSearchProperties } from '@/hooks/useSearch';
-import { useCities, usePropertyTypes } from '@/hooks/usePropertyMutations';
+import { useCities, usePropertyTypes, useProperties } from '@/hooks/usePropertyMutations';
 import PropertyCard from '@/components/cards/PropertyCard';
 import Pagination from '@/components/common/Pagination';
 import { Button } from '@/components/ui/button';
@@ -158,8 +158,18 @@ export default function PropertiesPageClient() {
     setAdvancedSearchParams(params);
   }, [searchParams]);
   
-  // همیشه از Search API استفاده می‌کنیم (طبق داکیومنت)
-  // اگر پارامتر جستجو وجود نداشت، یک جستجوی خالی انجام می‌دهیم (همه املاک)
+  // بررسی اینکه آیا فیلتر یا جستجو اعمال شده است
+  const hasSearchParams = Object.keys(advancedSearchParams).some(key => {
+    const value = advancedSearchParams[key as keyof SearchParams];
+    // اگر key برابر page یا page_size باشد، ignore کن
+    if (key === 'page' || key === 'page_size') {
+      return false;
+    }
+    // اگر value وجود داشته باشد و خالی نباشد
+    return value !== undefined && value !== null && value !== '';
+  });
+  
+  // استفاده از Search API فقط اگر فیلتر یا جستجو وجود داشته باشد
   const searchParamsWithPagination: SearchParams = {
     ...advancedSearchParams,
   };
@@ -173,21 +183,27 @@ export default function PropertiesPageClient() {
     searchParamsWithPagination.page_size = pageSize || 20;
   }
   
-  // مرتب‌سازی پیش‌فرض
-  if (!searchParamsWithPagination.sort_by) {
-    searchParamsWithPagination.sort_by = '-created_at';
-  }
-  
+  // استفاده از Search API اگر فیلتر وجود دارد
   const { data: searchData, isLoading: searchLoading, error: searchError } = useSearchProperties(
     searchParamsWithPagination,
     {
-      enabled: true // همیشه فعال
+      enabled: hasSearchParams // فقط اگر فیلتر وجود داشته باشد
     }
   );
   
-  const isLoading = searchLoading;
-  const error = searchError;
-  const data = searchData;
+  // استفاده از List API اگر فیلتر وجود ندارد
+  const currentPage = page || 1;
+  const currentPageSize = pageSize || 20;
+  const { data: listData, isLoading: listLoading, error: listError } = useProperties(
+    currentPage,
+    currentPageSize,
+    !hasSearchParams // فقط اگر فیلتر وجود نداشته باشد فعال باشد
+  );
+  
+  // انتخاب داده‌ها بر اساس اینکه آیا فیلتر وجود دارد یا نه
+  const isLoading = hasSearchParams ? searchLoading : listLoading;
+  const error = hasSearchParams ? searchError : listError;
+  const data = hasSearchParams ? searchData : listData;
   
   // Reset به صفحه اول هنگام تغییر فیلترها
   useEffect(() => {
@@ -233,8 +249,8 @@ export default function PropertiesPageClient() {
   };
   
   // اطمینان از اینکه properties یک آرایه است
-  // Search API خودش فیلتر و مرتب‌سازی را انجام می‌دهد، نیازی به فیلتر محلی نیست
-  const propertiesArray: PropertyListItem[] = data?.results || [];
+  // هر دو API (list و search) ساختار یکسانی دارند
+  const propertiesArray: PropertyListItem[] = (data?.results || []) as PropertyListItem[];
   
   // نمایش warning در صورت وجود (fallback به database)
   useEffect(() => {
@@ -560,7 +576,7 @@ export default function PropertiesPageClient() {
                 currentPage={paginationInfo.currentPage}
                 totalPages={paginationInfo.totalPages}
                 onPageChange={(newPage) => {
-                  // همیشه URL را بروزرسانی کن (چون از search API استفاده می‌کنیم)
+                  // همیشه URL را بروزرسانی کن
                   const newParams = new URLSearchParams(window.location.search);
                   newParams.set('page', newPage.toString());
                   router.push(`/properties?${newParams.toString()}`);

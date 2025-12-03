@@ -38,7 +38,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   // پیدا کردن تصویر اصلی
   const mainImage = property.images?.find(img => img.is_main) || property.images?.[0];
   const imageUrl = mainImage?.image 
-    ? (mainImage.image.startsWith('http') ? mainImage.image : `${process.env.NEXT_PUBLIC_API_URL || ''}${mainImage.image}`)
+    ? (mainImage.image.startsWith('http') ? mainImage.image : `${process.env.NEXT_PUBLIC_API_URL || 'https://api.goooya.ir'}${mainImage.image}`)
     : '/placeholder-property.jpg';
 
   return (
@@ -159,7 +159,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             {property.agent_image && (
               <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-primary">
                 <Image
-                  src={property.agent_image.startsWith('http') ? property.agent_image : `${process.env.NEXT_PUBLIC_API_URL || ''}${property.agent_image}`}
+                  src={property.agent_image.startsWith('http') ? property.agent_image : `${process.env.NEXT_PUBLIC_API_URL || 'https://api.goooya.ir'}${property.agent_image}`}
                   alt={property.agent}
                   fill
                   className="object-cover"
