@@ -17,7 +17,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Loader2, Search, Building2, SlidersHorizontal, X, Sparkles } from 'lucide-react';
 import { PropertyListItem } from '@/types/property';
-import { SearchParams } from '@/types/search';
+import { SearchParams, SearchResult } from '@/types/search';
+import { PaginatedPropertiesResponse } from '@/services/propertyApi';
 
 export default function PropertiesPageClient() {
   const router = useRouter();
@@ -254,8 +255,12 @@ export default function PropertiesPageClient() {
   
   // نمایش warning در صورت وجود (fallback به database)
   useEffect(() => {
-    if (data && 'warning' in data && data.warning) {
-      console.warn('⚠️ Search API Warning:', data.warning);
+    // Type guard برای بررسی اینکه data از نوع SearchResult است
+    if (data && 'warning' in data) {
+      const searchResult = data as SearchResult;
+      if (searchResult.warning) {
+        console.warn('⚠️ Search API Warning:', searchResult.warning);
+      }
     }
   }, [data]);
   
