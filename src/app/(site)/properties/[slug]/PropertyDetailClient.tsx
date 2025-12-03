@@ -280,11 +280,13 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                 </div>
                 
                 <div className="flex gap-2">
-                  <FavoriteButtonSmall
-                    propertyId={property.id}
-                    isFavorite={Boolean(property.is_favorite)}
-                    className="bg-white/90 backdrop-blur-sm"
-                  />
+                  {isAuthenticated && (
+                    <FavoriteButtonSmall
+                      propertyId={property.id}
+                      isFavorite={Boolean(property.is_favorite)}
+                      className="bg-white/90 backdrop-blur-sm"
+                    />
+                  )}
                   <Button 
                     size="icon" 
                     variant="secondary" 
@@ -715,11 +717,13 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                   {(isCreating || isCreatingBySlug) ? 'در حال ثبت...' : 'درخواست بازدید'}
                 </Button>
                 
-                <FavoriteButtonLarge
-                  propertyId={property.id}
-                  isFavorite={property.is_favorite}
-                  className="w-full"
-                />
+                {isAuthenticated && (
+                  <FavoriteButtonLarge
+                    propertyId={property.id}
+                    isFavorite={property.is_favorite}
+                    className="w-full"
+                  />
+                )}
               </div>
             </CardContent>
           </Card>

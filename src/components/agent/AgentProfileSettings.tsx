@@ -247,35 +247,35 @@ export default function AgentProfileSettings() {
   const displayImageUrl = previewUrl || (shouldDeleteImage ? null : getMediaUrl(profile.profile_image));
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 p-6">
+    <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 md:space-y-8 p-3 sm:p-4 md:p-6">
       {/* Header با Gradient */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 p-8 text-white shadow-2xl">
+      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 p-4 sm:p-6 md:p-8 text-white shadow-2xl">
         <div className="absolute top-0 right-0 -mt-4 -mr-4 h-32 w-32 rounded-full bg-white/10 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-32 w-32 rounded-full bg-white/10 blur-3xl"></div>
-        <div className="relative flex items-center gap-6">
+        <div className="relative flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
           <div className="relative group">
-            <Avatar className="w-28 h-28 border-4 border-white/20 shadow-2xl transition-transform group-hover:scale-105">
+            <Avatar className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 border-4 border-white/20 shadow-2xl transition-transform group-hover:scale-105">
               <AvatarImage src={displayImageUrl || undefined} />
-              <AvatarFallback className="text-4xl bg-gradient-to-br from-blue-400 to-indigo-600">
+              <AvatarFallback className="text-2xl sm:text-3xl md:text-4xl bg-gradient-to-br from-blue-400 to-indigo-600">
                 {profile.full_name.charAt(0)}
               </AvatarFallback>
             </Avatar>
             {profile.is_verified && (
-              <div className="absolute -top-1 -right-1 bg-green-500 rounded-full p-1.5 border-2 border-white shadow-lg">
-                <CheckCircle2 className="w-4 h-4 text-white" />
+              <div className="absolute -top-1 -right-1 bg-green-500 rounded-full p-1 sm:p-1.5 border-2 border-white shadow-lg">
+                <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
               </div>
             )}
           </div>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-              <Sparkles className="w-8 h-8" />
+          <div className="flex-1 text-center sm:text-right">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 sm:gap-3">
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8" />
               ویرایش پروفایل مشاور
             </h1>
-            <p className="text-blue-100 text-lg">
+            <p className="text-blue-100 text-sm sm:text-base md:text-lg">
               {profile.full_name}
             </p>
             {profile.license_number && (
-              <Badge className="mt-2 bg-white/20 text-white border-white/30">
+              <Badge className="mt-2 bg-white/20 text-white border-white/30 text-xs sm:text-sm">
                 پروانه کسب: {profile.license_number}
               </Badge>
             )}
@@ -304,20 +304,20 @@ export default function AgentProfileSettings() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row items-center gap-8">
+        <CardContent className="pt-4 sm:pt-6">
+          <div className="flex flex-col md:flex-row items-center gap-4 sm:gap-6 md:gap-8">
             <div className="relative group">
-              <Avatar className="w-32 h-32 border-4 border-blue-100 shadow-xl transition-all group-hover:border-blue-300 group-hover:scale-105">
+              <Avatar className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 border-4 border-blue-100 shadow-xl transition-all group-hover:border-blue-300 group-hover:scale-105">
                 <AvatarImage src={displayImageUrl || undefined} />
-                <AvatarFallback className="text-4xl bg-gradient-to-br from-blue-400 to-indigo-600 text-white">
+                <AvatarFallback className="text-2xl sm:text-3xl md:text-4xl bg-gradient-to-br from-blue-400 to-indigo-600 text-white">
                   {profile.full_name.charAt(0)}
                 </AvatarFallback>
               </Avatar>
               <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                <Camera className="w-8 h-8 text-white" />
+                <Camera className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
             </div>
-            <div className="flex-1 space-y-4">
+            <div className="flex-1 w-full space-y-3 sm:space-y-4">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -325,16 +325,17 @@ export default function AgentProfileSettings() {
                 className="hidden"
                 onChange={handleFileSelect}
               />
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={updateProfileMutation.isPending}
-                  className="gap-2 hover:bg-blue-50 hover:border-blue-300 transition-all"
+                  className="gap-2 hover:bg-blue-50 hover:border-blue-300 transition-all text-xs sm:text-sm flex-1 sm:flex-none"
                 >
-                  <Upload className="w-4 h-4" />
-                  {selectedFile ? 'تغییر تصویر' : 'انتخاب تصویر جدید'}
+                  <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">{selectedFile ? 'تغییر تصویر' : 'انتخاب تصویر جدید'}</span>
+                  <span className="sm:hidden">{selectedFile ? 'تغییر' : 'انتخاب'}</span>
                 </Button>
                 {(profile.profile_image || selectedFile) && !shouldDeleteImage && (
                   <Button
@@ -342,14 +343,15 @@ export default function AgentProfileSettings() {
                     variant="outline"
                     onClick={handleDeleteImage}
                     disabled={updateProfileMutation.isPending}
-                    className="gap-2 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-all"
+                    className="gap-2 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-all text-xs sm:text-sm flex-1 sm:flex-none"
                   >
-                    <Trash2 className="w-4 h-4" />
-                    حذف تصویر
+                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">حذف تصویر</span>
+                    <span className="sm:hidden">حذف</span>
                   </Button>
                 )}
               </div>
-              <div className="text-sm text-muted-foreground space-y-1">
+              <div className="text-xs sm:text-sm text-muted-foreground space-y-1">
                 <p>• حداکثر حجم: 5 مگابایت</p>
                 <p>• فرمت‌های مجاز: JPG, PNG</p>
               </div>
@@ -373,8 +375,8 @@ export default function AgentProfileSettings() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <CardContent className="pt-4 sm:pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
               <div className="space-y-2">
                 <Label htmlFor="full_name" className="flex items-center gap-2 text-base">
                   <User className="w-4 h-4 text-green-600" />
@@ -620,31 +622,34 @@ export default function AgentProfileSettings() {
         </Card>
 
         {/* دکمه‌های عملیات */}
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-4 pt-6 pb-4">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 pt-4 sm:pt-6 pb-2 sm:pb-4">
           <Button
             type="button"
             variant="outline"
             onClick={handleReset}
             disabled={updateProfileMutation.isPending}
-            className="gap-2 h-12 hover:bg-gray-100 transition-all"
+            className="gap-2 h-10 sm:h-12 hover:bg-gray-100 transition-all text-xs sm:text-sm w-full sm:w-auto"
           >
-            <RefreshCcw className="w-4 h-4" />
-            بازگشت به حالت اولیه
+            <RefreshCcw className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">بازگشت به حالت اولیه</span>
+            <span className="sm:hidden">بازگشت</span>
           </Button>
           <Button
             type="submit"
             disabled={updateProfileMutation.isPending}
-            className="gap-2 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all"
+            className="gap-2 h-10 sm:h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all text-xs sm:text-sm w-full sm:w-auto"
           >
             {updateProfileMutation.isPending ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                در حال ذخیره...
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                <span className="hidden sm:inline">در حال ذخیره...</span>
+                <span className="sm:hidden">ذخیره...</span>
               </>
             ) : (
               <>
-                <Save className="w-5 h-5" />
-                ذخیره تغییرات
+                <Save className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">ذخیره تغییرات</span>
+                <span className="sm:hidden">ذخیره</span>
               </>
             )}
           </Button>

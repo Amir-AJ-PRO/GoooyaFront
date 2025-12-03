@@ -5,7 +5,20 @@
 export const APP_NAME = "گویا";
 export const APP_DESCRIPTION = "پلتفرم املاک فارسی";
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.goooya.ir";
+/**
+ * دریافت Base URL از environment variable
+ * این تابع در هر دو client-side و server-side کار می‌کند
+ */
+export function getApiBaseUrl(): string {
+  // در server-side و client-side هر دو از NEXT_PUBLIC_API_URL استفاده می‌کنیم
+  return process.env.NEXT_PUBLIC_API_URL || "https://goooya.api.ir";
+}
+
+/**
+ * Base URL برای API - برای استفاده مستقیم
+ * @deprecated بهتر است از getApiBaseUrl() استفاده کنید
+ */
+export const API_BASE_URL = getApiBaseUrl();
 
 export const PHONE_REGEX = /^09\d{9}$/;
 export const OTP_LENGTH = 6;

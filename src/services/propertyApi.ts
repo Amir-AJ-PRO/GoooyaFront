@@ -246,8 +246,8 @@ export const getProperties = async (
   // محدود کردن pageSize به حداکثر 100
   const validPageSize = Math.min(pageSize, 100);
   
-  // استفاده از Next.js API route
-  const url = new URL('/api/properties/list/', window.location.origin);
+  // استفاده از Next.js API route - استفاده از API_BASE_URL برای اتصال مستقیم به backend
+  const url = new URL(`${API_BASE_URL}/api/properties/list/`);
   url.searchParams.append('page', page.toString());
   url.searchParams.append('page_size', validPageSize.toString());
   

@@ -34,6 +34,7 @@ import Image from 'next/image';
 import { getMediaUrl } from '@/lib/utils';
 import { UpdatePropertyPayload, AgentProperty } from '@/services/agentService';
 import { toast } from 'sonner';
+import RichTextEditor from '@/components/forms/RichTextEditor';
 
 export default function EditPropertyPage() {
   const params = useParams();
@@ -129,6 +130,8 @@ export default function EditPropertyPage() {
           city: cityId,
           location: locationId,
           property_type: propertyTypeId,
+          description: foundProperty.description || '',
+          goooya_description: foundProperty.goooya_description || '',
           // Features - فقط features موجود رو اضافه کن
           has_parking: foundProperty.has_parking,
           has_storage: foundProperty.has_storage,
@@ -343,24 +346,24 @@ export default function EditPropertyPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pb-10">
       <div className="max-w-5xl mx-auto space-y-6 px-4 py-8">
         {/* Header با طراحی بهتر */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-6 text-white">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
-                <Building2 className="w-8 h-8" />
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-5 md:p-6 text-white">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3">
+                <Building2 className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8" />
               </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold">ویرایش ملک</h1>
-                <p className="text-white/90 text-sm md:text-base mt-1">{property.title}</p>
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">ویرایش ملک</h1>
+                <p className="text-white/90 text-xs sm:text-sm md:text-base mt-1 line-clamp-2">{property.title}</p>
               </div>
             </div>
             <Button 
               variant="secondary" 
               onClick={() => router.back()}
-              className="self-start md:self-auto"
+              className="self-start md:self-auto text-xs sm:text-sm h-8 sm:h-9 md:h-10"
             >
-              <ArrowLeft className="w-4 h-4 ml-2" />
-              بازگشت
+              <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
+              <span className="hidden sm:inline">بازگشت</span>
             </Button>
           </div>
 
@@ -587,29 +590,29 @@ export default function EditPropertyPage() {
                     <RadioGroup
                       value={formData.transaction_type || property.transaction_type}
                       onValueChange={(value) => handleChange('transaction_type', value)}
-                      className="grid grid-cols-2 gap-4"
+                      className="grid grid-cols-2 gap-3 sm:gap-4"
                     >
                       <Label
                         htmlFor="sale"
-                        className={`flex items-center justify-center space-x-2 space-x-reverse p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        className={`flex items-center justify-center space-x-2 space-x-reverse p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all ${
                           (formData.transaction_type || property.transaction_type) === 'sale'
                             ? 'border-amber-500 bg-amber-50 shadow-md'
                             : 'border-gray-200 hover:border-amber-300'
                         }`}
                       >
-                        <RadioGroupItem value="sale" id="sale" />
-                        <span className="font-semibold">فروش</span>
+                        <RadioGroupItem value="sale" id="sale" className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <span className="font-semibold text-sm sm:text-base">فروش</span>
                       </Label>
                       <Label
                         htmlFor="rent"
-                        className={`flex items-center justify-center space-x-2 space-x-reverse p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        className={`flex items-center justify-center space-x-2 space-x-reverse p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all ${
                           (formData.transaction_type || property.transaction_type) === 'rent'
                             ? 'border-amber-500 bg-amber-50 shadow-md'
                             : 'border-gray-200 hover:border-amber-300'
                         }`}
                       >
-                        <RadioGroupItem value="rent" id="rent" />
-                        <span className="font-semibold">رهن / اجاره</span>
+                        <RadioGroupItem value="rent" id="rent" className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <span className="font-semibold text-sm sm:text-base">رهن / اجاره</span>
                       </Label>
                     </RadioGroup>
                   </div>
@@ -707,7 +710,7 @@ export default function EditPropertyPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description" className="text-base font-semibold">
+                    <Label htmlFor="description" className="text-sm sm:text-base font-semibold">
                       توضیحات کامل
                     </Label>
                     <Textarea
@@ -715,9 +718,23 @@ export default function EditPropertyPage() {
                       rows={6}
                       value={formData.description || ''}
                       onChange={(e) => handleChange('description', e.target.value)}
-                      className="border-2 focus:border-indigo-500 transition-colors resize-none"
+                      className="border-2 focus:border-indigo-500 transition-colors resize-none text-sm sm:text-base"
                       placeholder="توضیحات کامل در مورد ملک، موقعیت، امکانات و ..."
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="goooya_description" className="text-sm sm:text-base font-semibold">
+                      توضیحات گویا (Rich Text)
+                    </Label>
+                    <div className="w-full">
+                      <RichTextEditor
+                        value={formData.goooya_description || ''}
+                        onChange={(value) => handleChange('goooya_description', value)}
+                        placeholder="توضیحات کامل با قابلیت فرمت‌دهی..."
+                        minHeight="200px"
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -730,8 +747,8 @@ export default function EditPropertyPage() {
                     امکانات و ویژگی‌ها
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <CardContent className="pt-4 sm:pt-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4">
                     {[
                       { key: 'has_parking', label: 'پارکینگ', emoji: '🚗' },
                       { key: 'has_storage', label: 'انباری', emoji: '📦' },
@@ -745,7 +762,7 @@ export default function EditPropertyPage() {
                       <Label
                         key={key}
                         htmlFor={key}
-                        className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all ${
                           formData[key as keyof UpdatePropertyPayload]
                             ? 'border-emerald-500 bg-emerald-50 shadow-md'
                             : 'border-gray-200 hover:border-emerald-300'
@@ -755,9 +772,10 @@ export default function EditPropertyPage() {
                           id={key}
                           checked={formData[key as keyof UpdatePropertyPayload] as boolean || false}
                           onCheckedChange={(checked) => handleChange(key as keyof UpdatePropertyPayload, checked)}
+                          className="h-4 w-4 sm:h-5 sm:w-5"
                         />
-                        <span className="text-xl">{emoji}</span>
-                        <span className="font-medium">{label}</span>
+                        <span className="text-base sm:text-xl">{emoji}</span>
+                        <span className="font-medium text-xs sm:text-sm md:text-base">{label}</span>
                       </Label>
                     ))}
                   </div>
@@ -776,8 +794,8 @@ export default function EditPropertyPage() {
                   {/* تصاویر موجود */}
                   {existingImages.length > 0 && (
                     <div className="space-y-3">
-                      <Label className="text-base font-semibold">تصاویر موجود</Label>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <Label className="text-sm sm:text-base font-semibold">تصاویر موجود</Label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                         {existingImages.map((img) => (
                           <div key={img.id} className="relative group">
                             <div 
@@ -793,7 +811,7 @@ export default function EditPropertyPage() {
                                 alt="تصویر ملک"
                                 width={200}
                                 height={150}
-                                className="object-cover w-full h-32"
+                                className="object-cover w-full h-24 sm:h-28 md:h-32"
                                 unoptimized
                               />
                             </div>
@@ -879,19 +897,19 @@ export default function EditPropertyPage() {
 
                   {/* آپلود تصویر */}
                   <div className="space-y-2">
-                    <Label htmlFor="images" className="text-base font-semibold">
+                    <Label htmlFor="images" className="text-sm sm:text-base font-semibold">
                       افزودن تصاویر جدید
                     </Label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-rose-400 transition-colors bg-gray-50">
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg sm:rounded-xl p-4 sm:p-6 hover:border-rose-400 transition-colors bg-gray-50">
                       <Input
                         id="images"
                         type="file"
                         accept="image/*"
                         multiple
                         onChange={handleImageAdd}
-                        className="cursor-pointer"
+                        className="cursor-pointer text-xs sm:text-sm"
                       />
-                      <p className="text-sm text-muted-foreground mt-3 text-center">
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-2 sm:mt-3 text-center">
                         📸 می‌توانید چند تصویر به صورت همزمان انتخاب کنید
                       </p>
                     </div>
@@ -900,41 +918,42 @@ export default function EditPropertyPage() {
               </Card>
 
               {/* دکمه‌های ناوبری */}
-              <div className="flex justify-between gap-4">
+              <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handlePrevious}
-                  size="lg"
-                  className="px-8"
+                  className="w-full sm:w-auto h-10 sm:h-11 md:h-12 text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8"
                 >
-                  <ArrowLeft className="w-5 h-5 ml-2" />
-                  مرحله قبل
+                  <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 ml-1 sm:ml-2" />
+                  <span className="hidden sm:inline">مرحله قبل</span>
+                  <span className="sm:hidden">قبل</span>
                 </Button>
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => router.back()}
-                    size="lg"
+                    className="w-full sm:w-auto h-10 sm:h-11 md:h-12 text-xs sm:text-sm md:text-base"
                   >
                     انصراف
                   </Button>
                   <Button
                     type="submit"
                     disabled={updateMutation.isPending}
-                    size="lg"
-                    className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all px-8"
+                    className="w-full sm:w-auto h-10 sm:h-11 md:h-12 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all text-xs sm:text-sm md:text-base px-4 sm:px-6 md:px-8"
                   >
                     {updateMutation.isPending ? (
                       <>
-                        <Loader2 className="w-5 h-5 ml-2 animate-spin" />
-                        در حال ذخیره...
+                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 ml-1 sm:ml-2 animate-spin" />
+                        <span className="hidden sm:inline">در حال ذخیره...</span>
+                        <span className="sm:hidden">ذخیره...</span>
                       </>
                     ) : (
                       <>
-                        <Save className="w-5 h-5 ml-2" />
-                        ذخیره تغییرات
+                        <Save className="w-4 h-4 sm:w-5 sm:h-5 ml-1 sm:ml-2" />
+                        <span className="hidden sm:inline">ذخیره تغییرات</span>
+                        <span className="sm:hidden">ذخیره</span>
                       </>
                     )}
                   </Button>

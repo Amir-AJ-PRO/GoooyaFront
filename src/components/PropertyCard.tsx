@@ -14,6 +14,7 @@ import {
   User
 } from 'lucide-react';
 import { amountToWords } from '@/lib/numberToWords';
+import { API_BASE_URL } from '@/lib/constants';
 
 interface PropertyCardProps {
   property: PropertyListItem;
@@ -38,7 +39,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   // پیدا کردن تصویر اصلی
   const mainImage = property.images?.find(img => img.is_main) || property.images?.[0];
   const imageUrl = mainImage?.image 
-    ? (mainImage.image.startsWith('http') ? mainImage.image : `${process.env.NEXT_PUBLIC_API_URL || 'https://api.goooya.ir'}${mainImage.image}`)
+    ? (mainImage.image.startsWith('http') ? mainImage.image : `${API_BASE_URL}${mainImage.image.startsWith('/') ? mainImage.image : `/${mainImage.image}`}`)
     : '/placeholder-property.jpg';
 
   return (
@@ -54,14 +55,14 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
           
-          {/* Badge نوع معامله */}
-          <div className="absolute top-3 right-3">
+          {/* Badge نوع معامله - سمت راست بالا */}
+          <div className="absolute top-3 right-3 z-10">
             <Badge 
               className={`${
                 property.transaction_type === 'sale' 
                   ? 'bg-green-600 hover:bg-green-700' 
                   : 'bg-blue-600 hover:bg-blue-700'
-              } text-white font-semibold px-3 py-1`}
+              } text-white font-semibold px-3 py-1 shadow-lg`}
             >
               {property.transaction_type === 'sale' ? '💰 فروش' : '🏠 اجاره'}
             </Badge>
@@ -159,7 +160,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             {property.agent_image && (
               <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-primary">
                 <Image
-                  src={property.agent_image.startsWith('http') ? property.agent_image : `${process.env.NEXT_PUBLIC_API_URL || 'https://api.goooya.ir'}${property.agent_image}`}
+                  src={property.agent_image.startsWith('http') ? property.agent_image : `${API_BASE_URL}${property.agent_image.startsWith('/') ? property.agent_image : `/${property.agent_image}`}`}
                   alt={property.agent}
                   fill
                   className="object-cover"

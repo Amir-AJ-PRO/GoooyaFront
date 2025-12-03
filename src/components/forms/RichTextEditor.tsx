@@ -1,13 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import 'react-quill-new/dist/quill.snow.css';
+import 'react-quill/dist/quill.snow.css';
+
+// Import polyfill برای findDOMNode در React 18
+import '@/lib/react18-polyfill';
 
 // Dynamic import برای جلوگیری از خطای SSR
-const ReactQuill = dynamic(() => import('react-quill-new'), { 
+const ReactQuill = dynamic(() => import('react-quill'), { 
   ssr: false,
-  loading: () => <div className="h-64 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">در حال بارگذاری ویرایشگر...</div>
+  loading: () => <div className="h-64 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-500">در حال بارگذاری ویرایشگر...</div>
 });
 
 interface RichTextEditorProps {
@@ -32,8 +35,8 @@ export default function RichTextEditor({
     setMounted(true);
   }, []);
 
-  // تنظیمات toolbar
-  const modules = {
+  // تنظیمات toolbar با useMemo برای جلوگیری از re-render غیرضروری
+  const modules = useMemo(() => ({
     toolbar: [
       [{ 'header': [1, 2, 3, false] }],
       ['bold', 'italic', 'underline', 'strike'],
@@ -43,16 +46,16 @@ export default function RichTextEditor({
       ['link'],
       ['clean']
     ],
-  };
+  }), []);
 
-  const formats = [
+  const formats = useMemo(() => ([
     'header',
     'bold', 'italic', 'underline', 'strike',
     'list', 'bullet',
     'align',
     'color', 'background',
     'link'
-  ];
+  ]), []);
 
   if (!mounted) {
     return (
@@ -123,14 +126,17 @@ export default function RichTextEditor({
         }
       `}</style>
       
-      <ReactQuill
-        theme="snow"
-        value={value}
-        onChange={onChange}
-        modules={modules}
-        formats={formats}
-        placeholder={placeholder}
-      />
+      {/* استفاده از try-catch برای جلوگیری از خطا */}
+      {mounted && (
+        <ReactQuill
+          theme="snow"
+          value={value || ''} // Ensure value is always a string
+          onChange={onChange}
+          modules={modules}
+          formats={formats}
+          placeholder={placeholder}
+        />
+      )}
     </div>
   );
 }

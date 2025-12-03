@@ -137,10 +137,8 @@ export const useSearchProperties = (
         queryParams.append('sort_by', params.sort_by);
       }
       
-      // استفاده از Next.js API route برای جلوگیری از CORS
-      // Next.js route handler خودش به backend متصل می‌شود
-      // استفاده از / بعد از properties برای هماهنگی با فرمت backend
-      const url = `/api/search/properties/?${queryParams.toString()}`;
+      // استفاده مستقیم از backend API
+      const url = `${API_BASE_URL}/api/search/properties/?${queryParams.toString()}`;
       
       console.log('🔍 در حال جستجو:', url);
       console.log('📋 پارامترها:', Object.fromEntries(queryParams));

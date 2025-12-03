@@ -38,15 +38,16 @@ export default function AgentDashboard() {
   }, [properties]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5 md:space-y-6 px-2 sm:px-4 md:px-0">
       <PageHeader
         title="پنل مشاور"
         description="مدیریت املاک و فعالیت‌های خود"
       >
-        <Link href="/agent/properties/new">
-          <Button>
-            <Plus className="h-4 w-4 ml-2" />
-            ثبت ملک جدید
+        <Link href="/agent/properties/new" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10">
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
+            <span className="hidden sm:inline">ثبت ملک جدید</span>
+            <span className="sm:hidden">ثبت ملک</span>
           </Button>
         </Link>
       </PageHeader>
@@ -55,19 +56,19 @@ export default function AgentDashboard() {
       <AgentProfileCard />
 
       {/* آمار */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 p-3 sm:p-6">
+                <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
                   {stat.title}
                 </CardTitle>
-                <Icon className={`h-5 w-5 ${stat.color}`} />
+                <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.color} flex-shrink-0`} />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
+              <CardContent className="p-3 sm:p-6 pt-0">
+                <div className="text-xl sm:text-2xl font-bold">
                   {isLoading ? '...' : stat.value}
                 </div>
               </CardContent>

@@ -67,16 +67,16 @@ export default function AgentPropertiesList() {
   const propertiesArray = Array.isArray(allProperties) ? allProperties : [];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <Card>
-        <CardHeader>
-          <CardTitle>املاک من</CardTitle>
+        <CardHeader className="p-3 sm:p-6">
+          <CardTitle className="text-base sm:text-lg md:text-xl">املاک من</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-6 pt-0">
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="all">همه املاک</TabsTrigger>
-              <TabsTrigger value="ok">فعال</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
+              <TabsTrigger value="all" className="text-xs sm:text-sm">همه املاک</TabsTrigger>
+              <TabsTrigger value="ok" className="text-xs sm:text-sm">فعال</TabsTrigger>
             </TabsList>
           </Tabs>
         </CardContent>
@@ -84,23 +84,23 @@ export default function AgentPropertiesList() {
 
       {propertiesArray.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center">
-            <Home className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">
+          <CardContent className="py-8 sm:py-12 text-center px-4">
+            <Home className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
+            <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
               {activeTab === 'all' 
                 ? 'هنوز ملکی ثبت نکرده‌اید'
                 : `ملکی با وضعیت "${getStatusLabel(activeTab)}" یافت نشد`
               }
             </p>
             {activeTab === 'all' && (
-              <Button className="mt-4" onClick={() => window.location.href = '/agent/properties/new'}>
+              <Button className="mt-3 sm:mt-4 text-xs sm:text-sm h-9 sm:h-10" onClick={() => window.location.href = '/agent/properties/new'}>
                 افزودن ملک جدید
               </Button>
             )}
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {propertiesArray.map((property) => (
             <PropertyCard key={property.id} property={property} />
           ))}
@@ -162,7 +162,7 @@ function PropertyCard({ property }: { property: AgentProperty }) {
     
       <Card className="overflow-hidden hover:shadow-lg transition-shadow">
         {/* تصویر */}
-        <div className="relative h-48 bg-gray-200">
+        <div className="relative h-40 sm:h-48 bg-gray-200">
           {mainImage && getMediaUrl(mainImage.image) ? (
             <Image
               src={getMediaUrl(mainImage.image)!}
@@ -173,86 +173,89 @@ function PropertyCard({ property }: { property: AgentProperty }) {
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Home className="w-12 h-12 text-gray-400" />
+              <Home className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" />
             </div>
           )}
 
           
           {/* Badge وضعیت */}
-          <div className="absolute top-2 right-2">
-            <Badge variant={getStatusVariant(property.show_status)}>
-              {getStatusLabel(property.show_status)}
+          <div className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2">
+            <Badge variant={getStatusVariant(property.show_status)} className="text-xs px-1.5 sm:px-2 py-0.5 sm:py-1">
+              <span className="hidden sm:inline">{getStatusLabel(property.show_status)}</span>
+              <span className="sm:hidden">{getStatusLabel(property.show_status).slice(0, 4)}</span>
             </Badge>
           </div>
 
           {/* تعداد تصاویر */}
           {property.images.length > 1 && (
-            <div className="absolute bottom-2 left-2">
-              <Badge variant="secondary" className="gap-1">
-                <Eye className="w-3 h-3" />
+            <div className="absolute bottom-1.5 sm:bottom-2 left-1.5 sm:left-2">
+              <Badge variant="secondary" className="gap-1 text-xs px-1.5 sm:px-2 py-0.5 sm:py-1">
+                <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 {property.images.length}
               </Badge>
             </div>
           )}
         </div>
 
-        <CardContent className="p-4 space-y-3">
+        <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3">
           {/* عنوان */}
-          <h3 className="font-semibold text-lg line-clamp-1">
+          <h3 className="font-semibold text-sm sm:text-base md:text-lg line-clamp-2 break-words">
             {property.title}
           </h3>
 
           {/* آدرس */}
           {property.address && (
-            <div className="flex items-start gap-2 text-sm text-muted-foreground">
-              <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <p className="line-clamp-1">{property.address}</p>
+            <div className="flex items-start gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 mt-0.5 flex-shrink-0" />
+              <p className="line-clamp-2 break-words">{property.address}</p>
             </div>
           )}
 
           {/* مشخصات */}
-          <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-2 text-xs sm:text-sm">
             <div className="flex items-center gap-1">
-              <Maximize className="w-4 h-4 text-muted-foreground" />
-              <span>{property.measure} متر</span>
+              <Maximize className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0" />
+              <span className="truncate">{property.measure} متر</span>
             </div>
             <div className="flex items-center gap-1">
-              <BedDouble className="w-4 h-4 text-muted-foreground" />
-              <span>{property.rooms} اتاق</span>
+              <BedDouble className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0" />
+              <span className="truncate">{property.rooms} اتاق</span>
             </div>
           </div>
 
           {/* قیمت */}
-          <div className="flex items-center gap-2 pt-2 border-t">
-            <DollarSign className="w-5 h-5 text-green-600" />
-            <span className="font-bold text-lg">
+          <div className="flex items-center gap-1.5 sm:gap-2 pt-1.5 sm:pt-2 border-t">
+            <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
+            <span className="font-bold text-sm sm:text-base md:text-lg truncate">
               {formatPrice(property.price)} تومان
             </span>
           </div>
 
           {/* تاریخ */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Calendar className="w-3 h-3" />
-            <span>{formatDate(property.created_at)}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground">
+            <Calendar className="w-3 h-3 flex-shrink-0" />
+            <span className="truncate">{formatDate(property.created_at)}</span>
           </div>
 
           {/* دکمه‌ها */}
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-1.5 sm:gap-2 pt-1.5 sm:pt-2">
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex-1"
+              className="flex-1 text-xs sm:text-sm h-8 sm:h-9"
               onClick={handleEdit}
             >
-              <Pencil className="w-3 h-3 ml-1" />
-              ویرایش
+              <Pencil className="w-3 h-3 ml-0.5 sm:ml-1" />
+              <span className="hidden sm:inline">ویرایش</span>
+              <span className="sm:hidden">ویرایش</span>
             </Button>
             <Button 
               variant="destructive" 
               size="sm"
+              className="h-8 sm:h-9 w-8 sm:w-9 p-0"
               onClick={() => setShowDeleteDialog(true)}
             >
-              <Trash2 className="w-3 h-3" />
+              <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </Button>
           </div>
         </CardContent>

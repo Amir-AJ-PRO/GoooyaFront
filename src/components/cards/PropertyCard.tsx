@@ -1,3 +1,5 @@
+'use client';
+
 import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Bed, Square, ArrowLeft } from "lucide-react";
@@ -6,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { PropertyListItem } from "@/types/property";
 import { API_BASE_URL } from "@/lib/constants";
 import { FavoriteButtonSmall } from "@/components/favorites/FavoriteButton";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PropertyCardProps {
   property: PropertyListItem;
@@ -25,6 +28,8 @@ const formatPrice = (price?: number): string => {
 };
 
 export default function PropertyCard({ property, showFavoriteButton = true }: PropertyCardProps) {
+  const { isAuthenticated } = useAuth();
+  
   // چک کردن وجود property
   if (!property) {
     return null;
@@ -69,9 +74,19 @@ export default function PropertyCard({ property, showFavoriteButton = true }: Pr
           {/* Overlay gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
-          {/* بج نوع معامله */}
+          {/* دکمه علاقه‌مندی - سمت چپ بالا - فقط برای کاربران لاگین شده */}
+          {showFavoriteButton && isAuthenticated && (
+            <div className="absolute top-3 left-3 z-10">
+              <FavoriteButtonSmall
+                propertyId={property.id}
+                isFavorite={Boolean((property as any).is_favorite)}
+              />
+            </div>
+          )}
+          
+          {/* بج نوع معامله - سمت راست بالا */}
           <Badge 
-            className={`absolute top-3 left-3 px-3 py-1.5 text-xs font-bold shadow-lg ${
+            className={`absolute top-3 right-3 px-3 py-1.5 text-xs font-bold shadow-lg z-10 ${
               property.transaction_type === 'sale' 
                 ? 'bg-green-600 hover:bg-green-700 text-white' 
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
@@ -79,14 +94,6 @@ export default function PropertyCard({ property, showFavoriteButton = true }: Pr
           >
             {property.transaction_type === 'sale' ? '💰 فروش' : '🏠 اجاره'}
           </Badge>
-          
-          {/* دکمه علاقه‌مندی */}
-          {showFavoriteButton && (
-            <FavoriteButtonSmall
-              propertyId={property.id}
-              isFavorite={Boolean((property as any).is_favorite)}
-            />
-          )}
           
           {/* تعداد تصاویر */}
           {property.images && property.images.length > 1 && (

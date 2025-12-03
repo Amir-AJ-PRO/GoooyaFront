@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getApiBaseUrl } from '@/lib/constants';
 
-// در server-side باید از process.env مستقیماً استفاده کنیم
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.goooya.ir";
+// استفاده از helper function برای دریافت base URL
+const API_BASE_URL = getApiBaseUrl();
 
 /**
  * دریافت لیست املاک
