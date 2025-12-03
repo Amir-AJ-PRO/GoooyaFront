@@ -20,6 +20,11 @@ import { PropertyListItem } from '@/types/property';
 import { SearchParams, SearchResult } from '@/types/search';
 import { PaginatedPropertiesResponse } from '@/services/propertyApi';
 
+// Type guard function برای بررسی اینکه data از نوع SearchResult است
+function isSearchResult(data: SearchResult | PaginatedPropertiesResponse | undefined): data is SearchResult {
+  return data !== undefined && 'warning' in data;
+}
+
 export default function PropertiesPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -255,12 +260,8 @@ export default function PropertiesPageClient() {
   
   // نمایش warning در صورت وجود (fallback به database)
   useEffect(() => {
-    // Type guard برای بررسی اینکه data از نوع SearchResult است
-    if (data && 'warning' in data) {
-      const searchResult = data as SearchResult;
-      if (searchResult.warning) {
-        console.warn('⚠️ Search API Warning:', searchResult.warning);
-      }
+    if (isSearchResult(data) && data.warning) {
+      console.warn('⚠️ Search API Warning:', data.warning);
     }
   }, [data]);
   
