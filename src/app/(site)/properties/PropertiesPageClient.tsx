@@ -254,10 +254,10 @@ export default function PropertiesPageClient() {
   
   // نمایش warning در صورت وجود (fallback به database)
   useEffect(() => {
-    if (data?.warning) {
+    if (data && 'warning' in data && data.warning) {
       console.warn('⚠️ Search API Warning:', data.warning);
     }
-  }, [data?.warning]);
+  }, [data]);
   
   // اطلاعات pagination
   const paginationInfo = data ? {

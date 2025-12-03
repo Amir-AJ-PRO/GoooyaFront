@@ -16,7 +16,7 @@ interface PropertyCardProps {
 }
 
 // فرمت قیمت به تومان
-const formatPrice = (price?: number): string => {
+const formatPrice = (price?: number | null): string => {
   if (!price) return 'توافقی';
   
   if (price >= 1000000000) {

@@ -55,6 +55,8 @@ export interface AgentProperty {
   images: PropertyImage[];
   created_at: string;
   updated_at: string;
+  description?: string;
+  goooya_description?: string;
   // Features
   has_parking?: boolean;
   has_storage?: boolean;
