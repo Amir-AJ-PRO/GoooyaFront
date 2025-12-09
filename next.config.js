@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output : 'standalone',
   images: {
     remotePatterns: [
       // Production server
@@ -50,7 +51,7 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   env: {
-    API_BASE: process.env.API_BASE || 'http://127.0.0.1:9000',
+    NEXT_PUBLIC_API_URL: process.env.API_BASE || 'https://api.goooya.ir',
   },
   eslint: {
     ignoreDuringBuilds: true,
