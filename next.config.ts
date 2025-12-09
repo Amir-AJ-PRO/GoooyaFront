@@ -45,6 +45,9 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   swcMinify: true,
   
+  // Output configuration for Docker
+  output: 'standalone',
+  
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: [

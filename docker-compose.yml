@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  gooya-nextjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gooya-nextjs
+    ports:
+      - "8030:8030"
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      # متغیرهای محیطی را اینجا اضافه کنید یا از env_file استفاده کنید
+      # - NEXT_PUBLIC_API_URL=https://goooya.api.ir
+      # - API_BASE=https://goooya.api.ir
+      # - ELASTICSEARCH_HOST=localhost:9200
+      # - ELASTICSEARCH_INDEX=properties
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - gooya-network
+    # برای volume mapping در صورت نیاز
+    # volumes:
+    #   - ./public:/app/public:ro
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8030"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  gooya-network:
+    driver: bridge
+
