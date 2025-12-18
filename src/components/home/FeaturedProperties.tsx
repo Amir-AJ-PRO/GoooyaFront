@@ -12,16 +12,7 @@ import { Button } from '@/components/ui/button';
  * فقط املاک واقعی از API نمایش داده می‌شود
  */
 export default function FeaturedProperties() {
-  const { data: properties, isLoading, error } = useHomepageProperties();
-  
-  console.log('🏠 FeaturedProperties - داده‌های دریافتی:', {
-    isLoading,
-    error: error?.message,
-    propertiesCount: properties?.length || 0,
-    properties: properties
-  });
-
-  return (
+  const { data: properties, isLoading, error } = useHomepageProperties();return (
     <section className="py-16 bg-gradient-to-b from-white to-gray-50">
       <div className="container mx-auto px-4">
         {/* هدر */}

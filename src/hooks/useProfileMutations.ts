@@ -5,10 +5,9 @@ import {
   UpdateProfilePayload,
   UpdateProfileResponse 
 } from '@/services/authApi';
-import { getAccessToken } from '@/lib/tokenManager';
 
 /**
- * Hook برای به‌روزرسانی پروفایل کاربر
+ * Hook برای به‌روزرسانی پروفایل کاربر - نسخه امن
  */
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
@@ -19,18 +18,12 @@ export const useUpdateProfile = () => {
     UpdateProfilePayload
   >({
     mutationFn: async (payload: UpdateProfilePayload) => {
-      const token = getAccessToken();
-      if (!token) {
-        throw new Error('لطفاً ابتدا وارد شوید');
-      }
-      return updateProfile(payload, token);
+      return await updateProfile(payload);
     },
-    onSuccess: (data) => {
-      // به‌روزرسانی localStorage
-      localStorage.setItem('user_data', JSON.stringify(data.user));
-      
+    onSuccess: () => {
       // Invalidate queries مرتبط
       queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['auth-me'] });
       
       toast.success('پروفایل با موفقیت به‌روزرسانی شد', {
         description: 'اطلاعات شما ذخیره شد'
@@ -43,4 +36,3 @@ export const useUpdateProfile = () => {
     }
   });
 };
-

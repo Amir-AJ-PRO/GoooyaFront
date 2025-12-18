@@ -1,54 +1,44 @@
 import { useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 
 /**
- * Hook برای ارسال درخواست‌های احراز هویت شده با مدیریت خودکار رفرش توکن
+ * Hook امن برای ارسال درخواست‌های احراز هویت شده
+ * بدون دسترسی به token - همه چیز از طریق HttpOnly Cookie
  */
 export const useAuthenticatedFetch = () => {
-  const { refreshAccessToken, logout } = useAuth();
+  /**
+   * دریافت CSRF token از cookie
+   */
+  const getCsrfToken = (): string | null => {
+    if (typeof document === 'undefined') return null;
+    const matches = document.cookie.match(/csrf_token=([^;]+)/);
+    return matches ? matches[1] : null;
+  };
 
+  /**
+   * ارسال درخواست امن
+   */
   const authenticatedFetch = useCallback(async (
     url: string,
     options: RequestInit = {}
   ) => {
-    const makeRequest = async (token: string) => {
-      return fetch(url, {
-        ...options,
-        headers: {
-          ...options.headers,
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+    const csrfToken = getCsrfToken();
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string> || {}),
     };
-
-    try {
-      const token = localStorage.getItem('access_token');
-      
-      if (!token) {
-        logout();
-        throw new Error('لطفاً وارد شوید');
-      }
-
-      let response = await makeRequest(token);
-
-      // اگر 401 بود، رفرش کن و دوباره امتحان کن
-      if (response.status === 401) {
-        await refreshAccessToken();
-        const newToken = localStorage.getItem('access_token');
-        
-        if (newToken) {
-          response = await makeRequest(newToken);
-        }
-      }
-
-      return response;
-    } catch (error) {
-      console.error('خطا در درخواست:', error);
-      throw error;
+    
+    // اضافه کردن CSRF token برای درخواست‌های تغییردهنده
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method || 'GET') && csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
     }
-  }, [refreshAccessToken, logout]);
+    
+    return fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include', // ارسال cookies
+    });
+  }, []);
 
   return { authenticatedFetch };
 };
-

@@ -138,7 +138,7 @@ export default function PropertySubmissionForm({ onSuccess }: PropertySubmission
   
   // استفاده از اطلاعات کاربر لاگین‌شده (اگر موجود باشد)
   const userPhone = user?.phone || backendUser?.phone || '';
-  const userName = backendUser?.full_name || user?.name || '';
+  const userName = backendUser?.name || user?.name || '';
   
   const [currentStep, setCurrentStep] = useState(1); // 1 or 2
   const [formData, setFormData] = useState<PropertyFormData>({
@@ -280,10 +280,7 @@ export default function PropertySubmissionForm({ onSuccess }: PropertySubmission
   const submitProperty = async () => {
     setIsSubmitting(true);
     try {
-      // TODO: ارسال به API
-      console.log('Property Data:', formData);
-      
-      toast.success('ملک شما با موفقیت ثبت شد و در انتظار تایید کارشناسان است');
+      // TODO: ارسال به APItoast.success('ملک شما با موفقیت ثبت شد و در انتظار تایید کارشناسان است');
       
       // Reset form
       setFormData({

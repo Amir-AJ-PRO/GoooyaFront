@@ -119,9 +119,7 @@ function PropertyCard({ property }: { property: AgentProperty }) {
   const deleteMutation = useDeleteProperty();
   const mainImage = property.images.find((img) => img.is_main) || property.images[0];
 
-  const handleEdit = () => {
-    console.log('Editing property:', { id: property.id, slug: property.slug, title: property.title });
-    router.push(`/agent/properties/${property.slug}/edit`);
+  const handleEdit = () => {router.push(`/agent/properties/${property.slug}/edit`);
   };
 
   const handleDelete = async () => {

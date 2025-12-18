@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { getAccessToken } from '@/lib/tokenManager';
+import { useAuthenticatedFetch } from '@/hooks/useAuthenticatedFetch';
 import { API_BASE_URL } from '@/lib/constants';
 import { 
   CreateVisitTicketPayload, 
@@ -9,10 +9,11 @@ import {
 } from '@/types/property';
 
 /**
- * Hook برای مدیریت تیکت‌های بازدید ملک
+ * Hook برای مدیریت تیکت‌های بازدید ملک - نسخه امن
  */
 export const useVisitTickets = () => {
   const { isAuthenticated } = useAuth();
+  const { authenticatedFetch } = useAuthenticatedFetch();
 
   /**
    * ثبت تیکت بازدید جدید با slug در body
@@ -27,17 +28,8 @@ export const useVisitTickets = () => {
         throw new Error('نیاز به ورود به حساب کاربری دارید');
       }
 
-      const accessToken = getAccessToken();
-      if (!accessToken) {
-        throw new Error('نیاز به ورود به حساب کاربری دارید');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/properties/visit-tickets/create/`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/api/properties/visit-tickets/create/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
         body: JSON.stringify(payload),
       });
 
@@ -90,20 +82,11 @@ export const useVisitTickets = () => {
         throw new Error('نیاز به ورود به حساب کاربری دارید');
       }
 
-      const accessToken = getAccessToken();
-      if (!accessToken) {
-        throw new Error('نیاز به ورود به حساب کاربری دارید');
-      }
-
       // Encode Persian characters for URL
       const encodedSlug = encodeURIComponent(propertySlug);
 
-      const response = await fetch(`${API_BASE_URL}/api/properties/${encodedSlug}/visit/`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/api/properties/${encodedSlug}/visit/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
       });
 
       const data = await response.json();

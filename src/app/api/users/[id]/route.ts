@@ -1,115 +1,84 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withApiHandler, backendFetch, AuthenticatedRequest } from '@/lib/server/api-handler';
+import { z } from 'zod';
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
 /**
- * دریافت اطلاعات یک کاربر
  * GET /api/users/[id]
+ * دریافت اطلاعات یک کاربر
  */
-export async function GET(
-  request: NextRequest,
-  context: RouteContext
-) {
-  try {
-    const params = await context.params;
-    const id = params.id;
+export const GET = withApiHandler<any>(
+  async (request: NextRequest, context: RouteContext) => {
+    const { id } = await context.params;
 
-    // TODO: اتصال به Backend
-    // const token = request.headers.get('Authorization');
-    // const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/users/${id}`, {
-    //   headers: {
-    //     'Authorization': token || '',
-    //   },
-    // });
+    const response = await backendFetch(`/v1/users/${id}`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      return NextResponse.json(
+        { error: error.detail || 'خطا در دریافت اطلاعات کاربر' },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
 
     return NextResponse.json({
       success: true,
-      data: {
-        id,
-        name: 'کاربر تست',
-        // ... سایر اطلاعات
-      },
+      data,
     });
-  } catch (error) {
-    console.error('User fetch error:', error);
-    return NextResponse.json(
-      { error: 'خطا در دریافت اطلاعات کاربر' },
-      { status: 500 }
-    );
+  },
+  {
+    requireAuth: 'admin-agent',
+    csrfProtection: false,
   }
-}
+);
 
 /**
- * بروزرسانی کاربر
- * PATCH /api/users/[id]
+ * Schema برای بروزرسانی کاربر
  */
-export async function PATCH(
-  request: NextRequest,
-  context: RouteContext
-) {
-  try {
-    const params = await context.params;
-    const id = params.id;
-    const body = await request.json();
+const updateUserSchema = z.object({
+  name: z.string().min(2).optional(),
+  email: z.string().email().optional(),
+  phone: z.string().min(10).optional(),
+  type: z.enum(['user', 'agent', 'admin']).optional(),
+});
 
-    // TODO: اتصال به Backend
-    // const token = request.headers.get('Authorization');
-    // const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/users/${id}`, {
-    //   method: 'PATCH',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'Authorization': token || '',
-    //   },
-    //   body: JSON.stringify(body),
-    // });
+/**
+ * PATCH /api/users/[id]
+ * بروزرسانی کاربر
+ */
+export const PATCH = withApiHandler<any>(
+  async (request: NextRequest, context: RouteContext) => {
+    const { id } = await context.params;
+    const updateData = (request as any).validatedBody;
+
+    const response = await backendFetch(`/v1/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updateData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return NextResponse.json(
+        { error: error.detail || 'خطا در بروزرسانی کاربر' },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
 
     return NextResponse.json({
       success: true,
       message: 'کاربر با موفقیت بروزرسانی شد',
-      data: { id, ...body },
+      data,
     });
-  } catch (error) {
-    console.error('User update error:', error);
-    return NextResponse.json(
-      { error: 'خطا در بروزرسانی کاربر' },
-      { status: 500 }
-    );
+  },
+  {
+    requireAuth: 'admin',
+    bodySchema: updateUserSchema,
   }
-}
-
-/**
- * حذف کاربر
- * DELETE /api/users/[id]
- */
-export async function DELETE(
-  request: NextRequest,
-  context: RouteContext
-) {
-  try {
-    const params = await context.params;
-    const id = params.id;
-
-    // TODO: اتصال به Backend
-    // const token = request.headers.get('Authorization');
-    // const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/users/${id}`, {
-    //   method: 'DELETE',
-    //   headers: {
-    //     'Authorization': token || '',
-    //   },
-    // });
-
-    return NextResponse.json({
-      success: true,
-      message: 'کاربر با موفقیت حذف شد',
-    });
-  } catch (error) {
-    console.error('User deletion error:', error);
-    return NextResponse.json(
-      { error: 'خطا در حذف کاربر' },
-      { status: 500 }
-    );
-  }
-}
-
+);

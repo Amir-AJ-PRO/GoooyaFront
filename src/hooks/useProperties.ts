@@ -156,9 +156,7 @@ export function useProperty(id: number | string) {
  * ```tsx
  * const createProperty = useCreateProperty();
  * createProperty.mutate(newPropertyData, {
- *   onSuccess: () => console.log('Success!')
- * });
- * ```
+ *   onSuccess: () =>* ```
  */
 export function useCreateProperty() {
   const queryClient = useQueryClient();

@@ -113,24 +113,12 @@ export const getAgentProfile = async (): Promise<AgentProfile> => {
  */
 export const getAgentProperties = async (): Promise<AgentProperty[]> => {
   const response = await apiClient.get<any>('/api/agents/properties/');
-  const data = response.data;
-  
-  console.log('📦 پاسخ کامل از API (getAgentProperties):', data);
-  
-  // اگر پاسخ paginated است (دارای results)، results را برگردان
-  if (data && Array.isArray(data.results)) {
-    console.log('✅ دریافت املاک agent (paginated):', {
-      count: data.count,
-      resultsCount: data.results.length,
-      firstProperty: data.results[0]
-    });
-    return data.results as AgentProperty[];
+  const data = response.data;// اگر پاسخ paginated است (دارای results)، results را برگردان
+  if (data && Array.isArray(data.results)) {return data.results as AgentProperty[];
   }
   
   // اگر خود پاسخ یک آرایه است، مستقیماً برگردان
-  if (Array.isArray(data)) {
-    console.log('✅ دریافت املاک agent (آرایه مستقیم):', data.length);
-    return data as AgentProperty[];
+  if (Array.isArray(data)) {return data as AgentProperty[];
   }
   
   // در غیر این صورت آرایه خالی برگردان
@@ -168,9 +156,7 @@ export const updateAgentProfile = async (
           formData.append(key, value.toString());
         }
       }
-    });
-    
-    console.log('FormData to API:', Array.from(formData.entries())); // برای debug
+    });// برای debug
     
     const response = await apiClient.patch<UpdateAgentProfileResponse>(
       '/api/agents/profile/update/',
@@ -201,9 +187,7 @@ export const updateAgentProfile = async (
       else if (typeof value === 'number') {
         jsonPayload[key] = value;
       }
-    });
-    
-    console.log('JSON Payload to API:', jsonPayload); // برای debug
+    });// برای debug
     
     const response = await apiClient.patch<UpdateAgentProfileResponse>(
       '/api/agents/profile/update/',
@@ -279,20 +263,11 @@ export interface UpdatePropertyPayload {
 export const updateProperty = async (
   slug: string,
   payload: UpdatePropertyPayload
-): Promise<AgentProperty> => {
-  console.log('🔧 updateProperty called');
-  console.log('📝 Slug:', slug);
-  console.log('📦 Payload:', payload);
-
-  // بررسی: آیا تغییری در تصاویر داریم؟
+): Promise<AgentProperty> => {// بررسی: آیا تغییری در تصاویر داریم؟
   const hasImageChanges = 
     (payload.uploaded_images && payload.uploaded_images.length > 0) ||
     (payload.deleted_image_ids && payload.deleted_image_ids.length > 0) ||
-    payload.set_main_image_id !== undefined;
-
-  console.log('🖼️ Has image changes:', hasImageChanges);
-
-  // اگر تغییری در تصاویر داریم، از FormData استفاده کن
+    payload.set_main_image_id !== undefined;// اگر تغییری در تصاویر داریم، از FormData استفاده کن
   if (hasImageChanges) {
     const formData = new FormData();
 
@@ -317,23 +292,17 @@ export const updateProperty = async (
     });
 
     // 2. اضافه کردن تصاویر جدید
-    if (payload.uploaded_images && payload.uploaded_images.length > 0) {
-      console.log(`📸 Adding ${payload.uploaded_images.length} new images`);
-      payload.uploaded_images.forEach((file) => {
+    if (payload.uploaded_images && payload.uploaded_images.length > 0) {payload.uploaded_images.forEach((file) => {
         formData.append('uploaded_images', file);
       });
       
       // اندیس تصویر اصلی در لیست تصاویر جدید
       if (payload.main_image_index !== undefined) {
-        formData.append('main_image_index', payload.main_image_index.toString());
-        console.log('⭐ Main image index:', payload.main_image_index);
-      }
+        formData.append('main_image_index', payload.main_image_index.toString());}
     }
 
     // 3. اضافه کردن ID های تصاویر حذفی
-    if (payload.deleted_image_ids && payload.deleted_image_ids.length > 0) {
-      console.log('🗑️ Deleting images:', payload.deleted_image_ids);
-      payload.deleted_image_ids.forEach((id) => {
+    if (payload.deleted_image_ids && payload.deleted_image_ids.length > 0) {payload.deleted_image_ids.forEach((id) => {
         formData.append('deleted_image_ids', id.toString());
       });
     }
@@ -341,17 +310,6 @@ export const updateProperty = async (
     // 4. تنظیم تصویر موجود به عنوان اصلی
     if (payload.set_main_image_id !== undefined) {
       formData.append('set_main_image_id', payload.set_main_image_id.toString());
-      console.log('⭐ Setting existing image as main:', payload.set_main_image_id);
-    }
-
-    // لاگ محتویات FormData
-    console.log('📤 FormData entries:');
-    for (let [key, value] of formData.entries()) {
-      if (value instanceof File) {
-        console.log(`  ${key}: [File] ${value.name} (${value.size} bytes)`);
-      } else {
-        console.log(`  ${key}: ${value}`);
-      }
     }
     
     try {
@@ -364,7 +322,7 @@ export const updateProperty = async (
           },
         }
       );
-      console.log('✅ Update successful:', response.status);
+      
       return response.data;
     } catch (error: any) {
       console.error('❌ Update failed (FormData)');
@@ -394,11 +352,7 @@ export const updateProperty = async (
           jsonPayload[key] = value;
         }
       }
-    });
-
-    console.log('📤 JSON payload:', jsonPayload);
-    
-    try {
+    });try {
       const response = await apiClient.patch<AgentProperty>(
         `/api/properties/${slug}/update/`,
         jsonPayload,
@@ -407,9 +361,7 @@ export const updateProperty = async (
             'Content-Type': 'application/json',
           },
         }
-      );
-      console.log('✅ Update successful:', response.status);
-      return response.data;
+      );return response.data;
     } catch (error: any) {
       console.error('❌ Update failed (JSON)');
       console.error('Status:', error?.response?.status);

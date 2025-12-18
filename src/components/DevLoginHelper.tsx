@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+/**
+ * Dev Login Helper - غیرفعال شده
+ * در نسخه جدید با HttpOnly cookies، نمی‌توان مستقیماً user را inject کرد
+ * باید از API login استفاده شود
+ */
 export default function DevLoginHelper() {
-  const { login } = useAuth();
-
   useEffect(() => {
     // فقط در development mode
     if (process.env.NODE_ENV !== 'development') return;
@@ -16,20 +18,8 @@ export default function DevLoginHelper() {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'L') {
         e.preventDefault();
         
-        const devUser = {
-          id: '09191192668',
-          name: 'توسعه‌دهنده',
-          email: '',
-          type: 'admin' as const,
-          phone: '09191192668',
-          company: 'گویا',
-          licenseNumber: undefined,
-        };
-        
-        login(devUser);
-        
-        toast.success("🔑 ورود سریع مدیر", {
-          description: "شما با Keyboard Shortcut وارد شدید",
+        toast.info("🔧 Dev Login Disabled", {
+          description: "در نسخه جدید، لطفاً از صفحه login استفاده کنید (شماره: 09191192668)",
         });
       }
     };
@@ -39,9 +29,7 @@ export default function DevLoginHelper() {
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
     };
-  }, [login]);
+  }, []);
 
-  // این component چیزی render نمی‌کنه
   return null;
 }
-

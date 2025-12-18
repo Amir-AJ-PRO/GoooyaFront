@@ -52,15 +52,7 @@ export async function GET(request: NextRequest) {
     // ساخت URL برای backend
     const backendUrl = new URL(`${API_BASE_URL}/api/properties/list/`);
     backendUrl.searchParams.set('page', pageNum.toString());
-    backendUrl.searchParams.set('page_size', pageSizeNum.toString());
-    
-    console.log('📋 درخواست لیست املاک:', {
-      page: pageNum,
-      page_size: pageSizeNum,
-      url: backendUrl.toString()
-    });
-    
-    try {
+    backendUrl.searchParams.set('page_size', pageSizeNum.toString());try {
       const backendResponse = await fetch(backendUrl.toString(), {
         method: 'GET',
         headers: {
@@ -98,17 +90,7 @@ export async function GET(request: NextRequest) {
         );
       }
       
-      const data = await backendResponse.json();
-      
-      console.log('✅ دریافت موفق از backend:', {
-        count: data.count,
-        page: data.page,
-        page_size: data.page_size,
-        total_pages: data.total_pages,
-        resultsCount: data.results?.length || 0
-      });
-      
-      // برگرداندن پاسخ بدون تغییر
+      const data = await backendResponse.json();// برگرداندن پاسخ بدون تغییر
       return NextResponse.json(data);
       
     } catch (fetchError: any) {

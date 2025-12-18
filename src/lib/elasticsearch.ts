@@ -160,10 +160,7 @@ export const createIndex = async (): Promise<void> => {
             }
           }
         }
-      } as any);
-      
-      console.log(`Index ${defaultConfig.index} ایجاد شد`);
-    }
+      } as any);}
   } catch (error) {
     console.error('خطا در ایجاد Index:', error);
     throw error;

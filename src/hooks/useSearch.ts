@@ -138,12 +138,7 @@ export const useSearchProperties = (
       }
       
       // استفاده مستقیم از backend API
-      const url = `${API_BASE_URL}/api/search/properties/?${queryParams.toString()}`;
-      
-      console.log('🔍 در حال جستجو:', url);
-      console.log('📋 پارامترها:', Object.fromEntries(queryParams));
-      
-      const response = await fetch(url, {
+      const url = `${API_BASE_URL}/api/search/properties/?${queryParams.toString()}`;const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -162,17 +157,7 @@ export const useSearchProperties = (
         throw new Error(`خطا در جستجو: ${response.status} ${response.statusText}`);
       }
       
-      const data: SearchResult = await response.json();
-      
-      console.log('✅ جستجو موفق:', {
-        count: data.count,
-        page: data.page,
-        total_pages: data.total_pages,
-        results_count: data.results.length,
-        warning: data.warning
-      });
-      
-      return data;
+      const data: SearchResult = await response.json();return data;
     },
     enabled: options?.enabled ?? true,
     staleTime: options?.staleTime ?? 5 * 60 * 1000, // 5 دقیقه

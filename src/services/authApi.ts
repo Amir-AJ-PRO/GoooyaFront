@@ -146,18 +146,17 @@ export const refreshToken = async (payload: RefreshTokenPayload): Promise<Refres
 };
 
 /**
- * به‌روزرسانی پروفایل کاربر
+ * به‌روزرسانی پروفایل کاربر - با HttpOnly Cookies
  */
 export const updateProfile = async (
-  payload: UpdateProfilePayload,
-  token: string
+  payload: UpdateProfilePayload
 ): Promise<UpdateProfileResponse> => {
   const response = await fetch(`${API_BASE}/api/auth/update-profile/`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
     },
+    credentials: 'include', // برای ارسال cookies
     body: JSON.stringify(payload),
   });
 

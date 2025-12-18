@@ -24,19 +24,7 @@ interface PropertyCardProps {
  * کامپوننت کارت نمایش ملک
  */
 export default function PropertyCard({ property }: PropertyCardProps) {
-  // دیباگ: بررسی داده‌های ملک
-  console.log('🏘️ PropertyCard - داده‌های ملک:', {
-    id: property.id,
-    title: property.title,
-    measure: property.measure,
-    rooms: property.rooms,
-    price: property.price,
-    images: property.images?.length || 0,
-    city: property.city,
-    location: property.location
-  });
-  
-  // پیدا کردن تصویر اصلی
+  // دیباگ: بررسی داده‌های ملک// پیدا کردن تصویر اصلی
   const mainImage = property.images?.find(img => img.is_main) || property.images?.[0];
   const imageUrl = mainImage?.image 
     ? (mainImage.image.startsWith('http') ? mainImage.image : `${API_BASE_URL}${mainImage.image.startsWith('/') ? mainImage.image : `/${mainImage.image}`}`)

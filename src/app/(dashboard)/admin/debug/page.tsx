@@ -1,27 +1,15 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { getUserData } from '@/lib/tokenManager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 /**
- * صفحه دیباگ - برای بررسی localStorage و backendUser
+ * صفحه دیباگ - برای بررسی session و backendUser
  */
 export default function DebugPage() {
   const { user, backendUser } = useAuth();
-  const [localStorageData, setLocalStorageData] = useState<any>(null);
-  
-  useEffect(() => {
-    const data = getUserData();
-    setLocalStorageData(data);
-  }, []);
-  
-  const refreshData = () => {
-    const data = getUserData();
-    setLocalStorageData(data);
-  };
   
   return (
     <div className="container mx-auto py-8 px-4" dir="rtl">
@@ -66,36 +54,17 @@ export default function DebugPage() {
           </CardContent>
         </Card>
         
-        {/* localStorage */}
+        {/* Session Info */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>💾 localStorage (__ud__)</CardTitle>
-            <Button onClick={refreshData} size="sm">تازه‌سازی</Button>
+          <CardHeader>
+            <CardTitle>🔐 اطلاعات Session</CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="bg-gray-100 p-4 rounded overflow-auto text-left" dir="ltr">
-              {JSON.stringify(localStorageData, null, 2)}
-            </pre>
-            
-            {localStorageData?.agent_profile && (
-              <div className="mt-4 p-4 bg-green-50 rounded">
-                <h3 className="font-bold mb-2">✅ agent_profile در localStorage:</h3>
-                <div className="space-y-1 text-sm">
-                  <p><strong>id:</strong> {localStorageData.agent_profile.id}</p>
-                  <p><strong>full_name:</strong> {localStorageData.agent_profile.full_name}</p>
-                  <p><strong>is_verified:</strong> {String(localStorageData.agent_profile.is_verified)}</p>
-                  <p className="text-lg font-bold text-red-600">
-                    <strong>🔥 is_goooya_adviser:</strong> {String(localStorageData.agent_profile.is_goooya_adviser)}
-                  </p>
-                </div>
-              </div>
-            )}
-            
-            {!localStorageData?.agent_profile && (
-              <div className="mt-4 p-4 bg-red-50 rounded text-red-600">
-                <p className="font-bold">❌ agent_profile در localStorage موجود نیست!</p>
-              </div>
-            )}
+            <div className="space-y-2">
+              <p><strong>Session Status:</strong> {user ? '✅ فعال' : '❌ غیرفعال'}</p>
+              <p><strong>User ID:</strong> {user?.id || 'N/A'}</p>
+              <p><strong>User Type:</strong> {user?.type || 'N/A'}</p>
+            </div>
           </CardContent>
         </Card>
         
@@ -119,9 +88,8 @@ export default function DebugPage() {
               
               <div className="text-sm space-y-2">
                 <p><strong>user type:</strong> {user?.type || 'N/A'}</p>
-                <p><strong>is_agent:</strong> {String(backendUser?.is_agent)}</p>
-                <p><strong>user_role:</strong> {backendUser?.user_role || 'N/A'}</p>
                 <p><strong>agent_profile exists:</strong> {String(!!backendUser?.agent_profile)}</p>
+                <p><strong>is_verified:</strong> {String(backendUser?.agent_profile?.is_verified)}</p>
               </div>
             </div>
           </CardContent>

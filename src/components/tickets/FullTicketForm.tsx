@@ -29,7 +29,7 @@ export default function FullTicketForm({ onSuccess }: FullTicketFormProps) {
   
   // استفاده از اطلاعات کاربر لاگین‌شده (اگر موجود باشد)
   const userPhone = user?.phone || backendUser?.phone || '';
-  const userName = backendUser?.full_name || user?.name || '';
+  const userName = backendUser?.name || user?.name || '';
   
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState<Partial<FullTicketPayload>>({

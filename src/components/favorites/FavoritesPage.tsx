@@ -40,7 +40,6 @@ export const FavoritesPage: React.FC = () => {
   const handleSearch = () => {
     // در اینجا می‌توانید منطق جستجو را پیاده‌سازی کنید
     // فعلاً فقط فیلتر کردن بر اساس نام شهر یا نوع ملک را پشتیبانی می‌کنیم
-    console.log('جستجو برای:', searchTerm);
   };
 
   if (error) {

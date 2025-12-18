@@ -41,11 +41,7 @@ export const createPropertyFormData = (payload: CreatePropertyPayload): FormData
   
   // قیمت - اگر null باشه (قیمت توافقی)، اصلا نمیفرستیم
   if (payload.price !== undefined && payload.price !== null) {
-    formData.append('price', payload.price.toString());
-    console.log('💰 قیمت ملک:', payload.price);
-  } else {
-    console.log('🤝 قیمت توافقی فعال است - price ارسال نمی‌شود');
-  }
+    formData.append('price', payload.price.toString());} else {}
   
   if (payload.mortgage) formData.append('mortgage', payload.mortgage.toString());
   if (payload.rent) formData.append('rent', payload.rent.toString());
@@ -70,31 +66,20 @@ export const createPropertyFormData = (payload: CreatePropertyPayload): FormData
 };
 
 /**
- * ایجاد ملک جدید
+ * ایجاد ملک جدید - با HttpOnly Cookies
  */
 export const createProperty = async (
-  payload: CreatePropertyPayload,
-  token: string
+  payload: CreatePropertyPayload
 ): Promise<Property> => {
   const formData = createPropertyFormData(payload);
   
   const response = await fetch(`${API_BASE_URL}/api/properties/add/`, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
+    credentials: 'include', // برای ارسال cookies
     body: formData,
   });
   
   const data = await response.json();
-  
-  // چاپ response در console
-  console.log('========== Property Creation Response ==========');
-  console.log('Status:', response.status);
-  console.log('Status Text:', response.statusText);
-  console.log('Response OK:', response.ok);
-  console.log('Response Data:', data);
-  console.log('================================================');
   
   if (!response.ok) {
     // Handle different serialized error formats from backend
@@ -152,11 +137,9 @@ export const createProperty = async (
       }
     }
     
-    console.log('🔴 خطای دریافت شده از سرور:', errorMessage);
     throw new Error(errorMessage);
   }
   
-  console.log('✅ Property Created Successfully:', data);
   return data;
 };
 
@@ -324,10 +307,7 @@ export const getProperties = async (
  * @throws Error در صورت خطا (404: ملک یافت نشد یا وضعیت نمایش آن ok نیست)
  */
 export const getPropertyBySlug = async (slugOrId: string | number): Promise<Property> => {
-  try {
-    console.log('📥 در حال دریافت جزئیات ملک:', slugOrId);
-    
-    // تبدیل به string برای استفاده در URL
+  try {// تبدیل به string برای استفاده در URL
     const identifier = String(slugOrId);
     
     // بررسی اینکه آیا identifier یک عدد است (ID) یا slug
@@ -346,10 +326,7 @@ export const getPropertyBySlug = async (slugOrId: string | number): Promise<Prop
     
     if (!response.ok) {
       // اگر با ID کار نکرد و identifier یک عدد است، از لیست properties استفاده کنیم
-      if (response.status === 404 && isNumericId) {
-        console.log('⚠️ ملک با ID پیدا نشد، در حال جستجو در لیست properties...');
-        
-        try {
+      if (response.status === 404 && isNumericId) {try {
           // جستجو در لیست properties برای پیدا کردن slug
           const propertyId = Number(identifier);
           let foundSlug: string | null = null;
@@ -363,9 +340,7 @@ export const getPropertyBySlug = async (slugOrId: string | number): Promise<Prop
             // جستجو در نتایج
             const foundProperty = propertiesList.results.find(p => p.id === propertyId);
             if (foundProperty && foundProperty.slug) {
-              foundSlug = foundProperty.slug;
-              console.log('✅ Slug پیدا شد:', foundSlug);
-              break;
+              foundSlug = foundProperty.slug;break;
             }
             
             // اگر صفحه آخر بود، جستجو را متوقف کن
@@ -377,9 +352,7 @@ export const getPropertyBySlug = async (slugOrId: string | number): Promise<Prop
           }
           
           // اگر slug پیدا شد، دوباره تلاش کن
-          if (foundSlug) {
-            console.log('🔄 تلاش مجدد با slug:', foundSlug);
-            return await getPropertyBySlug(foundSlug);
+          if (foundSlug) {return await getPropertyBySlug(foundSlug);
           } else {
             throw new Error('ملک یافت نشد یا وضعیت نمایش آن مناسب نیست');
           }
@@ -404,19 +377,7 @@ export const getPropertyBySlug = async (slugOrId: string | number): Promise<Prop
       throw new Error(`خطا در دریافت جزئیات ملک: ${response.status} ${response.statusText}`);
     }
     
-    const propertyData: Property = await response.json();
-    
-    console.log('✅ دریافت جزئیات ملک موفق:', {
-      id: propertyData.id,
-      title: propertyData.title,
-      slug: propertyData.slug,
-      agent: propertyData.agent?.full_name || 'نامشخص',
-      address: propertyData.address,
-      location_iframe: propertyData.location_iframe ? 'دارد' : 'ندارد',
-      is_favorite: propertyData.is_favorite
-    });
-    
-    return propertyData;
+    const propertyData: Property = await response.json();return propertyData;
   } catch (error: any) {
     // لاگ کردن جزئیات بیشتر برای خطایابی
     const errorDetails: Record<string, unknown> = {
@@ -491,24 +452,12 @@ export const getHomepageProperties = async (): Promise<PropertyListItem[]> => {
     throw new Error('خطا در دریافت املاک صفحه اصلی');
   }
   
-  const data = await response.json();
-  
-  console.log('📦 پاسخ کامل از API:', data);
-  
-  // اگر پاسخ paginated است (دارای results)، results را برگردان
-  if (data && Array.isArray(data.results)) {
-    console.log('✅ دریافت املاک صفحه اصلی (paginated):', {
-      count: data.count,
-      resultsCount: data.results.length,
-      firstProperty: data.results[0]
-    });
-    return data.results as PropertyListItem[];
+  const data = await response.json();// اگر پاسخ paginated است (دارای results)، results را برگردان
+  if (data && Array.isArray(data.results)) {return data.results as PropertyListItem[];
   }
   
   // اگر خود پاسخ یک آرایه است، مستقیماً برگردان
-  if (Array.isArray(data)) {
-    console.log('✅ دریافت املاک صفحه اصلی (آرایه مستقیم):', data.length);
-    return data as PropertyListItem[];
+  if (Array.isArray(data)) {return data as PropertyListItem[];
   }
   
   // در غیر این صورت آرایه خالی برگردان

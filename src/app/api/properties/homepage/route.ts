@@ -14,14 +14,7 @@ export async function GET(request: NextRequest) {
     const pageSize = searchParams.get('page_size') || '6';
     
     const pageNum = parseInt(page);
-    const pageSizeNum = parseInt(pageSize);
-    
-    console.log('🏠 درخواست املاک صفحه اصلی:', {
-      page: pageNum,
-      pageSize: pageSizeNum
-    });
-
-    // سعی در ارتباط با backend
+    const pageSizeNum = parseInt(pageSize);// سعی در ارتباط با backend
     const backendUrl = new URL(`${API_BASE_URL}/v1/properties/homepage/`);
     backendUrl.searchParams.set('page', pageNum.toString());
     backendUrl.searchParams.set('page_size', pageSizeNum.toString());
@@ -38,17 +31,9 @@ export async function GET(request: NextRequest) {
       const contentType = backendResponse.headers.get('content-type');
       
       if (backendResponse.ok && contentType && contentType.includes('application/json')) {
-        const data = await backendResponse.json();
-        console.log('✅ دریافت موفق از backend:', {
-          count: data.count,
-          resultsCount: data.results?.length || 0
-        });
-        
-        return NextResponse.json(data.results || []);
+        const data = await backendResponse.json();return NextResponse.json(data.results || []);
       }
-    } catch (backendError) {
-      console.log('⚠️ Backend در دسترس نیست، استفاده از داده‌های نمونه');
-    }
+    } catch (backendError) {}
 
     // اگر backend در دسترس نیست، داده‌های نمونه برگردان
     const mockProperties = [
@@ -127,14 +112,7 @@ export async function GET(request: NextRequest) {
     ];
 
     // محدود کردن به تعداد درخواست شده
-    const limitedProperties = mockProperties.slice(0, pageSizeNum);
-    
-    console.log('📦 برگرداندن داده‌های نمونه:', {
-      requestedCount: pageSizeNum,
-      returnedCount: limitedProperties.length
-    });
-
-    return NextResponse.json(limitedProperties);
+    const limitedProperties = mockProperties.slice(0, pageSizeNum);return NextResponse.json(limitedProperties);
 
   } catch (error) {
     console.error('❌ خطا در API املاک صفحه اصلی:', error);

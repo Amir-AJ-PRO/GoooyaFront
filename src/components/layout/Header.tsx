@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import QuickSearch from "@/components/common/QuickSearch";
 
 const Header = memo(() => {
   const pathname = usePathname();
@@ -50,8 +51,9 @@ const Header = memo(() => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+        <div className="flex h-16 items-center justify-between gap-4">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <div className="h-10 w-10">
               <img 
                 src="/logo-gooya.svg" 
@@ -59,37 +61,46 @@ const Header = memo(() => {
                 className="h-full w-full object-contain"
               />
             </div>
-            <span className="text-2xl font-bold text-foreground">گویا</span>
+            <span className="text-xl lg:text-2xl font-bold text-foreground">گویا</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-2">
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
                 <Link key={item.path} href={item.path} className="relative" prefetch={true}>
                   <Button
                     variant={isActive(item.path) ? "default" : "ghost"}
-                    className="gap-2 text-sm px-3"
+                    className={`gap-1.5 text-sm px-2.5 xl:px-3 h-9 ${
+                      isActive(item.path) 
+                        ? "bg-primary/80 hover:bg-primary/90" 
+                        : ""
+                    }`}
                   >
                     <Icon className="h-4 w-4" />
-                    {item.name}
+                    <span className="whitespace-nowrap">{item.name}</span>
                   </Button>
                 </Link>
               );
             })}
           </nav>
 
-          <div className="flex items-center gap-2">
+          {/* Quick Search - Desktop */}
+          <div className="hidden lg:flex flex-1 max-w-xs xl:max-w-sm mx-2 xl:mx-4">
+            <QuickSearch />
+          </div>
+
+          <div className="flex items-center gap-1.5 xl:gap-2 flex-shrink-0">
             {/* دکمه تیکت‌ها - فقط برای مشاور گویا */}
             {isGooyaAdviser && (
               <Link href="/admin/tickets">
-                <Button variant="default" className="gap-2 hidden lg:flex bg-primary hover:bg-primary/90 text-sm px-3">
+                <Button variant="default" className="gap-1.5 hidden lg:flex bg-primary hover:bg-primary/90 text-sm px-2.5 xl:px-3 h-9">
                   <FileText className="h-4 w-4" />
-                  <span className="hidden xl:inline">تیکت‌های ثبت ملک</span>
-                  <span className="xl:hidden">تیکت‌ها</span>
+                  <span className="hidden xl:inline whitespace-nowrap">تیکت‌های ثبت ملک</span>
+                  <span className="xl:hidden whitespace-nowrap">تیکت‌ها</span>
                   {ticketsCount !== undefined && ticketsCount > 0 && (
-                    <Badge className="mr-1 bg-white text-primary">
+                    <Badge className="mr-1 bg-white text-primary text-xs px-1.5">
                       {ticketsCount}
                     </Badge>
                   )}
@@ -100,12 +111,12 @@ const Header = memo(() => {
             {/* دکمه ثبت ملک - برای همه کاربران */}
             {(!user || user.type === 'user') && (
               <Button 
-                className="gap-2 hidden lg:flex text-sm px-3"
+                className="gap-1.5 hidden lg:flex text-sm px-2.5 xl:px-3 h-9"
                 onClick={() => setSubmitPropertyModalOpen(true)}
               >
                 <Plus className="h-4 w-4" />
-                <span className="hidden xl:inline">درخواست ثبت آگهی</span>
-                <span className="xl:hidden">ثبت آگهی</span>
+                <span className="hidden xl:inline whitespace-nowrap">درخواست ثبت آگهی</span>
+                <span className="xl:hidden whitespace-nowrap">ثبت آگهی</span>
               </Button>
             )}
 
@@ -115,13 +126,13 @@ const Header = memo(() => {
                 <div className="hidden lg:block">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="gap-2 text-sm px-3">
-                        <Avatar className="h-6 w-6">
+                      <Button variant="outline" className="gap-1.5 text-sm px-2.5 xl:px-3 h-9">
+                        <Avatar className="h-6 w-6 flex-shrink-0">
                           <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                             {user.phone ? user.phone.slice(-2) : (user.name ? user.name.charAt(0) : 'U')}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="max-w-[80px] xl:max-w-[100px] truncate">
+                        <span className="max-w-[60px] xl:max-w-[100px] truncate">
                           {user.name || user.phone || 'کاربر'}
                         </span>
                       </Button>
@@ -197,50 +208,20 @@ const Header = memo(() => {
               <>
                 <Button 
                   variant="outline" 
-                  className="gap-2 hidden lg:flex text-sm px-3"
+                  className="gap-1.5 hidden lg:flex text-sm px-2.5 xl:px-3 h-9"
                   onClick={() => setLoginModalOpen(true)}
                 >
                   <User className="h-4 w-4" />
-                  <span className="hidden xl:inline">ورود / ثبت نام</span>
-                  <span className="xl:hidden">ورود</span>
+                  <span className="hidden xl:inline whitespace-nowrap">ورود / ثبت نام</span>
+                  <span className="xl:hidden whitespace-nowrap">ورود</span>
                 </Button>
-                {/* نمایش منوی تغییر نقش برای کاربران بدون لاگین */}
-                <div className="hidden lg:block">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9">
-                        <UserCircle className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuLabel className="font-normal">
-                        <div className="flex flex-col space-y-1">
-                          <p className="text-sm font-medium leading-none">کاربر مهمان</p>
-                          <p className="text-xs leading-none text-muted-foreground">
-                            برای دسترسی کامل وارد شوید
-                          </p>
-                        </div>
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setLoginModalOpen(true)} className="cursor-pointer">
-                        <User className="ml-2 h-4 w-4" />
-                        <span>ورود / ثبت نام</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-muted-foreground cursor-not-allowed" disabled>
-                        <LogOut className="ml-2 h-4 w-4" />
-                        <span>خروج</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
               </>
             )}
             
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden"
+              className="lg:hidden h-9 w-9 flex-shrink-0"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <Menu className="h-5 w-5" />

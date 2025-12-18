@@ -20,7 +20,7 @@ export default function SimpleTicketForm({ onSuccess }: SimpleTicketFormProps) {
   const { user, backendUser } = useAuth();
   const submitMutation = useSubmitSimpleTicket();
   
-  const [fullName, setFullName] = useState(backendUser?.full_name || '');
+  const [fullName, setFullName] = useState(backendUser?.name || '');
   const [phone, setPhone] = useState(backendUser?.phone || '');
   const [submitted, setSubmitted] = useState(false);
 
@@ -39,7 +39,7 @@ export default function SimpleTicketForm({ onSuccess }: SimpleTicketFormProps) {
       // Reset form و بستن modal بعد از 2 ثانیه
       setTimeout(() => {
         setSubmitted(false);
-        if (!backendUser?.full_name) {
+        if (!backendUser?.name) {
           setFullName('');
         }
         if (!backendUser?.phone) {
@@ -69,7 +69,7 @@ export default function SimpleTicketForm({ onSuccess }: SimpleTicketFormProps) {
   return (
     <Card dir="rtl">
       <CardContent className="pt-6">
-        {user && backendUser?.full_name && (
+        {user && backendUser?.name && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-sm text-green-800 flex items-center gap-2">
               <CheckCircle className="h-4 w-4" />

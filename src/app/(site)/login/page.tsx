@@ -17,6 +17,7 @@ export default function Login() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [countdown, setCountdown] = useState(0);
+  const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
 
@@ -110,21 +111,8 @@ export default function Login() {
       { phone: phoneNumber, code: otpCode },
       {
         onSuccess: (data) => {
-          // تشخیص نوع کاربر بر اساس is_agent
-          const userType: UserType = data.user.is_agent ? 'agent' : 'user';
-          
-          // ساخت آبجکت User برای AuthContext
-          const mockUser = {
-            id: data.user.phone,
-            name: '',
-            email: '',
-            type: userType,
-            phone: data.user.phone,
-            company: (data.user.agent_profile as any)?.company_name,
-            licenseNumber: (data.user.agent_profile as any)?.license_number,
-          };
-          
-          login(mockUser);
+          // Login (HttpOnly Cookie در server ذخیره شده)
+          login(data.user);
           
           const welcomeMessage = data.created 
             ? "حساب کاربری شما ایجاد شد. خوش آمدید!"
@@ -134,7 +122,7 @@ export default function Login() {
             description: welcomeMessage
           });
           
-          // هدایت به پنل مناسب بر اساس نوع کاربر
+          // هدایت به پنل مناسب
           const redirectPath = data.user.is_agent ? '/agent' : '/user';
           router.push(redirectPath);
         }

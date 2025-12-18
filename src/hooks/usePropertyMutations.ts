@@ -18,7 +18,6 @@ import {
   City,
   Location
 } from '@/types/property';
-import { getAccessToken } from '@/lib/tokenManager';
 
 /**
  * Hook برای ایجاد ملک جدید
@@ -28,23 +27,9 @@ export const useCreateProperty = () => {
 
   return useMutation<Property, Error, CreatePropertyPayload>({
     mutationFn: async (payload: CreatePropertyPayload) => {
-      console.log('========== Sending Property Creation Request ==========');
-      console.log('Payload:', payload);
-      console.log('Has Images:', payload.uploaded_images?.length || 0);
-      console.log('=======================================================');
-      
-      const token = getAccessToken();
-      if (!token) {
-        throw new Error('لطفاً ابتدا وارد شوید');
-      }
-      return createProperty(payload, token);
+      return await createProperty(payload);
     },
-    onSuccess: (data) => {
-      console.log('========== Property Creation Success ==========');
-      console.log('Created Property:', data);
-      console.log('===============================================');
-      
-      // Invalidate کردن تمام query های مربوط به املاک
+    onSuccess: (data) => {// Invalidate کردن تمام query های مربوط به املاک
       queryClient.invalidateQueries({ queryKey: ['agent-properties'] });
       queryClient.invalidateQueries({ queryKey: ['searchProperties'] });
       queryClient.invalidateQueries({ queryKey: ['properties'] });

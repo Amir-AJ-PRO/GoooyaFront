@@ -122,21 +122,8 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
       { phone: phoneNumber, code: otpCode },
       {
         onSuccess: (data) => {
-          // تشخیص نوع کاربر بر اساس is_agent
-          const userType: UserType = data.user.is_agent ? 'agent' : 'user';
-          
-          // ساخت آبجکت User برای AuthContext
-          const mockUser = {
-            id: data.user.phone,
-            name: data.user.full_name || '',
-            email: data.user.email || '',
-            type: userType,
-            phone: data.user.phone,
-            company: data.user.agent_profile?.office_name,
-            licenseNumber: data.user.agent_profile?.license_number,
-          };
-          
-          login(mockUser);
+          // Login (HttpOnly Cookie در server ذخیره شده)
+          login(data.user);
           
           const welcomeMessage = data.created 
             ? "حساب کاربری شما ایجاد شد. خوش آمدید!"

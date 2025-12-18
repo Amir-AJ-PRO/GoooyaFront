@@ -1,24 +1,30 @@
-import { getAccessToken } from "./tokenManager";
-
 /**
- * Fetcher برای استفاده با React Query
+ * Fetcher برای React Query
+ * با HttpOnly Cookies - بدون نیاز به Token
  */
+
 export async function fetcher<T = any>(url: string, options?: RequestInit): Promise<T> {
-  const token = getAccessToken();
-  
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options?.headers as Record<string, string> | undefined),
   };
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
   const response = await fetch(url, {
     ...options,
     headers,
+    credentials: 'include', // ارسال cookies
   });
+
+  if (response.status === 401) {
+    // Redirect به login
+    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+      const currentPath = window.location.pathname + window.location.search;
+      if (currentPath !== '/login' && currentPath !== '/') {
+        sessionStorage.setItem('redirectAfterLogin', currentPath);
+      }
+      window.location.href = '/login';
+    }
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({
@@ -54,4 +60,3 @@ export const api = {
   delete: <T = any>(url: string, options?: RequestInit) =>
     fetcher<T>(url, { ...options, method: 'DELETE' }),
 };
-

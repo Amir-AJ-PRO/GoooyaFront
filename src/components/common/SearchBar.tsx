@@ -6,21 +6,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search } from "lucide-react";
 import { useState, memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useDebounce } from "@/hooks/useDebounce";
-import { useSearchSuggestions } from "@/hooks/useSearch";
 import { useCities } from "@/hooks/useCities";
 import { usePropertyTypes } from "@/hooks/usePropertyMutations";
 
 const SearchBar = memo(() => {
   const router = useRouter();
   const [tab, setTab] = useState<"buy" | "rent">("buy");
-  const [searchTerm, setSearchTerm] = useState<string>("");
   const [city, setCity] = useState<string | undefined>(undefined);
   const [type, setType] = useState<string | undefined>(undefined);
   const [price, setPrice] = useState<string | undefined>(undefined);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   // دریافت شهرها
   const { data: cities = [], isLoading: citiesLoading } = useCities();
@@ -28,19 +22,9 @@ const SearchBar = memo(() => {
   // دریافت انواع ملک از دیتابیس
   const { data: propertyTypes = [], isLoading: propertyTypesLoading } = usePropertyTypes();
 
-  // دریافت پیشنهادات
-  const { data: suggestionsData } = useSearchSuggestions(debouncedSearchTerm, {
-    enabled: debouncedSearchTerm.length >= 2
-  });
-  const suggestions = suggestionsData?.suggestions || [];
-
   const submitSearch = useCallback(() => {
     // ساخت پارامترهای جستجو
     const searchParams = new URLSearchParams();
-    
-    if (searchTerm.trim()) {
-      searchParams.set('q', searchTerm.trim());
-    }
     
     searchParams.set('transaction_type', tab === 'buy' ? 'sale' : 'rent');
     
@@ -68,18 +52,7 @@ const SearchBar = memo(() => {
     
     // انتقال به صفحه املاک
     router.push(`/properties?${searchParams.toString()}`);
-    setShowSuggestions(false);
-  }, [router, searchTerm, tab, city, type, price]);
-
-  const handleSuggestionClick = (suggestion: string) => {
-    setSearchTerm(suggestion);
-    setShowSuggestions(false);
-  };
-
-  const handleSearchInputChange = (value: string) => {
-    setSearchTerm(value);
-    setShowSuggestions(value.length >= 2);
-  };
+  }, [router, tab, city, type, price]);
 
   return (
     <div className="bg-card rounded-2xl shadow-large p-3 md:p-6" dir="rtl">
@@ -109,34 +82,6 @@ const SearchBar = memo(() => {
 
       {/* Content - Mobile */}
       <div className="md:hidden space-y-2">
-        <div className="relative">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="جستجوی ملک، منطقه، آدرس..."
-            value={searchTerm}
-            onChange={(e) => handleSearchInputChange(e.target.value)}
-            className="pr-10 h-9 text-xs"
-            dir="rtl"
-          />
-          
-          {/* پیشنهادات موبایل */}
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-40 overflow-y-auto">
-              {suggestions.map((suggestion, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  className="w-full text-right px-3 py-2 text-xs hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
-                  onClick={() => handleSuggestionClick(suggestion)}
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
         <div className="grid grid-cols-2 gap-2">
           <div>
             <Select value={city} onValueChange={setCity}>
@@ -184,38 +129,7 @@ const SearchBar = memo(() => {
 
       {/* Content - Desktop */}
       <div className="hidden md:block">
-        <div className="grid grid-cols-6 gap-3 items-end">
-          <div className="col-span-2">
-            <label className="text-sm font-medium mb-2 block text-right">جستجوی سریع</label>
-            <div className="relative">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="جستجوی ملک، منطقه، آدرس..."
-                value={searchTerm}
-                onChange={(e) => handleSearchInputChange(e.target.value)}
-                className="pr-10"
-                dir="rtl"
-              />
-              
-              {/* پیشنهادات دسکتاپ */}
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
-                  {suggestions.map((suggestion, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      className="w-full text-right px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
-                      onClick={() => handleSuggestionClick(suggestion)}
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
+        <div className="grid grid-cols-4 gap-3 items-end">
           <div>
             <label className="text-sm font-medium mb-2 block text-right">شهر</label>
             <Select value={city} onValueChange={setCity}>

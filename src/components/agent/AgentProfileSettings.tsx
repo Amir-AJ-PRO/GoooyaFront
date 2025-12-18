@@ -182,9 +182,7 @@ export default function AgentProfileSettings() {
     // اگر قصد حذف عکس داریم
     if (shouldDeleteImage && !selectedFile) {
       payload.delete_profile_image = true;
-    }
-
-    console.log('Payload to send:', payload); // برای debug
+    }// برای debug
 
     try {
       await updateProfileMutation.mutateAsync(payload);
