@@ -1,14 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output : 'standalone',
+  // Output configuration for Docker
+  output: 'standalone',
+  
+  // Compiler optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  
+  // Image optimization
   images: {
     remotePatterns: [
       // Production server
-      {
-        protocol: 'https',
-        hostname: 'api.goooya.ir',
-        pathname: '/**',
-      },
       {
         protocol: 'https',
         hostname: 'api.goooya.ir',
@@ -50,20 +53,31 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
+  
+  // Environment variables
   env: {
-    NEXT_PUBLIC_API_URL: process.env.API_BASE || 'https://api.goooya.ir',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE || 'https://api.goooya.ir',
   },
+  
+  // ESLint configuration
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // بهینه‌سازی‌های عملکرد
+  
+  // Performance optimizations
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
   
-  // بهینه‌سازی bundle
+  // Experimental features
   experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    optimizePackageImports: [
+      '@radix-ui/react-icons',
+      'lucide-react',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-toast',
+    ],
   },
   
   // Prefetching optimization

@@ -1,11 +1,24 @@
-# راهنمای Docker برای پروژه Gooya
+# 🐳 راهنمای Docker برای پروژه Gooya
 
 این راهنما نحوه Dockerize کردن و اجرای پروژه Next.js را توضیح می‌دهد.
 
-## پیش‌نیازها
+## 📋 پیش‌نیازها
 
 - Docker (نسخه 20.10 یا بالاتر)
 - Docker Compose (نسخه 2.0 یا بالاتر)
+
+## 🔐 ویژگی‌های جدید Authentication System
+
+این نسخه شامل سیستم احراز هویت بهبود یافته با ویژگی‌های زیر است:
+
+- ✅ **HttpOnly Cookies**: توکن‌ها به صورت امن در HttpOnly cookies ذخیره می‌شوند
+- ✅ **Auto Token Refresh**: توکن‌ها به صورت خودکار هر 5 دقیقه رفرش می‌شوند
+- ✅ **Persistent Login**: کاربران تا 30 روز لاگین باقی می‌مانند
+- ✅ **Smart Token Management**: 
+  - Access Token: 15 دقیقه
+  - Refresh Token: 30 روز
+- ✅ **User Data Caching**: اطلاعات کاربر در cookie ذخیره می‌شود
+- ✅ **No /me Endpoint Required**: نیازی به endpoint `/me` در backend نیست
 
 ## ساخت و اجرای Docker Image
 
@@ -43,34 +56,63 @@ docker stop gooya-nextjs
 docker rm gooya-nextjs
 ```
 
-## تنظیم متغیرهای محیطی
+## ⚙️ تنظیم متغیرهای محیطی
 
 برای تنظیم متغیرهای محیطی، می‌توانید:
 
-1. **استفاده از .env file (پیشنهادی)**: فایل `.env` را در root پروژه ایجاد کنید:
+### 1. استفاده از .env file (پیشنهادی)
+
+فایل `.env` را در root پروژه ایجاد کنید یا ویرایش کنید:
+
+محتوای نمونه (متغیرهای مهم برای Production):
 
 ```env
-# API Configuration
-NEXT_PUBLIC_API_URL=https://goooya.api.ir
-API_BASE=https://goooya.api.ir
-
-# Elasticsearch Configuration (اختیاری)
-ELASTICSEARCH_HOST=localhost:9200
-ELASTICSEARCH_INDEX=properties
+# ==================================
+# Environment Variables - Production
+# ==================================
 
 # Node Environment
 NODE_ENV=production
-
-# Next.js Telemetry
 NEXT_TELEMETRY_DISABLED=1
 
-# Port
+# Server Configuration
 PORT=8030
+HOSTNAME=0.0.0.0
+
+# ==================================
+# Backend API Configuration
+# ==================================
+
+# URL اصلی Backend API (Django)
+NEXT_PUBLIC_API_URL=https://api.goooya.ir
+
+# ==================================
+# Authentication & Session
+# ==================================
+
+# توکن‌ها به صورت خودکار مدیریت می‌شوند:
+# - Access Token: 15 دقیقه (در HttpOnly Cookie)
+# - Refresh Token: 30 روز (در HttpOnly Cookie)
+# - User Data: 30 روز (در readable Cookie)
+
+# ==================================
+# Security
+# ==================================
+
+# در production باید true باشه
+SECURE_COOKIES=true
+
+# ==================================
+# Elasticsearch (اختیاری)
+# ==================================
+
+# ELASTICSEARCH_HOST=elasticsearch:9200
+# ELASTICSEARCH_INDEX=properties
 ```
 
-2. **در docker-compose.yml**: متغیرها را در بخش `environment` اضافه کنید
+### 2. در docker-compose.yml
 
-docker-compose.yml به صورت خودکار فایل `.env` را load می‌کند.
+متغیرها را در بخش `environment` اضافه کنید. docker-compose.yml به صورت خودکار فایل `.env` را load می‌کند.
 
 ## دسترسی به اپلیکیشن
 
@@ -141,12 +183,62 @@ ports:
 docker-compose build --no-cache
 ```
 
-## نکات مهم
+## 🔒 نحوه کار Authentication در Production
 
-1. **Postinstall Script**: اسکریپت `fix-quill.js` به صورت خودکار در مرحله build اجرا می‌شود
-2. **Standalone Output**: Next.js در حالت standalone build می‌شود که برای Docker بهینه است
-3. **Security**: Container با user غیر root اجرا می‌شود (nextjs:nodejs)
-4. **Health Check**: Container دارای health check است که هر 30 ثانیه بررسی می‌شود
+### Cookie Management
+
+1. **Access Token** (HttpOnly):
+   - عمر: 15 دقیقه
+   - ذخیره: HttpOnly Cookie (امن در برابر XSS)
+   - به صورت خودکار با هر درخواست ارسال می‌شود
+
+2. **Refresh Token** (HttpOnly):
+   - عمر: 30 روز
+   - ذخیره: HttpOnly Cookie
+   - برای رفرش کردن Access Token استفاده می‌شود
+
+3. **User Data** (Readable):
+   - عمر: 30 روز
+   - ذخیره: Cookie معمولی (قابل خواندن توسط JavaScript)
+   - برای نمایش اطلاعات کاربر بعد از refresh صفحه
+
+### Auto Refresh Flow
+
+```
+کاربر لاگین می‌کنه
+    ↓
+توکن‌ها در Cookie ذخیره می‌شن
+    ↓
+هر 5 دقیقه یک بار AuthContext چک می‌کنه
+    ↓
+اگر Access Token منقضی شده → با Refresh Token رفرش می‌کنه
+    ↓
+کاربر تا 30 روز لاگین می‌مونه
+```
+
+### مزایا
+
+✅ **امنیت بالا**: توکن‌ها در JavaScript قابل دسترسی نیستند  
+✅ **تجربه کاربری عالی**: کاربر تا 30 روز لاگین باقی می‌مونه  
+✅ **رفرش خودکار**: نیازی به دخالت کاربر نیست  
+✅ **Stateless**: نیازی به ذخیره session در server نیست
+
+## 💡 نکات مهم
+
+1. **Standalone Output**: Next.js در حالت standalone build می‌شود که برای Docker بهینه است (تنظیم در `next.config.ts`)
+2. **Security**: 
+   - Container با user غیر root اجرا می‌شود (nextjs:nodejs)
+   - `npm audit fix` قبل از build اجرا می‌شود
+   - HttpOnly Cookies برای توکن‌های احراز هویت
+3. **Health Check**: Container دارای health check است که هر 30 ثانیه بررسی می‌شود
+4. **Optimized Build**: 
+   - Multi-stage build برای کاهش حجم image (از ~1.5GB به ~150MB)
+   - فقط dependencies ضروری در image نهایی
+5. **Cookie Security**: در production همه cookies با flag `Secure` ست می‌شوند
+6. **Auto Token Management**: 
+   - Access Token: 15 دقیقه
+   - Refresh Token: 30 روز
+   - رفرش خودکار هر 5 دقیقه
 
 ## Production Deployment
 

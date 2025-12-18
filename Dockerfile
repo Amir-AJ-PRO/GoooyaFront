@@ -1,28 +1,6 @@
-# Stage 1: Dependencies
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
-
-COPY package.json package-lock.json* ./
-COPY scripts/ ./scripts/
-
-RUN npm ci
-
-# Stage 2: Builder
-FROM node:20-alpine AS builder
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
-
-RUN npm audit fix
-RUN npm run build
-
-# Stage 3: Runner
+# استفاده از build شده local
 FROM node:20-alpine AS runner
+
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -30,16 +8,27 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=8030
 ENV HOSTNAME=0.0.0.0
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# نصب wget برای healthcheck
+RUN apk add --no-cache wget
 
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# ایجاد user غیر root
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# کپی فایل‌های public
+COPY --chown=nextjs:nodejs public ./public
+
+# کپی standalone output
+COPY --chown=nextjs:nodejs .next/standalone ./
+
+# کپی static files
+COPY --chown=nextjs:nodejs .next/static ./.next/static
 
 USER nextjs
 
 EXPOSE 8030
 
-CMD ["node", "server.js"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:8030/ || exit 1
 
+CMD ["node", "server.js"]

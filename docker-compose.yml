@@ -5,27 +5,43 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+    image: gooya-nextjs:latest
     container_name: gooya-nextjs
     ports:
       - "8030:8030"
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
-      # متغیرهای محیطی را اینجا اضافه کنید یا از env_file استفاده کنید
-      # - NEXT_PUBLIC_API_URL=https://goooya.api.ir
-      # - API_BASE=https://goooya.api.ir
-      # - ELASTICSEARCH_HOST=localhost:9200
-      # - ELASTICSEARCH_INDEX=properties
+      - PORT=8030
+      - HOSTNAME=0.0.0.0
+      # Backend API URL - از .env خوانده می‌شود
+      # یا اینجا مستقیماً تنظیم کنید:
+      # - NEXT_PUBLIC_API_URL=https://api.goooya.ir
+    # استفاده از فایل .env موجود (نه .env.production)
     env_file:
       - .env
     restart: unless-stopped
     networks:
       - gooya-network
-    # برای volume mapping در صورت نیاز
-    # volumes:
-    #   - ./public:/app/public:ro
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Resource limits (اختیاری - بر اساس نیاز تنظیم کنید)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1'
+    #       memory: 1G
+    #     reservations:
+    #       cpus: '0.5'
+    #       memory: 512M
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8030"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8030/"]
       interval: 30s
       timeout: 10s
       retries: 3
