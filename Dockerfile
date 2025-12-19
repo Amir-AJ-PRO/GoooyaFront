@@ -1,6 +1,48 @@
-# استفاده از build شده local
-FROM node:20-alpine AS runner
+# Multi-stage build (install + audit fix + build داخل Docker)
 
+FROM node:20-alpine AS base
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# ---- deps: نصب dependency ها + audit fix ----
+FROM base AS deps
+
+# اگر نیاز شد بعضی پکیج‌ها روی alpine به libc نیاز دارند
+RUN apk add --no-cache libc6-compat
+
+COPY package.json package-lock.json ./
+
+# نصب دقیق بر اساس lockfile (شامل devDependencies برای build)
+RUN npm ci --include=dev --no-fund --no-audit
+
+# اجرای npm audit fix (قابل کنترل با build-arg)
+ARG NPM_AUDIT_FIX=true
+ARG NPM_AUDIT_FIX_FORCE=false
+RUN if [ "$NPM_AUDIT_FIX" = "true" ]; then \
+      if [ "$NPM_AUDIT_FIX_FORCE" = "true" ]; then \
+        npm audit fix --force || true; \
+      else \
+        npm audit fix || true; \
+      fi; \
+    fi
+
+# ---- builder: ساخت پروژه ----
+FROM base AS builder
+ENV NODE_ENV=production
+
+# این‌ها اگر ست شوند، روی build (به خصوص NEXT_PUBLIC_*) اثر می‌گذارند
+ARG NEXT_PUBLIC_API_URL
+ARG API_BASE
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV API_BASE=${API_BASE}
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+RUN npm run build
+
+# ---- runner: اجرای production (standalone) ----
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -16,13 +58,13 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
 # کپی فایل‌های public
-COPY --chown=nextjs:nodejs public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # کپی standalone output
-COPY --chown=nextjs:nodejs .next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 
 # کپی static files
-COPY --chown=nextjs:nodejs .next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 

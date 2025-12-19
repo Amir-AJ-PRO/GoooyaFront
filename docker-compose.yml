@@ -1,12 +1,16 @@
-version: '3.8'
-
 services:
   gooya-nextjs:
     build:
       context: .
       dockerfile: Dockerfile
+      target: runner
       args:
-        - NODE_ENV=production
+        NPM_AUDIT_FIX: "true"
+        # اگر لازم شد با آپدیت‌های major هم فیکس کنه (ریسکی‌تر):
+        # NPM_AUDIT_FIX_FORCE: "true"
+        # اگر می‌خوای NEXT_PUBLIC_API_URL داخل build هم embed بشه:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+        API_BASE: ${API_BASE:-}
     image: gooya-nextjs:latest
     container_name: gooya-nextjs
     ports:
@@ -19,9 +23,10 @@ services:
       # Backend API URL - از .env خوانده می‌شود
       # یا اینجا مستقیماً تنظیم کنید:
       # - NEXT_PUBLIC_API_URL=https://api.goooya.ir
-    # استفاده از فایل .env موجود (نه .env.production)
+    # استفاده از فایل .env اگر وجود داشت (اختیاری)
     env_file:
-      - .env
+      - path: .env
+        required: false
     restart: unless-stopped
     networks:
       - gooya-network

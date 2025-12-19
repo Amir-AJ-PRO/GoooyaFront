@@ -1,7 +1,16 @@
 node_modules
+.next
+.turbo
+.cache
+coverage
+dist
+.output
+.vercel
 .git
 *.log
 Dockerfile
 .dockerignore
 docker-compose.yml
+.env
+.env.*
 .env*.local
