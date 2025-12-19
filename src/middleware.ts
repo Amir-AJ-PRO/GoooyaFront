@@ -38,7 +38,9 @@ export async function middleware(request: NextRequest) {
       'Content-Security-Policy',
       [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-eval'",
+        // Next.js برای بوت‌استرپ/هیدریشن به inline script نیاز دارد.
+        // اگر nonce-based CSP خواستی، باید nonce روی scriptها هم ست شود.
+        "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
         "font-src 'self' data: https://cdn.jsdelivr.net",
         "img-src 'self' data: https:",
