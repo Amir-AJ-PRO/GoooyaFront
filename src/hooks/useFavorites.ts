@@ -4,6 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   getFavorites,
   addToFavorites,
@@ -30,11 +31,13 @@ export const FAVORITES_QUERY_KEYS = {
  * Hook برای دریافت لیست علاقه‌مندی‌ها
  */
 export const useFavorites = (params?: FavoritesSearchParams) => {
+  const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: FAVORITES_QUERY_KEYS.list(params),
     queryFn: () => getFavorites(params),
     staleTime: 5 * 60 * 1000, // 5 دقیقه
     gcTime: 10 * 60 * 1000, // 10 دقیقه
+    enabled: isAuthenticated,
   });
 };
 
@@ -42,12 +45,14 @@ export const useFavorites = (params?: FavoritesSearchParams) => {
  * Hook برای دریافت آمار علاقه‌مندی‌ها
  */
 export const useFavoritesStats = () => {
+  const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: FAVORITES_QUERY_KEYS.stats(),
     queryFn: getFavoritesStats,
     staleTime: 10 * 60 * 1000, // 10 دقیقه
     gcTime: 30 * 60 * 1000, // 30 دقیقه
     retry: 1, // فقط یک بار تلاش مجدد
+    enabled: isAuthenticated,
     // در صورت خطا، آمار خالی برگردان
     placeholderData: {
       total_favorites: 0,
@@ -61,6 +66,7 @@ export const useFavoritesStats = () => {
  * Hook ساده برای فقط تعداد کل علاقه‌مندی‌ها
  */
 export const useFavoritesCount = () => {
+  const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: [...FAVORITES_QUERY_KEYS.all, 'count'],
     queryFn: async () => {
@@ -70,6 +76,7 @@ export const useFavoritesCount = () => {
     staleTime: 5 * 60 * 1000, // 5 دقیقه
     gcTime: 10 * 60 * 1000, // 10 دقیقه
     retry: 2,
+    enabled: isAuthenticated,
     // در صورت خطا، 0 برگردان
     placeholderData: 0
   });
@@ -79,12 +86,13 @@ export const useFavoritesCount = () => {
  * Hook برای بررسی وضعیت علاقه‌مندی یک ملک
  */
 export const useFavoriteStatus = (propertyId: number) => {
+  const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: FAVORITES_QUERY_KEYS.status(propertyId),
     queryFn: () => checkFavoriteStatus(propertyId),
     staleTime: 2 * 60 * 1000, // 2 دقیقه
     gcTime: 5 * 60 * 1000, // 5 دقیقه
-    enabled: !!propertyId,
+    enabled: isAuthenticated && !!propertyId,
   });
 };
 

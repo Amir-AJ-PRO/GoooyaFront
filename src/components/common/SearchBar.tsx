@@ -8,6 +8,7 @@ import { useState, memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useCities } from "@/hooks/useCities";
 import { usePropertyTypes } from "@/hooks/usePropertyMutations";
+import Link from "next/link";
 
 const SearchBar = memo(() => {
   const router = useRouter();
@@ -21,6 +22,8 @@ const SearchBar = memo(() => {
   
   // دریافت انواع ملک از دیتابیس
   const { data: propertyTypes = [], isLoading: propertyTypesLoading } = usePropertyTypes();
+
+  const selectedCity = city ? cities.find((c) => c.id === Number(city)) : undefined;
 
   const submitSearch = useCallback(() => {
     // ساخت پارامترهای جستجو
@@ -192,6 +195,21 @@ const SearchBar = memo(() => {
           </div>
         </div>
       </div>
+
+      {/* درباره شهر انتخاب شده */}
+      {selectedCity && (
+        <div className="mt-4 pt-4 border-t">
+          <Link
+            href={`/cities/${selectedCity.id}`}
+            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+          >
+            در مورد {selectedCity.name}
+            <span className="text-muted-foreground text-xs font-normal">
+              (مشاهده اطلاعات شهر و املاک مرتبط)
+            </span>
+          </Link>
+        </div>
+      )}
     </div>
   );
 });

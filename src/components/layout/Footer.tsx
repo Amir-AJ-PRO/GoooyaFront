@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Home, Phone, Mail, Instagram, Twitter, Briefcase } from "lucide-react";
+import { GOOOYA_CONTACT_EMAIL, GOOOYA_CONTACT_PHONE_DISPLAY } from "@/lib/constants";
 
 export default function Footer() {
   return (
@@ -76,11 +77,11 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Phone className="h-4 w-4" />
-                <span>۰۲۱-۱۲۳۴۵۶۷۸</span>
+                <span>{GOOOYA_CONTACT_PHONE_DISPLAY}</span>
               </li>
               <li className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Mail className="h-4 w-4" />
-                <span>info@gooya.ir</span>
+                <span>{GOOOYA_CONTACT_EMAIL}</span>
               </li>
               <li className="flex items-center gap-3 mt-4">
                 <a href="#" className="text-muted-foreground hover:text-primary transition-smooth">

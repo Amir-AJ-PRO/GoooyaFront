@@ -17,12 +17,35 @@ export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     let accessToken = cookieStore.get(ACCESS_TOKEN_KEY)?.value;
+    const refreshToken = cookieStore.get(REFRESH_TOKEN_KEY)?.value;
     
     console.log('🔍 Checking cookies in /api/auth/me');
     console.log('Access token exists:', !!accessToken);
     console.log('Access token length:', accessToken?.length);
     console.log('All cookies:', cookieStore.getAll().map(c => c.name));
     
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.goooya.ir';
+
+    // اگر access token نداریم ولی refresh token داریم، اول رفرش کنیم
+    if (!accessToken && refreshToken) {
+      console.log('⚠️ No access token, trying refresh in /api/auth/me ...');
+      const refreshResponse = await fetch(`${backendUrl}/api/token/refresh/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh: refreshToken }),
+      });
+
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json();
+        accessToken = refreshData.access;
+        console.log('✅ Token refreshed (no previous access token)');
+      } else {
+        console.log('❌ Refresh failed (no previous access token)');
+      }
+    }
+
     if (!accessToken) {
       console.log('❌ No access token found in cookies');
       return NextResponse.json(
@@ -30,8 +53,6 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
-
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.goooya.ir';
     
     // امتحان endpoint های مختلف تا endpoint صحیح پیدا بشه
     const endpoints = [
@@ -90,8 +111,6 @@ export async function GET(request: NextRequest) {
     // اگر 401 بود، سعی در رفرش
     if (response.status === 401) {
       console.log('⚠️ Access token expired, trying refresh...');
-      
-      const refreshToken = cookieStore.get(REFRESH_TOKEN_KEY)?.value;
       
       if (!refreshToken) {
         console.log('❌ No refresh token found');

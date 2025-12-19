@@ -8,8 +8,10 @@ import { useVisitTickets } from '@/hooks/useVisitTickets';
 import { useToast } from '@/hooks/use-toast';
 import { DuplicateVisitTicketError } from '@/types/property';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Dialog,
   DialogContent,
@@ -48,8 +50,9 @@ import {
   Sparkles
 } from 'lucide-react';
 import { FavoriteButtonLarge, FavoriteButtonSmall } from '@/components/favorites/FavoriteButton';
-import { API_BASE_URL } from '@/lib/constants';
+import { API_BASE_URL, GOOOYA_CONTACT_PHONE_DISPLAY, GOOOYA_CONTACT_PHONE_TEL } from '@/lib/constants';
 import Link from 'next/link';
+import { getMediaUrl } from '@/lib/utils';
 
 interface PropertyDetailClientProps {
   slug: string;
@@ -246,6 +249,23 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
     : (anyProperty.property_type && anyProperty.property_type.title
       ? anyProperty.property_type.title 
       : '');
+
+  const agentObj = typeof anyProperty.agent === 'object' && anyProperty.agent ? anyProperty.agent : null;
+  const agentName =
+    agentObj?.full_name ||
+    (typeof anyProperty.agent === 'string' ? anyProperty.agent : '') ||
+    'نامشخص';
+  const isGoooyaProperty =
+    (anyProperty as any)?.is_goooya_property === true ||
+    (anyProperty as any)?.is_goooya_adviser === true ||
+    (anyProperty as any)?.is_goooya === true ||
+    agentObj?.is_goooya_adviser === true ||
+    (typeof anyProperty.agent === 'string' &&
+      (anyProperty.agent.toLowerCase().includes('گویا') ||
+        anyProperty.agent.toLowerCase().includes('gooya') ||
+        anyProperty.agent.toLowerCase().includes('goooya')));
+
+  const agentProfileImage = agentObj?.profile_image || anyProperty.agent_image || null;
   
   return (
     <div className="container mx-auto px-4 py-8">
@@ -277,6 +297,11 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                   <div className="bg-primary text-white px-4 py-2 rounded-full text-sm font-bold">
                     {property.transaction_type === 'sale' ? 'فروش' : 'اجاره'}
                   </div>
+                  {isGoooyaProperty && (
+                    <div className="bg-primary/90 text-white px-4 py-2 rounded-full text-sm font-bold">
+                      گویا
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex gap-2">
@@ -643,6 +668,104 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
         
         {/* ستون سمت چپ - قیمت و تماس */}
         <div className="space-y-6">
+          {/* مالک / مشاور */}
+          <Card>
+            <CardHeader>
+              <CardTitle>متعلق به</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {isGoooyaProperty ? (
+                <div className="flex items-center gap-3">
+                  <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-muted flex items-center justify-center">
+                    <Image
+                      src="/logo-gooya.svg"
+                      alt="گویا"
+                      fill
+                      className="object-contain p-2"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold">گویا</p>
+                    <p className="text-sm text-muted-foreground">
+                      این ملک برای خودِ گویاست
+                    </p>
+                  </div>
+                  <Badge className="bg-primary/90 hover:bg-primary text-white">گویا</Badge>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={getMediaUrl(agentProfileImage)} />
+                      <AvatarFallback className="font-bold">
+                        {agentName?.charAt(0) || 'م'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold break-words">{agentName}</p>
+                        {agentObj?.is_verified === true ? (
+                          <Badge variant="default" className="text-xs">
+                            تأیید شده
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">
+                            تأیید نشده
+                          </Badge>
+                        )}
+                      </div>
+                      {agentObj?.office_name && (
+                        <p className="text-xs text-muted-foreground mt-1 break-words">
+                          {agentObj.office_name}
+                        </p>
+                      )}
+                      {typeof agentObj?.years_of_experience === 'number' && agentObj.years_of_experience > 0 && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {agentObj.years_of_experience} سال سابقه
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {agentObj?.specialties && (
+                    <div className="flex flex-wrap gap-2">
+                      {agentObj.specialties.split('،').slice(0, 4).map((sp: string, idx: number) => (
+                        <Badge key={idx} variant="secondary" className="text-xs">
+                          {sp.trim()}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {(agentObj?.website || agentObj?.instagram) && (
+                    <div className="flex flex-wrap gap-3 text-sm">
+                      {agentObj.website && (
+                        <a
+                          href={agentObj.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline break-all"
+                        >
+                          وب‌سایت
+                        </a>
+                      )}
+                      {agentObj.instagram && (
+                        <a
+                          href={agentObj.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline break-all"
+                        >
+                          اینستاگرام
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* قیمت */}
           <Card className="sticky top-4">
             <CardHeader>
@@ -680,6 +803,12 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                 className="w-full gap-2" 
                 size="lg"
                 onClick={() => {
+                  // برای ملک‌های گویا: شماره عمومی گویا نمایش داده می‌شود (بدون نیاز به لاگین)
+                  if (isGoooyaProperty) {
+                    setShowAgentPhoneDialog(true);
+                    return;
+                  }
+
                   if (isAuthenticated) {
                     // اگر لاگین بود، شماره agent را نمایش بده
                     const agentPhone = typeof property.agent === 'object' && property.agent?.phone
@@ -699,7 +828,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                 }}
               >
                 <Phone className="h-5 w-5" />
-                تماس با مشاور
+                {isGoooyaProperty ? 'تماس با گویا' : 'تماس با مشاور'}
               </Button>
               
               <div className="space-y-3">
@@ -763,29 +892,33 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
       <Dialog open={showAgentPhoneDialog} onOpenChange={setShowAgentPhoneDialog}>
         <DialogContent dir="rtl" className="text-right">
           <DialogHeader>
-            <DialogTitle>شماره تماس مشاور</DialogTitle>
+            <DialogTitle>{isGoooyaProperty ? 'شماره تماس گویا' : 'شماره تماس مشاور'}</DialogTitle>
             <DialogDescription>
-              برای تماس با مشاور این ملک، از شماره زیر استفاده کنید
+              {isGoooyaProperty
+                ? 'برای تماس با گویا، از شماره زیر استفاده کنید'
+                : 'برای تماس با مشاور این ملک، از شماره زیر استفاده کنید'}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            {typeof property.agent === 'object' && property.agent?.phone ? (
+            {isGoooyaProperty || (typeof property.agent === 'object' && property.agent?.phone) ? (
               <div className="flex flex-col items-center gap-4">
-                {/* اطلاعات agent */}
-                {property.agent.full_name && (
+                {/* اطلاعات مالک/مشاور */}
+                {(isGoooyaProperty || (typeof property.agent === 'object' && property.agent?.full_name)) && (
                   <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-1">مشاور</p>
-                    <p className="font-semibold">{property.agent.full_name}</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      {isGoooyaProperty ? 'مالک' : 'مشاور'}
+                    </p>
+                    <p className="font-semibold">{isGoooyaProperty ? 'گویا' : (property as any).agent?.full_name}</p>
                   </div>
                 )}
                 
                 {/* شماره تلفن */}
                 <div className="text-3xl font-bold text-primary">
-                  {property.agent.phone}
+                  {isGoooyaProperty ? GOOOYA_CONTACT_PHONE_DISPLAY : (property as any).agent?.phone}
                 </div>
                 
                 {/* شماره دفتر (اگر موجود باشد) */}
-                {property.agent.office_phone && (
+                {!isGoooyaProperty && typeof property.agent === 'object' && property.agent?.office_phone && (
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-1">دفتر</p>
                     <p className="font-medium">{property.agent.office_phone}</p>
@@ -795,10 +928,10 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                 <div className="flex gap-2">
                   <Button
                     onClick={() => {
-                      const agentPhone = typeof property.agent === 'object' ? property.agent?.phone : null;
-                      if (agentPhone) {
-                        window.location.href = `tel:${agentPhone}`;
-                      }
+                      const phoneToDial = isGoooyaProperty
+                        ? GOOOYA_CONTACT_PHONE_TEL
+                        : (typeof property.agent === 'object' ? property.agent?.phone : null);
+                      if (phoneToDial) window.location.href = `tel:${phoneToDial}`;
                     }}
                     className="gap-2"
                   >
@@ -808,9 +941,11 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                   <Button
                     variant="outline"
                     onClick={() => {
-                      const agentPhone = typeof property.agent === 'object' ? property.agent?.phone : null;
-                      if (agentPhone) {
-                        navigator.clipboard.writeText(agentPhone);
+                      const phoneToCopy = isGoooyaProperty
+                        ? GOOOYA_CONTACT_PHONE_TEL
+                        : (typeof property.agent === 'object' ? property.agent?.phone : null);
+                      if (phoneToCopy) {
+                        navigator.clipboard.writeText(phoneToCopy);
                         alert('شماره تلفن کپی شد');
                       }
                     }}
@@ -821,7 +956,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
               </div>
             ) : (
               <p className="text-center text-muted-foreground">
-                شماره تماس مشاور در دسترس نیست
+                {isGoooyaProperty ? 'شماره تماس گویا در دسترس نیست' : 'شماره تماس مشاور در دسترس نیست'}
               </p>
             )}
           </div>

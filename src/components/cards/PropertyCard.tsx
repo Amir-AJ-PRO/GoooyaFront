@@ -57,6 +57,28 @@ export default function PropertyCard({ property, showFavoriteButton = true }: Pr
   } else {
     priceLabel = `رهن: ${formatPrice(property.mortgage)} / اجاره: ${formatPrice(property.rent)}`;
   }
+
+  // تشخیص اینکه آیا ملک «برای گویا» است یا خیر
+  const isGoooyaProperty = (() => {
+    const propertyAny = property as any;
+    if (
+      propertyAny?.is_goooya_property === true ||
+      propertyAny?.is_goooya_adviser === true ||
+      propertyAny?.is_goooya === true
+    ) {
+      return true;
+    }
+
+    const agentAny = propertyAny?.agent;
+    if (agentAny && typeof agentAny === 'object') {
+      return agentAny.is_goooya_adviser === true;
+    }
+    if (typeof agentAny === 'string') {
+      const normalized = agentAny.toLowerCase();
+      return normalized.includes('گویا') || normalized.includes('gooya') || normalized.includes('goooya');
+    }
+    return false;
+  })();
   
   return (
     <Link href={`/properties/${property.slug}`} prefetch={true}>
@@ -84,16 +106,23 @@ export default function PropertyCard({ property, showFavoriteButton = true }: Pr
             </div>
           )}
           
-          {/* بج نوع معامله - سمت راست بالا */}
-          <Badge 
-            className={`absolute top-3 right-3 px-3 py-1.5 text-xs font-bold shadow-lg z-10 ${
-              property.transaction_type === 'sale' 
-                ? 'bg-green-600 hover:bg-green-700 text-white' 
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            {property.transaction_type === 'sale' ? '💰 فروش' : '🏠 اجاره'}
-          </Badge>
+          {/* بج‌ها - سمت راست بالا */}
+          <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-2">
+            <Badge 
+              className={`px-3 py-1.5 text-xs font-bold shadow-lg ${
+                property.transaction_type === 'sale' 
+                  ? 'bg-green-600 hover:bg-green-700 text-white' 
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+            >
+              {property.transaction_type === 'sale' ? '💰 فروش' : '🏠 اجاره'}
+            </Badge>
+            {isGoooyaProperty && (
+              <Badge className="bg-primary/90 hover:bg-primary text-white px-3 py-1 text-xs font-bold shadow-lg">
+                گویا
+              </Badge>
+            )}
+          </div>
           
           {/* تعداد تصاویر */}
           {property.images && property.images.length > 1 && (

@@ -97,7 +97,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userData = transformUser(userDataFromCookie);
         setUser(userData);
         setBackendUser(userDataFromCookie);
-        return; // دیگه نیازی به فراخوانی API نیست
+
+        // ولی هنوز هم session رو با سرور sync می‌کنیم تا اگر access token حذف/منقضی شده بود،
+        // با refresh token دوباره ساخته بشه (و همچنین اگر user data تغییر کرده بود آپدیت بشه).
+        try {
+          const response = await fetch('/api/auth/me', {
+            credentials: 'include',
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data?.success && data?.user) {
+              const freshUser = transformUser(data.user);
+              setUser(freshUser);
+              setBackendUser(data.user);
+            }
+          } else if (response.status === 401) {
+            console.log('🔒 Session invalid (401) - clearing local user state');
+            setUser(null);
+            setBackendUser(null);
+          }
+        } catch (syncError) {
+          console.log('⚠️ Failed to sync session with server - keeping cookie user');
+        }
+
+        return;
       }
       
       // اگر در cookie نبود، از API بگیریم

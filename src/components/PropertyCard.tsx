@@ -30,6 +30,28 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     ? (mainImage.image.startsWith('http') ? mainImage.image : `${API_BASE_URL}${mainImage.image.startsWith('/') ? mainImage.image : `/${mainImage.image}`}`)
     : '/placeholder-property.jpg';
 
+  // تشخیص اینکه آیا ملک «برای گویا» است یا خیر
+  const isGoooyaProperty = (() => {
+    const propertyAny = property as any;
+    if (
+      propertyAny?.is_goooya_property === true ||
+      propertyAny?.is_goooya_adviser === true ||
+      propertyAny?.is_goooya === true
+    ) {
+      return true;
+    }
+
+    const agentAny = propertyAny?.agent;
+    if (agentAny && typeof agentAny === 'object') {
+      return agentAny.is_goooya_adviser === true;
+    }
+    if (typeof agentAny === 'string') {
+      const normalized = agentAny.toLowerCase();
+      return normalized.includes('گویا') || normalized.includes('gooya') || normalized.includes('goooya');
+    }
+    return false;
+  })();
+
   return (
     <Link href={`/properties/${property.slug}`}>
       <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-300 h-full border-2 hover:border-primary">
@@ -43,8 +65,8 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
           
-          {/* Badge نوع معامله - سمت راست بالا */}
-          <div className="absolute top-3 right-3 z-10">
+          {/* Badge ها - سمت راست بالا */}
+          <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-2">
             <Badge 
               className={`${
                 property.transaction_type === 'sale' 
@@ -54,6 +76,11 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             >
               {property.transaction_type === 'sale' ? '💰 فروش' : '🏠 اجاره'}
             </Badge>
+            {isGoooyaProperty && (
+              <Badge className="bg-primary/90 hover:bg-primary text-white font-semibold px-3 py-1 shadow-lg">
+                گویا
+              </Badge>
+            )}
           </div>
         </div>
 

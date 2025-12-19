@@ -22,6 +22,7 @@ async function proxyRequest(
   try {
     const cookieStore = await cookies();
     let accessToken = cookieStore.get(ACCESS_TOKEN_KEY)?.value;
+    const refreshToken = cookieStore.get(REFRESH_TOKEN_KEY)?.value;
     
     // ساخت URL
     const url = new URL(request.url);
@@ -42,6 +43,26 @@ async function proxyRequest(
       'Content-Type': 'application/json',
     };
     
+    // اگر access token نداریم ولی refresh token داریم، قبل از ارسال درخواست رفرش کنیم
+    if (!accessToken && refreshToken) {
+      console.log('⚠️ No access token, trying refresh using refresh token...');
+      const refreshResponse = await fetch(`${backendUrl}/api/token/refresh/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh: refreshToken }),
+      });
+
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json();
+        accessToken = refreshData.access;
+        console.log('✅ Access token refreshed (no previous access token)');
+      } else {
+        console.log('❌ Refresh failed (no previous access token)');
+      }
+    }
+
     if (accessToken) {
       headers['Authorization'] = `Bearer ${accessToken}`;
       console.log('🔑 Token added to request');
@@ -74,8 +95,6 @@ async function proxyRequest(
     // اگر 401 بود، رفرش کن
     if (response.status === 401 && accessToken) {
       console.log('⚠️ Token expired, refreshing...');
-      
-      const refreshToken = cookieStore.get(REFRESH_TOKEN_KEY)?.value;
       
       if (refreshToken) {
         const refreshResponse = await fetch(`${backendUrl}/api/token/refresh/`, {

@@ -24,6 +24,14 @@ export const PHONE_REGEX = /^09\d{9}$/;
 export const OTP_LENGTH = 6;
 export const OTP_EXPIRY_TIME = 120; // seconds
 
+/**
+ * اطلاعات تماس عمومی گویا (برای نمایش و tel:)
+ * نکته: مقدار tel باید با اعداد انگلیسی باشد.
+ */
+export const GOOOYA_CONTACT_PHONE_DISPLAY = "۰۲۱-۱۲۳۴۵۶۷۸";
+export const GOOOYA_CONTACT_PHONE_TEL = "02112345678";
+export const GOOOYA_CONTACT_EMAIL = "info@gooya.ir";
+
 export const PROPERTY_TYPES = {
   APARTMENT: "apartment",
   VILLA: "villa",
