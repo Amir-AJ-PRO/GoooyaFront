@@ -40,6 +40,7 @@ const Header = memo(() => {
   const navItems = [
     { name: "صفحه اصلی", path: "/", icon: Home },
     { name: "املاک", path: "/properties", icon: Search },
+    { name: "مشاورین", path: "/agents", icon: UserCircle },
     { name: "مقالات", path: "/blog", icon: BookOpen },
     { name: "خدمات مهندسی", path: "/engineering", icon: Wrench },
     { name: "پشتیبانی", path: "/support", icon: MessageCircle },

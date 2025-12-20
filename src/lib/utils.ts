@@ -12,7 +12,8 @@ export function cn(...inputs: ClassValue[]) {
  * همیشه یک رشته معتبر برمی‌گرداند (در صورت نبود تصویر، placeholder)
  */
 export function getMediaUrl(path: string | null | undefined): string {
-  if (!path) return '/placeholder-image.jpg';
+  // placeholder پروژه
+  if (!path) return '/placeholder.svg';
 
   // اگر قبلاً URL کامل است، همون رو برگردان
   if (path.startsWith('http://') || path.startsWith('https://')) {
