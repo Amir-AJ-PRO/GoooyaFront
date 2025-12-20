@@ -18,17 +18,11 @@ export async function GET(request: NextRequest) {
     const cookieStore = await cookies();
     let accessToken = cookieStore.get(ACCESS_TOKEN_KEY)?.value;
     const refreshToken = cookieStore.get(REFRESH_TOKEN_KEY)?.value;
-    
-    console.log('🔍 Checking cookies in /api/auth/me');
-    console.log('Access token exists:', !!accessToken);
-    console.log('Access token length:', accessToken?.length);
-    console.log('All cookies:', cookieStore.getAll().map(c => c.name));
-    
+
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.goooya.ir';
 
     // اگر access token نداریم ولی refresh token داریم، اول رفرش کنیم
     if (!accessToken && refreshToken) {
-      console.log('⚠️ No access token, trying refresh in /api/auth/me ...');
       const refreshResponse = await fetch(`${backendUrl}/api/token/refresh/`, {
         method: 'POST',
         headers: {
@@ -40,17 +34,15 @@ export async function GET(request: NextRequest) {
       if (refreshResponse.ok) {
         const refreshData = await refreshResponse.json();
         accessToken = refreshData.access;
-        console.log('✅ Token refreshed (no previous access token)');
-      } else {
-        console.log('❌ Refresh failed (no previous access token)');
       }
     }
 
     if (!accessToken) {
-      console.log('❌ No access token found in cookies');
+      // مهم: برای جلوگیری از لاگ 401 در کنسول مرورگر (Failed to load resource),
+      // برای کاربر مهمان 200 برمی‌گردونیم و با success=false مشخص می‌کنیم.
       return NextResponse.json(
-        { error: 'احراز هویت نشده' },
-        { status: 401 }
+        { success: false, user: null, message: 'Unauthenticated' },
+        { status: 200 }
       );
     }
     
@@ -65,37 +57,26 @@ export async function GET(request: NextRequest) {
     let response: Response | null = null;
     let successEndpoint = '';
     
-    console.log('🔍 Trying to find correct backend endpoint...');
-    
     for (const endpoint of endpoints) {
       try {
-        console.log(`🔄 Testing endpoint: ${backendUrl}${endpoint}`);
         const testResponse = await fetch(`${backendUrl}${endpoint}`, {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
           },
         });
-        
-        console.log(`📬 Endpoint ${endpoint} returned status: ${testResponse.status}`);
-        
+
         // قبول می‌کنیم: 200 (OK), 401 (Unauthorized - endpoint درسته اما token منقضی شده)
         // رد می‌کنیم: 404 (Not Found), 405 (Method Not Allowed)
         if (testResponse.ok || testResponse.status === 401) {
           response = testResponse;
           successEndpoint = endpoint;
-          console.log(`✅ Found working endpoint: ${endpoint} (status: ${testResponse.status})`);
           break;
         }
       } catch (error) {
-        console.log(`❌ Endpoint ${endpoint} failed with error:`, error);
       }
     }
     
     if (!response) {
-      console.log('❌ No working endpoint found - all endpoints returned 404 or error');
-      console.log('⚠️ Backend might not have /me endpoint implemented yet');
-      console.log('⚠️ Keeping user logged in despite this error');
-      
       // نباید کاربر رو logout کنیم فقط به خاطر اینکه endpoint نداریم
       // بهتره یک response ساده برگردونیم
       return NextResponse.json(
@@ -110,15 +91,11 @@ export async function GET(request: NextRequest) {
 
     // اگر 401 بود، سعی در رفرش
     if (response.status === 401) {
-      console.log('⚠️ Access token expired, trying refresh...');
-      
       if (!refreshToken) {
-        console.log('❌ No refresh token found');
-        
         // پاک کردن Cookie ها
         const jsonResponse = NextResponse.json(
-          { error: 'نشست منقضی شده' },
-          { status: 401 }
+          { success: false, user: null, message: 'Session expired' },
+          { status: 200 }
         );
         jsonResponse.cookies.delete(ACCESS_TOKEN_KEY);
         jsonResponse.cookies.delete(REFRESH_TOKEN_KEY);
@@ -135,11 +112,9 @@ export async function GET(request: NextRequest) {
       });
 
       if (!refreshResponse.ok) {
-        console.log('❌ Refresh failed');
-        
         const jsonResponse = NextResponse.json(
-          { error: 'نشست منقضی شده' },
-          { status: 401 }
+          { success: false, user: null, message: 'Session expired' },
+          { status: 200 }
         );
         jsonResponse.cookies.delete(ACCESS_TOKEN_KEY);
         jsonResponse.cookies.delete(REFRESH_TOKEN_KEY);
@@ -147,7 +122,6 @@ export async function GET(request: NextRequest) {
       }
 
       const refreshData = await refreshResponse.json();
-      console.log('✅ Token refreshed');
       
       // دوباره درخواست اصلی با endpoint صحیح که پیدا کردیم
       response = await fetch(`${backendUrl}${successEndpoint}`, {
@@ -161,11 +135,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (!response.ok) {
-      console.log('❌ Backend error:', response.status);
-      
+      // برای جلوگیری از لاگ 401 در کنسول مرورگر، 200 برگردون
       const jsonResponse = NextResponse.json(
-        { error: 'خطا در دریافت اطلاعات' },
-        { status: response.status }
+        { success: false, user: null, message: 'Failed to fetch user' },
+        { status: 200 }
       );
       
       // فقط در صورت 401 کوکی‌ها رو پاک کن (احراز هویت نامعتبر)
@@ -179,7 +152,6 @@ export async function GET(request: NextRequest) {
     }
 
     const userData = await response.json();
-    console.log('✅ User data fetched successfully');
     
     // بازگشت با Cookie به‌روز
     const jsonResponse = NextResponse.json({
@@ -200,11 +172,9 @@ export async function GET(request: NextRequest) {
     
     return jsonResponse;
   } catch (error) {
-    console.error('Get user error:', error);
-    
     return NextResponse.json(
-      { error: 'خطای سرور' },
-      { status: 500 }
+      { success: false, user: null, message: 'Server error' },
+      { status: 200 }
     );
   }
 }

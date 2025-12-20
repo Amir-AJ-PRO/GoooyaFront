@@ -57,6 +57,15 @@ const nextConfig = {
   // Environment variables
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE || 'https://api.goooya.ir',
+    // پشتیبانی: مقدار اصلی از .env با کلید VITE_SUPPORT_API_BASE_URL خوانده می‌شود
+    // و برای استفاده در Client Component به NEXT_PUBLIC_SUPPORT_API_BASE_URL مپ می‌کنیم
+    NEXT_PUBLIC_SUPPORT_API_BASE_URL:
+      process.env.VITE_SUPPORT_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_SUPPORT_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_SUPPORT_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.API_BASE ||
+      'https://api.goooya.ir',
   },
   
   // ESLint configuration

@@ -78,7 +78,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return JSON.parse(decodeURIComponent(userData));
       }
     } catch (error) {
-      console.error('خطا در خواندن user data از cookie:', error);
     }
     
     return null;
@@ -93,7 +92,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userDataFromCookie = getUserFromCookie();
       
       if (userDataFromCookie) {
-        console.log('✅ User data loaded from cookie');
         const userData = transformUser(userDataFromCookie);
         setUser(userData);
         setBackendUser(userDataFromCookie);
@@ -113,19 +111,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setBackendUser(data.user);
             }
           } else if (response.status === 401) {
-            console.log('🔒 Session invalid (401) - clearing local user state');
             setUser(null);
             setBackendUser(null);
           }
         } catch (syncError) {
-          console.log('⚠️ Failed to sync session with server - keeping cookie user');
         }
 
         return;
       }
       
       // اگر در cookie نبود، از API بگیریم
-      console.log('🔄 Fetching user data from API...');
       const response = await fetch('/api/auth/me', {
         credentials: 'include', // ارسال cookies
       });
@@ -134,11 +129,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // فقط در صورت 401 (Unauthorized) کاربر رو logout کن
         // برای خطاهای دیگه (مثل 500, 404) کاربر رو logout نکن
         if (response.status === 401) {
-          console.log('🔒 User session expired (401) - logging out');
           setUser(null);
           setBackendUser(null);
         } else {
-          console.log(`⚠️ Failed to fetch user data (${response.status}) - keeping user logged in`);
         }
         return;
       }
@@ -152,12 +145,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (data.success === false && data.message === 'Keeping session alive') {
         // Backend endpoint موجود نیست اما session معتبره
         // کاربر رو logout نکن
-        console.log('⚠️ Backend /me endpoint not available - keeping current session');
       }
-    } catch (error) {
-      console.error('خطا در دریافت اطلاعات کاربر:', error);
-      // فقط در صورت خطای شبکه کاربر رو logout نکن
-      console.log('⚠️ Network error - keeping user logged in');
+    } catch {
+      // خطای شبکه - کاربر را logout نکن
     }
   };
 
@@ -179,8 +169,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         method: 'POST',
         credentials: 'include',
       });
-    } catch (error) {
-      console.error('خطا در خروج:', error);
+    } catch {
     } finally {
       setUser(null);
       setBackendUser(null);
@@ -217,7 +206,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const CHECK_INTERVAL = 5 * 60 * 1000; // 5 دقیقه
     
     const interval = setInterval(() => {
-      console.log('🔄 Auto-checking authentication status...');
       refreshUser();
     }, CHECK_INTERVAL);
 

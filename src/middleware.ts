@@ -6,6 +6,18 @@ import type { NextRequest } from 'next/server';
  * Authentication در client-side با sessionStorage انجام میشه
  */
 
+function tryGetOrigin(raw?: string): string | null {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  try {
+    // اگر کاربر مقدار را با path داده باشد، فقط origin را برمی‌داریم
+    return new URL(trimmed).origin;
+  } catch {
+    return null;
+  }
+}
+
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
   
@@ -17,6 +29,10 @@ export async function middleware(request: NextRequest) {
   
   // CSP Header - اجازه به external resources
   const isDevelopment = process.env.NODE_ENV === 'development';
+  const supportOrigin =
+    tryGetOrigin(process.env.VITE_SUPPORT_API_BASE_URL) ||
+    tryGetOrigin(process.env.NEXT_PUBLIC_SUPPORT_API_BASE_URL) ||
+    tryGetOrigin(process.env.NEXT_PUBLIC_SUPPORT_API_URL);
   
   if (isDevelopment) {
     // در حالت development، CSP را خیلی آزاد میگذاریم
@@ -28,7 +44,15 @@ export async function middleware(request: NextRequest) {
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
         "font-src 'self' data: https://cdn.jsdelivr.net",
         "img-src 'self' data: https: http:",
-        "connect-src 'self' https://api.goooya.ir http://localhost:8000 ws: wss:",
+        // connect-src: اجازه‌ی اتصال به API ها (شامل support با baseUrl از .env)
+        [
+          "connect-src 'self'",
+          'https://api.goooya.ir',
+          'http://localhost:8000',
+          supportOrigin,
+          'ws:',
+          'wss:',
+        ].filter(Boolean).join(' '),
         "frame-src 'none'",
       ].join('; ')
     );
@@ -44,7 +68,11 @@ export async function middleware(request: NextRequest) {
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
         "font-src 'self' data: https://cdn.jsdelivr.net",
         "img-src 'self' data: https:",
-        "connect-src 'self' https://api.goooya.ir",
+        [
+          "connect-src 'self'",
+          'https://api.goooya.ir',
+          supportOrigin,
+        ].filter(Boolean).join(' '),
         "frame-src 'none'",
       ].join('; ')
     );
