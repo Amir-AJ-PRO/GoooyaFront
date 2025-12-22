@@ -11,7 +11,7 @@ services:
         # اگر می‌خوای NEXT_PUBLIC_API_URL داخل build هم embed بشه:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
         # Base URL ساپورت (اجباری) - اگر ست نباشه compose خطا می‌دهد
-        NEXT_PUBLIC_SUPPORT_API_BASE_URL: ${NEXT_PUBLIC_SUPPORT_API_BASE_URL}
+        NEXT_PUBLIC_SUPPORT_API_BASE_URL: ${NEXT_PUBLIC_SUPPORT_API_BASE_URL:?NEXT_PUBLIC_SUPPORT_API_BASE_URL is required}
         API_BASE: ${API_BASE:-}
     image: gooya-nextjs:latest
     container_name: gooya-nextjs
@@ -24,7 +24,7 @@ services:
       - HOSTNAME=0.0.0.0
       # Support API Base URL - از .env خوانده می‌شود یا اینجا تنظیم کنید
       # توجه: از default خالی استفاده نمی‌کنیم چون باعث می‌شود مقدار env_file شما overwrite شود
-      - NEXT_PUBLIC_SUPPORT_API_BASE_URL=${NEXT_PUBLIC_SUPPORT_API_BASE_URL}
+      - NEXT_PUBLIC_SUPPORT_API_BASE_URL=${NEXT_PUBLIC_SUPPORT_API_BASE_URL:?NEXT_PUBLIC_SUPPORT_API_BASE_URL is required}
       # Backend API URL - از .env خوانده می‌شود
       # یا اینجا مستقیماً تنظیم کنید:
       # - NEXT_PUBLIC_API_URL=https://api.goooya.ir
