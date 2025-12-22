@@ -129,42 +129,18 @@ export default function SupportChatClient() {
   // فقط هنگام ورود به صفحه / رفرش / برگشت دوباره به صفحه چت
   // conversation را از get_chat می‌گیریم.
   useEffect(() => {
-    const supportBase = process.env.NEXT_PUBLIC_SUPPORT_API_BASE_URL;
     const controller = new AbortController();
 
     const load = async () => {
       setIsLoadingHistory(true);
       try {
-        if (!supportBase) {
-          toast({
-            title: 'تنظیمات ناقص',
-            description: 'VITE_SUPPORT_API_BASE_URL در env لود نشده است. لطفاً dev server را ریستارت کنید.',
-            variant: 'destructive',
-          });
-          return;
-        }
-
-        const base = supportBase.replace(/\/+$/, '');
-        const candidates = [`${base}/api/Support/get_chat`, `${base}/api/Chat/get_chat`];
-
-        let res: Response | null = null;
-        for (const url of candidates) {
-          res = await fetch(url, {
-            method: 'GET',
-            headers: {
-              // بعضی بک‌اندها (یا فیلترها) حتی برای GET هم Content-Type را enforce می‌کنند
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            credentials: 'include',
-            signal: controller.signal,
-          });
-
-          if (res.status === 404) continue;
-          break;
-        }
-
-        if (!res) return;
+        // جلوگیری از CORS: کلاینت فقط به route داخلی Next می‌زند
+        const res = await fetch('/api/support/chat', {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+          credentials: 'include',
+          signal: controller.signal,
+        });
 
         const data = (await res.json()) as unknown as GetChatConversationResponse;
         const ok = Boolean(
@@ -249,15 +225,12 @@ export default function SupportChatClient() {
     setIsSending(true);
 
     try {
-      const supportBase = process.env.NEXT_PUBLIC_SUPPORT_API_BASE_URL;
-      const directUrl = supportBase ? `${supportBase.replace(/\/+$/, '')}/api/Support/chat` : null;
-
-      const res = await fetch(directUrl || '/api/support/chat', {
+      // جلوگیری از CORS: کلاینت فقط به route داخلی Next می‌زند
+      const res = await fetch('/api/support/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        // اگر مستقیم به بک‌اند پشتیبانی می‌زنیم، بدنه باید PascalCase باشد
-        body: JSON.stringify(directUrl ? { Message: text } : { message: text }),
+        body: JSON.stringify({ message: text }),
       });
 
       let data: SupportChatResponse | null = null;

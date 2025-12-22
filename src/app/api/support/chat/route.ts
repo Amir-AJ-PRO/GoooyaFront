@@ -12,15 +12,21 @@ type SupportChatCreateResponseDTO = {
   IsSuccess: boolean;
 };
 
+type SupportChatHistoryResponseDTO = {
+  Conversations?: Array<{
+    UserId?: string;
+    ChatId?: string;
+    Message?: string;
+    Role?: 'user' | 'assistant' | 0 | 1;
+  }>;
+  Message?: string;
+  IsSuccess?: boolean;
+  ChatId?: string;
+};
+
 function getSupportBaseUrl(): string {
-  // طبق درخواست شما: بیس پشتیبانی از .env با کلید VITE_SUPPORT_API_BASE_URL خوانده شود
-  // (این route سروری است، پس نیاز نیست NEXT_PUBLIC_ باشد)
-  return (
-    process.env.VITE_SUPPORT_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_SUPPORT_API_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    'https://api.goooya.ir'
-  );
+  // فقط و فقط از این env می‌خوانیم (هیچ fallback دیگری نداریم)
+  return process.env.NEXT_PUBLIC_SUPPORT_API_BASE_URL || '';
 }
 
 function getCookieOptions() {
@@ -48,6 +54,77 @@ const insecureDispatcher = new Agent({
   },
 });
 
+function getSupportCookieHeader(request: NextRequest): string | undefined {
+  const supportSession = request.cookies.get('support_session')?.value;
+  if (!supportSession) return undefined;
+  return `support_session=${supportSession}`;
+}
+
+async function fetchSupportUpstream(request: NextRequest, url: string, init: RequestInit): Promise<Response> {
+  const headers = new Headers(init.headers || {});
+  const cookieHeader = getSupportCookieHeader(request);
+  if (cookieHeader) headers.set('Cookie', cookieHeader);
+
+  const requestInit: RequestInit & { dispatcher?: unknown } = {
+    ...init,
+    headers,
+    ...(shouldAllowInsecureTls() ? { dispatcher: insecureDispatcher } : {}),
+  };
+
+  return fetch(url, requestInit);
+}
+
+export async function GET(request: NextRequest) {
+  const supportBase = getSupportBaseUrl();
+  if (!supportBase) {
+    return NextResponse.json(
+      { Message: 'NEXT_PUBLIC_SUPPORT_API_BASE_URL تنظیم نشده است', IsSuccess: false, Conversations: [] } satisfies SupportChatHistoryResponseDTO,
+      { status: 500 }
+    );
+  }
+
+  const base = supportBase.replace(/\/+$/, '');
+  const candidates = [`${base}/api/Support/get_chat`, `${base}/api/Chat/get_chat`];
+
+  try {
+    let upstream: Response | null = null;
+    for (const url of candidates) {
+      const res = await fetchSupportUpstream(request, url, {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+      });
+      if (res.status === 404) continue;
+      upstream = res;
+      break;
+    }
+
+    if (!upstream) {
+      return NextResponse.json(
+        { Message: 'Endpoint not found', IsSuccess: false, Conversations: [] } satisfies SupportChatHistoryResponseDTO,
+        { status: 200 }
+      );
+    }
+
+    const contentType = upstream.headers.get('content-type') || '';
+    let data: SupportChatHistoryResponseDTO;
+
+    if (contentType.includes('application/json')) {
+      data = (await upstream.json()) as SupportChatHistoryResponseDTO;
+    } else {
+      const rawText = await upstream.text();
+      data = { Message: rawText || 'پاسخ نامعتبر از سرور پشتیبانی', IsSuccess: false, Conversations: [] };
+    }
+
+    return NextResponse.json(data, { status: upstream.status });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'خطا در ارتباط با سرور پشتیبانی';
+    return NextResponse.json(
+      { Message: msg, IsSuccess: false, Conversations: [] } satisfies SupportChatHistoryResponseDTO,
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   let body: SupportChatCommand | null = null;
   try {
@@ -60,18 +137,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ErrorMessage: 'پیام نامعتبر است', IsSuccess: false, ChatId: '' }, { status: 400 });
   }
 
-  const base = getSupportBaseUrl().replace(/\/+$/, '');
+  const supportBase = getSupportBaseUrl();
+  if (!supportBase) {
+    return NextResponse.json(
+      { ErrorMessage: 'NEXT_PUBLIC_SUPPORT_API_BASE_URL تنظیم نشده است', IsSuccess: false, ChatId: '' },
+      { status: 500 }
+    );
+  }
+
+  const base = supportBase.replace(/\/+$/, '');
   const url = `${base}/api/Support/chat`;
 
   try {
-    const requestInit: RequestInit & { dispatcher?: unknown } = {
+    const upstream = await fetchSupportUpstream(request, url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ Message: body.message }),
-      ...(shouldAllowInsecureTls() ? { dispatcher: insecureDispatcher } : {}),
-    };
-
-    const upstream = await fetch(url, requestInit);
+    });
 
     const contentType = upstream.headers.get('content-type') || '';
     let data: SupportChatCreateResponseDTO | null = null;
