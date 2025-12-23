@@ -1,7 +1,11 @@
 /** @type {import('next').NextConfig} */
+const path = require('path');
+
 const nextConfig = {
   // Output configuration for Docker
   output: 'standalone',
+  // Ensure Next traces files from the actual project root (fixes wrong root inference when multiple lockfiles exist)
+  outputFileTracingRoot: path.join(__dirname),
   
   // Compiler optimizations
   compiler: {
@@ -20,7 +24,7 @@ const nextConfig = {
       // CDN/Storage servers
       {
         protocol: 'https',
-        hostname: 'c133408.parspack.net',
+        hostname: 'c748821.parspack.net',
         pathname: '/**',
       },
       // Development servers

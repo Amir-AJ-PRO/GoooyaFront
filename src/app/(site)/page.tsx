@@ -51,8 +51,8 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Search Bar - positioned at bottom edge */}
-        <div className="absolute -bottom-10 md:-bottom-14 left-0 right-0 z-20">
+        {/* Search Bar - anchor to top so it grows downward (not upward) */}
+        <div className="absolute top-full -mt-10 md:-mt-14 left-0 right-0 z-20">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <SearchBar />

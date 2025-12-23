@@ -1,19 +1,20 @@
 'use client';
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
 import { useState, memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useCities } from "@/hooks/useCities";
 import { usePropertyTypes } from "@/hooks/usePropertyMutations";
+import { useLocations } from "@/hooks/useLocations";
 import Link from "next/link";
 
 const SearchBar = memo(() => {
   const router = useRouter();
   const [tab, setTab] = useState<"buy" | "rent">("buy");
   const [city, setCity] = useState<string | undefined>(undefined);
+  const [location, setLocation] = useState<string | undefined>(undefined);
   const [type, setType] = useState<string | undefined>(undefined);
   const [price, setPrice] = useState<string | undefined>(undefined);
 
@@ -24,6 +25,16 @@ const SearchBar = memo(() => {
   const { data: propertyTypes = [], isLoading: propertyTypesLoading } = usePropertyTypes();
 
   const selectedCity = city ? cities.find((c) => c.id === Number(city)) : undefined;
+  const selectedCityId = city ? Number(city) : undefined;
+
+  // دریافت مناطق (ترجیحاً بعد از انتخاب شهر)
+  const { data: locations = [], isLoading: locationsLoading } = useLocations(selectedCityId, {
+    enabled: !!selectedCityId,
+  });
+
+  const selectedLocation = location
+    ? locations.find((l) => l.id === Number(location))
+    : undefined;
 
   const submitSearch = useCallback(() => {
     // ساخت پارامترهای جستجو
@@ -33,6 +44,10 @@ const SearchBar = memo(() => {
     
     if (city) {
       searchParams.set('city', city);
+    }
+
+    if (location) {
+      searchParams.set('location', location);
     }
     
     if (type) {
@@ -55,7 +70,7 @@ const SearchBar = memo(() => {
     
     // انتقال به صفحه املاک
     router.push(`/properties?${searchParams.toString()}`);
-  }, [router, tab, city, type, price]);
+  }, [router, tab, city, location, type, price]);
 
   return (
     <div className="bg-card rounded-2xl shadow-large p-3 md:p-6" dir="rtl">
@@ -87,7 +102,13 @@ const SearchBar = memo(() => {
       <div className="md:hidden space-y-2">
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <Select value={city} onValueChange={setCity}>
+            <Select
+              value={city}
+              onValueChange={(value) => {
+                setCity(value);
+                setLocation(undefined); // تغییر شهر => ریست منطقه
+              }}
+            >
               <SelectTrigger dir="rtl" className="h-9 text-xs">
                 <SelectValue placeholder="شهر" />
               </SelectTrigger>
@@ -106,6 +127,33 @@ const SearchBar = memo(() => {
           </div>
 
           <div>
+            <Select
+              value={location}
+              onValueChange={setLocation}
+              disabled={!selectedCityId}
+            >
+              <SelectTrigger dir="rtl" className="h-9 text-xs">
+                <SelectValue placeholder={selectedCityId ? "منطقه" : "ابتدا شهر"} />
+              </SelectTrigger>
+              <SelectContent>
+                {!selectedCityId ? (
+                  <SelectItem value="disabled" disabled>ابتدا شهر را انتخاب کنید</SelectItem>
+                ) : locationsLoading ? (
+                  <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
+                ) : locations.length === 0 ? (
+                  <SelectItem value="empty" disabled>منطقه‌ای یافت نشد</SelectItem>
+                ) : (
+                  locations.map((loc) => (
+                    <SelectItem key={loc.id} value={loc.id.toString()}>
+                      {loc.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="col-span-2">
             <Select value={type} onValueChange={setType}>
               <SelectTrigger dir="rtl" className="h-9 text-xs">
                 <SelectValue placeholder="نوع ملک" />
@@ -134,8 +182,13 @@ const SearchBar = memo(() => {
       <div className="hidden md:block">
         <div className="grid grid-cols-4 gap-3 items-end">
           <div>
-            <label className="text-sm font-medium mb-2 block text-right">شهر</label>
-            <Select value={city} onValueChange={setCity}>
+            <Select
+              value={city}
+              onValueChange={(value) => {
+                setCity(value);
+                setLocation(undefined); // تغییر شهر => ریست منطقه
+              }}
+            >
               <SelectTrigger dir="rtl">
                 <SelectValue placeholder="انتخاب شهر" />
               </SelectTrigger>
@@ -154,7 +207,33 @@ const SearchBar = memo(() => {
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2 block text-right">نوع ملک</label>
+            <Select
+              value={location}
+              onValueChange={setLocation}
+              disabled={!selectedCityId}
+            >
+              <SelectTrigger dir="rtl">
+                <SelectValue placeholder={selectedCityId ? "منطقه" : "ابتدا شهر"} />
+              </SelectTrigger>
+              <SelectContent>
+                {!selectedCityId ? (
+                  <SelectItem value="disabled" disabled>ابتدا شهر را انتخاب کنید</SelectItem>
+                ) : locationsLoading ? (
+                  <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
+                ) : locations.length === 0 ? (
+                  <SelectItem value="empty" disabled>منطقه‌ای یافت نشد</SelectItem>
+                ) : (
+                  locations.map((loc) => (
+                    <SelectItem key={loc.id} value={loc.id.toString()}>
+                      {loc.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
             <Select value={type} onValueChange={setType}>
               <SelectTrigger dir="rtl">
                 <SelectValue placeholder="نوع ملک" />
@@ -174,7 +253,6 @@ const SearchBar = memo(() => {
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2 block text-right">قیمت</label>
             <Select value={price} onValueChange={setPrice}>
               <SelectTrigger dir="rtl">
                 <SelectValue placeholder="قیمت" />
@@ -186,13 +264,12 @@ const SearchBar = memo(() => {
               </SelectContent>
             </Select>
           </div>
+        </div>
 
-          <div>
-            <label className="text-sm font-medium mb-2 block text-right opacity-0 pointer-events-none">جستجو</label>
-            <Button className="w-full" onClick={submitSearch}>
-              <Search className="h-4 w-4 inline-block ml-2" /> جستجو
-            </Button>
-          </div>
+        <div className="mt-3">
+          <Button className="w-full" onClick={submitSearch}>
+            <Search className="h-4 w-4 inline-block ml-2" /> جستجو
+          </Button>
         </div>
       </div>
 
@@ -206,6 +283,21 @@ const SearchBar = memo(() => {
             در مورد {selectedCity.name}
             <span className="text-muted-foreground text-xs font-normal">
               (مشاهده اطلاعات شهر و املاک مرتبط)
+            </span>
+          </Link>
+        </div>
+      )}
+
+      {/* درباره منطقه انتخاب شده */}
+      {selectedLocation && (
+        <div className="mt-2">
+          <Link
+            href={`/locations/${selectedLocation.id}`}
+            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+          >
+            در مورد {selectedLocation.name}
+            <span className="text-muted-foreground text-xs font-normal">
+              (مشاهده اطلاعات منطقه و املاک مرتبط)
             </span>
           </Link>
         </div>

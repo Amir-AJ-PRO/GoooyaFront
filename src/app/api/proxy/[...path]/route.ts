@@ -31,8 +31,9 @@ async function proxyRequest(
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.goooya.ir';
     const targetPath = pathSegments.join('/');
     
-    // اضافه کردن trailing slash (Django معمولاً نیاز داره)
-    const needsSlash = !targetPath.endsWith('/') && !queryString;
+    // اضافه کردن trailing slash (Django معمولاً نیاز داره) حتی وقتی query string داریم
+    // تا URL هایی مثل /api/properties/options/locations/?city=1 درست ساخته شوند.
+    const needsSlash = !targetPath.endsWith('/');
     const targetUrl = `${backendUrl}/${targetPath}${needsSlash ? '/' : ''}${queryString}`;
     
     console.log(`🔄 Proxying ${method} ${targetUrl}`);
@@ -122,6 +123,25 @@ async function proxyRequest(
       }
     }
     
+    // اگر 204/205 باشد body ندارد (مثل DELETE ملک)؛ JSON برنگردان
+    if (response.status === 204 || response.status === 205) {
+      const emptyResponse = new NextResponse(null, { status: response.status });
+
+      // اگر token رفرش شد، update کن با maxAge صحیح
+      if (accessToken) {
+        emptyResponse.cookies.set(ACCESS_TOKEN_KEY, accessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: ACCESS_TOKEN_MAX_AGE, // 15 دقیقه
+        });
+      }
+
+      console.log('✅ Proxy completed (no-content)');
+      return emptyResponse;
+    }
+
     // دریافت response data
     const contentType = response.headers.get('content-type');
     let data: any;

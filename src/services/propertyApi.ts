@@ -73,7 +73,10 @@ export const createProperty = async (
 ): Promise<Property> => {
   const formData = createPropertyFormData(payload);
   
-  const response = await fetch(`${API_BASE_URL}/api/properties/add/`, {
+  // IMPORTANT:
+  // از Next.js API route استفاده می‌کنیم تا توکن HttpOnly (روی دامنه فرانت) در سرور خوانده شود
+  // و درخواست multipart با Authorization به backend ارسال شود. این کار 401 های client->backend را رفع می‌کند.
+  const response = await fetch(`/api/properties/add/`, {
     method: 'POST',
     credentials: 'include', // برای ارسال cookies
     body: formData,
@@ -183,7 +186,15 @@ export const getLocations = async (cityId?: number): Promise<Location[]> => {
     throw new Error('خطا در دریافت مناطق');
   }
   
-  return response.json();
+  const data = (await response.json()) as Location[];
+
+  // Fallback: اگر backend به هر دلیلی همه مناطق را برگرداند،
+  // در فرانت فقط مناطق همان شهر انتخاب‌شده را نمایش بده.
+  if (cityId) {
+    return data.filter((loc) => loc.city === cityId);
+  }
+
+  return data;
 };
 
 /**

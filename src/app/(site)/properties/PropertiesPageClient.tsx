@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSearchProperties } from '@/hooks/useSearch';
 import { useCities, usePropertyTypes, useProperties } from '@/hooks/usePropertyMutations';
+import { useLocations } from '@/hooks/useLocations';
 import PropertyCard from '@/components/cards/PropertyCard';
 import Pagination from '@/components/common/Pagination';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ export default function PropertiesPageClient() {
   // فیلترهای محلی (برای نمایش)
   const [searchTerm, setSearchTerm] = useState('');
   const [cityFilter, setCityFilter] = useState<string>('all');
+  const [locationFilter, setLocationFilter] = useState<string>('all');
   const [transactionFilter, setTransactionFilter] = useState<string>('all');
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('newest');
@@ -44,6 +46,11 @@ export default function PropertiesPageClient() {
   
   // دریافت شهرها
   const { data: cities = [], isLoading: citiesLoading } = useCities();
+
+  const selectedCityId = cityFilter !== 'all' ? Number(cityFilter) : undefined;
+  const { data: locations = [], isLoading: locationsLoading } = useLocations(selectedCityId, {
+    enabled: cityFilter !== 'all',
+  });
   
   // دریافت انواع ملک از دیتابیس
   const { data: propertyTypes = [], isLoading: propertyTypesLoading } = usePropertyTypes();
@@ -70,6 +77,7 @@ export default function PropertiesPageClient() {
     const location = searchParams.get('location');
     if (location) {
       params.location = parseInt(location);
+      setLocationFilter(location);
       hasAdvancedParams = true;
     }
     
@@ -214,7 +222,7 @@ export default function PropertiesPageClient() {
   // Reset به صفحه اول هنگام تغییر فیلترها
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, cityFilter, transactionFilter, propertyTypeFilter]);
+  }, [searchTerm, cityFilter, locationFilter, transactionFilter, propertyTypeFilter]);
   
   // تابع اعمال فیلترهای محلی
   const applyLocalFilters = () => {
@@ -226,6 +234,10 @@ export default function PropertiesPageClient() {
     
     if (cityFilter !== 'all') {
       params.set('city', cityFilter);
+    }
+
+    if (locationFilter !== 'all') {
+      params.set('location', locationFilter);
     }
     
     if (transactionFilter !== 'all') {
@@ -288,6 +300,7 @@ export default function PropertiesPageClient() {
   const activeFiltersCount = [
     searchTerm && 1,
     cityFilter !== 'all' && 1,
+    locationFilter !== 'all' && 1,
     transactionFilter !== 'all' && 1,
     propertyTypeFilter !== 'all' && 1,
     sortBy !== 'newest' && 1
@@ -360,7 +373,7 @@ export default function PropertiesPageClient() {
         
         <div className={`space-y-4 transition-all duration-300 ${showFilters ? 'block' : 'hidden md:block'}`}>
           {/* ردیف اول فیلترها */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* جستجو */}
           <div className="relative md:col-span-2 lg:col-span-1">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
@@ -381,7 +394,14 @@ export default function PropertiesPageClient() {
           </div>
             
             {/* شهر */}
-            <Select value={cityFilter} onValueChange={setCityFilter}>
+            <Select
+              value={cityFilter}
+              onValueChange={(value) => {
+                setCityFilter(value);
+                // تغییر شهر => ریست منطقه
+                setLocationFilter('all');
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="شهر" />
               </SelectTrigger>
@@ -398,6 +418,33 @@ export default function PropertiesPageClient() {
                 )}
               </SelectContent>
             </Select>
+
+          {/* منطقه */}
+          <Select
+            value={locationFilter}
+            onValueChange={setLocationFilter}
+            disabled={cityFilter === 'all'}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={cityFilter === 'all' ? 'ابتدا شهر' : 'منطقه'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">همه مناطق</SelectItem>
+              {cityFilter === 'all' ? (
+                <SelectItem value="disabled" disabled>ابتدا شهر را انتخاب کنید</SelectItem>
+              ) : locationsLoading ? (
+                <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
+              ) : locations.length === 0 ? (
+                <SelectItem value="empty" disabled>منطقه‌ای یافت نشد</SelectItem>
+              ) : (
+                locations.map((loc) => (
+                  <SelectItem key={loc.id} value={loc.id.toString()}>
+                    {loc.name}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
           
           {/* نوع معامله */}
           <Select value={transactionFilter} onValueChange={setTransactionFilter}>
@@ -493,6 +540,7 @@ export default function PropertiesPageClient() {
               onClick={() => {
                 setSearchTerm('');
                 setCityFilter('all');
+                setLocationFilter('all');
                 setTransactionFilter('all');
                 setPropertyTypeFilter('all');
                 setSortBy('newest');
@@ -534,6 +582,7 @@ export default function PropertiesPageClient() {
               onClick={() => {
                 setSearchTerm('');
                 setCityFilter('all');
+                setLocationFilter('all');
                 setTransactionFilter('all');
                 setPropertyTypeFilter('all');
                 setSortBy('newest');
