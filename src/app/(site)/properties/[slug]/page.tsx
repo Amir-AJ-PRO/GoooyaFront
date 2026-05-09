@@ -16,6 +16,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PropertyDetailPage({ params }: Props) {
   const { slug } = await params;
-  return <PropertyDetailClient slug={slug} />;
+  return  <PropertyDetailClient slug={slug} />;
 }
 

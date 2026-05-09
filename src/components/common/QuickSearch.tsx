@@ -54,13 +54,13 @@ export default function QuickSearch() {
       <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
       <Input
         type="text"
-        placeholder="جستجوی ملک، منطقه، آدرس..."
+        placeholder="جستو در عنوان، شهر ، منطقه..."
         value={searchTerm}
         onChange={(e) => handleSearchInputChange(e.target.value)}
         onKeyDown={handleKeyDown}
         onFocus={() => searchTerm.length >= 2 && setShowSuggestions(true)}
         onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-        className="pr-10 h-9 text-sm"
+        className="pr-10  h-9 text-sm"
         dir="rtl"
       />
       

@@ -28,8 +28,8 @@ export default function BlogPageClient() {
 
   const { data: blogData, isLoading, error } = useBlogPosts(searchParams);
 
-  const filteredPosts = blogData?.results.filter(post => 
-    !searchTerm || 
+  const filteredPosts = blogData?.results.filter(post =>
+    !searchTerm ||
     post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     post.description.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
@@ -127,7 +127,7 @@ export default function BlogPageClient() {
           <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <h2 className="text-2xl font-bold mb-2">مقاله‌ای یافت نشد</h2>
           <p className="text-muted-foreground">
-            {blogData?.results.length === 0 
+            {blogData?.results.length === 0
               ? 'هنوز مقاله‌ای منتشر نشده است'
               : 'با فیلترهای انتخاب شده مقاله‌ای یافت نشد'
             }
@@ -138,69 +138,73 @@ export default function BlogPageClient() {
           {/* Grid مقالات */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {filteredPosts.map((post, index) => (
-              <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative h-48">
-                  <Image
-                    src={post.thumbnail}
-                    alt={post.title}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute top-4 right-4">
-                    <Badge variant="secondary">
-                      {post.category.name}
-                    </Badge>
-                  </div>
-                </div>
-                
-                <CardHeader className="pb-3">
-                  <h3 className="text-lg font-semibold line-clamp-2 mb-2">
-                    <Link 
-                      href={`/blog/${post.slug}`}
-                      className="hover:text-primary transition-colors"
-                    >
-                      {post.title}
-                    </Link>
-                  </h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {post.description}
-                  </p>
-                </CardHeader>
-                
-                <CardContent className="pt-0">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-                    <div className="flex items-center gap-1">
-                      <User className="h-3 w-3" />
-                      <span>{post.author}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      <span>{new Date(post.pub_date).toLocaleDateString('fa-IR')}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-wrap gap-1">
-                      {post.blogtags.slice(0, 2).map((tag) => (
-                        <Badge key={tag.id} variant="outline" className="text-xs">
-                          {tag.name}
+              <div key={index}>
+                <Link href={`/blog/${post.slug}`}>
+
+
+                  <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+
+                    <div className="relative h-48">
+                      <Image
+                        src={post.thumbnail}
+                        alt={post.title}
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute top-4 right-4">
+                        <Badge variant="secondary">
+                          {post.category.name}
                         </Badge>
-                      ))}
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <MessageCircle className="h-3 w-3" />
-                      <span>{post.comment_count}</span>
-                    </div>
-                  </div>
-                  
-                  <Link href={`/blog/${post.slug}`}>
-                    <Button variant="outline" size="sm" className="w-full mt-3">
-                      مطالعه مقاله
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+
+                    <CardHeader className="pb-3">
+                      <h3 className="text-lg font-semibold line-clamp-2 mb-2">
+                     
+                      </h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {post.description}
+                      </p>
+                    </CardHeader>
+
+                    <CardContent className="pt-0">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+                        <div className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          <span>{post.author}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>{new Date(post.pub_date).toLocaleDateString('fa-IR')}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap gap-1">
+                          {post.blogtags.slice(0, 2).map((tag) => (
+                            <Badge key={tag.id} variant="outline" className="text-xs">
+                              {tag.name}
+                            </Badge>
+                          ))}
+                        </div>
+
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <MessageCircle className="h-3 w-3" />
+                          <span>{post.comment_count}</span>
+                        </div>
+                      </div>
+
+
+                      <Button variant="outline" size="sm" className="w-full mt-3">
+                        مطالعه مقاله
+                      </Button>
+
+                    </CardContent>
+
+                  </Card>
+                </Link>
+              </div>
+
             ))}
           </div>
 
@@ -214,11 +218,11 @@ export default function BlogPageClient() {
               >
                 قبلی
               </Button>
-              
+
               <span className="flex items-center px-4 py-2 text-sm">
                 صفحه {page} از {blogData.total_pages}
               </span>
-              
+
               <Button
                 variant="outline"
                 onClick={() => setPage(page + 1)}

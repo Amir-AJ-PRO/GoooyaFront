@@ -13,11 +13,11 @@ import { Button } from '@/components/ui/button';
  */
 export default function FeaturedProperties() {
   const { data: properties, isLoading, error } = useHomepageProperties();return (
-    <section className="py-16 bg-gradient-to-b from-white to-gray-50">
-      <div className="container mx-auto px-4">
+    <section className="py-16 bg-[#E0E0E0]">
+      <div className="container mx-auto px-4 ">
         {/* هدر */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl mb-4">
+        {/* <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl mb-4 my-14" >
             <Home className="w-8 h-8 text-primary" />
           </div>
           <h2 className="text-4xl font-bold text-gray-800 mb-4">
@@ -26,7 +26,7 @@ export default function FeaturedProperties() {
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
             جدیدترین و برترین املاک برای خرید و اجاره
           </p>
-        </div>
+        </div> */}
 
         {/* محتوا */}
         {isLoading ? (

@@ -257,7 +257,7 @@ export default function BlogPostClient({ slug }: BlogPostClientProps) {
 
         {/* Sidebar */}
         <div className="lg:col-span-1">
-          <div className="sticky top-8 space-y-6">
+          <div className="sticky top-20 space-y-6">
             {/* اطلاعات مقاله */}
             <Card>
               <CardHeader>

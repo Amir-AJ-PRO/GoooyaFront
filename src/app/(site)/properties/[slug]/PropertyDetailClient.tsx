@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useProperty } from '@/hooks/usePropertyMutations';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import "react-image-gallery/styles/image-gallery.css";
 import {
   Dialog,
   DialogContent,
@@ -20,10 +21,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import Image from 'next/image';
-import { 
-  MapPin, 
-  Bed, 
-  Square, 
+import {
+  MapPin,
+  Bed,
+  Square,
   Calendar,
   Building2,
   Phone,
@@ -46,13 +47,23 @@ import {
   Radio,
   Wifi,
   XCircle,
+  X,
   CheckCircle,
-  Sparkles
+
+  Sparkles,
+  ExternalLinkIcon
 } from 'lucide-react';
 import { FavoriteButtonLarge, FavoriteButtonSmall } from '@/components/favorites/FavoriteButton';
 import { API_BASE_URL, GOOOYA_CONTACT_PHONE_DISPLAY, GOOOYA_CONTACT_PHONE_TEL } from '@/lib/constants';
 import Link from 'next/link';
 import { getMediaUrl } from '@/lib/utils';
+import MyModal from "react-modal"
+
+
+
+
+
+
 
 interface PropertyDetailClientProps {
   slug: string;
@@ -61,7 +72,7 @@ interface PropertyDetailClientProps {
 // فرمت قیمت
 const formatPrice = (price?: number | null): string => {
   if (!price) return 'توافقی';
-  
+
   if (price >= 1000000000) {
     return `${(price / 1000000000).toFixed(2)} میلیارد تومان`;
   } else if (price >= 1000000) {
@@ -75,16 +86,46 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const { 
-    createVisitTicket, 
-    isCreating, 
-    createVisitTicketBySlug, 
-    isCreatingBySlug 
+  const {
+    createVisitTicket,
+    isCreating,
+    createVisitTicketBySlug,
+    isCreatingBySlug
   } = useVisitTickets();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showAgentPhoneDialog, setShowAgentPhoneDialog] = useState(false);
+  const [ModalHandeler, setModalHandeler] = useState(false)
+  const [visibliti, setvisibliti] = useState(false)
+  const MAX_THUMBNAILS = 6;
+  let remainig = property?.images.length - MAX_THUMBNAILS;
+
+
+
+
+  // let sliderImage =[] ;
+  //   property?.images.map((img) => {
+
+
+
+  //     sliderImage.push({
+  //       original: (img.image.startsWith('http://') || img.image.startsWith('https://')
+  //         ? img.image
+  //         : `${API_BASE_URL}${img.image.startsWith('/') ? img.image : `/${img.image}`}`)
+  //       ,
+  //       size: 100
+  //     })
+
+
+  //   })
+
+
+
+
+
 
   // هندل کردن درخواست بازدید (روش اول: با slug در body)
+
+  console.log()
   const handleVisitRequest = async () => {
     if (!isAuthenticated) {
       router.push(`/login?from=${encodeURIComponent(`/properties/${slug}`)}`);
@@ -114,7 +155,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
           hour: '2-digit',
           minute: '2-digit'
         });
-        
+
         toast({
           title: "درخواست تکراری",
           description: `شما قبلاً در تاریخ ${formattedDate} برای این ملک درخواست بازدید ثبت کرده‌اید.`,
@@ -157,7 +198,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
           hour: '2-digit',
           minute: '2-digit'
         });
-        
+
         toast({
           title: "درخواست تکراری",
           description: `شما قبلاً در تاریخ ${formattedDate} برای این ملک درخواست بازدید ثبت کرده‌اید.`,
@@ -172,7 +213,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
       }
     }
   };
-  
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-20">
@@ -183,12 +224,12 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
       </div>
     );
   }
-  
+
   if (error || !property) {
-    const isAuthError = error?.message?.includes('احراز هویت') || 
-                       error?.message?.includes('وارد شوید') ||
-                       error?.message?.includes('نشست');
-    
+    const isAuthError = error?.message?.includes('احراز هویت') ||
+      error?.message?.includes('وارد شوید') ||
+      error?.message?.includes('نشست');
+
     return (
       <div className="container mx-auto px-4 py-20">
         <div className="text-center">
@@ -218,36 +259,37 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
       </div>
     );
   }
-  
+
   const mainImage = property.images?.[selectedImageIndex];
-  
+
+
   // ساخت URL تصویر - اگر URL کامل است (شروع با http/https)، از همان استفاده می‌کنیم
   let imageUrl = '/assets/property-placeholder.jpg';
   if (mainImage?.image) {
     if (mainImage.image.startsWith('http://') || mainImage.image.startsWith('https://')) {
       imageUrl = mainImage.image;
     } else {
-      const imagePath = mainImage.image.startsWith('/') ? mainImage.image : `/${mainImage.image}`;
-      imageUrl = `${API_BASE_URL}${imagePath}`;
+      //const imagePath = mainImage.image.startsWith('/') ? mainImage.image : `/${mainImage.image}`;
+      imageUrl = `${API_BASE_URL}${imageUrl}`;
     }
   }
-  
+
   // محاسبه نوع شهر و منطقه با optional chaining (استفاده از any برای سازگاری با انواع مختلف backend)
   const anyProperty = property as any;
-  const cityName = typeof anyProperty.city === 'string' 
-    ? anyProperty.city 
+  const cityName = typeof anyProperty.city === 'string'
+    ? anyProperty.city
     : (anyProperty.city && anyProperty.city.name
-      ? anyProperty.city.name 
+      ? anyProperty.city.name
       : '');
   const locationName = typeof anyProperty.location === 'string'
     ? anyProperty.location
     : (anyProperty.location && anyProperty.location.name
-      ? anyProperty.location.name 
+      ? anyProperty.location.name
       : '');
   const propertyTypeName = typeof anyProperty.property_type === 'string'
     ? anyProperty.property_type
     : (anyProperty.property_type && anyProperty.property_type.title
-      ? anyProperty.property_type.title 
+      ? anyProperty.property_type.title
       : '');
 
   const agentObj = typeof anyProperty.agent === 'object' && anyProperty.agent ? anyProperty.agent : null;
@@ -266,7 +308,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
         anyProperty.agent.toLowerCase().includes('goooya')));
 
   const agentProfileImage = agentObj?.profile_image || anyProperty.agent_image || null;
-  
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Back Button */}
@@ -276,7 +318,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
           بازگشت به لیست املاک
         </Button>
       </Link>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* ستون اصلی - تصاویر و جزئیات */}
         <div className="lg:col-span-2 space-y-6">
@@ -287,10 +329,10 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                 src={imageUrl}
                 alt={property.title}
                 fill
-                className="object-contain"
+                className="object-contain bg-cover bg-center "
                 priority
               />
-              
+
               {/* بج‌ها */}
               <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
                 <div className="flex gap-2">
@@ -303,7 +345,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex gap-2">
                   {isAuthenticated && (
                     <FavoriteButtonSmall
@@ -312,9 +354,9 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                       className="bg-white/90 backdrop-blur-sm"
                     />
                   )}
-                  <Button 
-                    size="icon" 
-                    variant="secondary" 
+                  <Button
+                    size="icon"
+                    variant="secondary"
                     className="rounded-full bg-white/90 backdrop-blur-sm"
                     onClick={(e) => {
                       e.preventDefault();
@@ -347,21 +389,24 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                 </div>
               </div>
             </div>
-            
+
             {/* گالری تصاویر */}
             {property.images && property.images.length > 1 && (
               <div className="p-4">
                 <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
-                  {property.images.map((img, index) => (
-                    <button
+                  {property.images.slice(0, MAX_THUMBNAILS).map((img, index) => {
+                    let isLastVisible = index === MAX_THUMBNAILS - 1;
+
+
+                    return <button
                       key={img.id}
                       onClick={() => setSelectedImageIndex(index)}
-                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                        index === selectedImageIndex 
-                          ? 'border-primary ring-2 ring-primary/20' 
-                          : 'border-transparent hover:border-gray-300'
-                      }`}
+                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${index === selectedImageIndex
+                        ? 'border-primary ring-2 ring-primary/20'
+                        : 'border-transparent hover:border-gray-300'
+                        }`}
                     >
+
                       <Image
                         src={
                           img.image.startsWith('http://') || img.image.startsWith('https://')
@@ -372,18 +417,136 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                         fill
                         className="object-contain bg-gray-100"
                       />
+                      {isLastVisible && remainig > 0 && (
+                        <div onClick={() => {
+                          if (isLastVisible && remainig > 0) {
+                            // open modal with all images
+                            setModalHandeler(true);
+                          }
+
+                        }
+
+                        }
+                          className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-sm font-medium">
+                          +{remainig} more
+                        </div>
+
+                      )}
+
                     </button>
-                  ))}
+                  }
+                  )
+                  }
+
                 </div>
               </div>
             )}
+
           </Card>
-          
+
+
+          <div className='fixed h-screen -z-50 '>
+            <MyModal
+              className={"fixed   justify-center items-center rounded-sm z-[100]  h-screen w-screen  text-white  "}
+              isOpen={ModalHandeler}
+              overlayClassName={"fixed flex   z-[1000]  h-screen w-screen   bg-black/90 bg-opacity-5  inset-0"}
+              onRequestClose={() => { setModalHandeler(false) }}
+            >
+
+              <div className='relative '  >
+                <button className='  border border-black top-[15px] right-[15px] absolute' onClick={() => { setModalHandeler(false) }} ><X  /></button>
+              </div>
+
+
+
+              <div className='flex flex-col h-full '>
+                <div className=' flex items-center justify-center h-full   '>
+                  <div className=' h-full md:w-3/6 w-full flex justify-center items-center     '>
+                    <div className="relative h-full w-full">
+                      <Image
+                        src={imageUrl}
+                        alt={property.title}
+                        fill
+                       
+                        className="object-contain"
+
+                        priority
+                      />
+                    </div>
+                  </div>
+                </div>
+
+
+
+                {/* گالری تصاویر */}
+                <div className=''>
+                  {property.images && property.images.length > 1 && (
+                    <div className="p-4 flex justify-center items-start">
+                      <div className='flex justify-center items-start flex-wrap'>
+                        {property.images.map((img, index) => {
+
+
+
+                          return <button
+                            key={img.id}
+                            onClick={() => setSelectedImageIndex(index)}
+                            className={`mx-1 relative aspect-square rounded-lg overflow-hidden border-2 transition-all \   h-20 ${index === selectedImageIndex
+                              ? 'border-primary ring-1 ring-primary/70'
+                              : 'border-transparent hover:border-gray-300'
+                              }`}
+                          >
+
+                            <Image
+
+                              src={
+                                img.image.startsWith('http://') || img.image.startsWith('https://')
+                                  ? img.image
+                                  : `${API_BASE_URL}${img.image.startsWith('/') ? img.image : `/${img.image}`}`
+                              }
+                              alt={`تصویر ${index + 1}`}
+                              width={100}
+                              height={100}
+                              className="object-contain bg-gray-100"
+                            />
+
+
+                          </button>
+
+                        }
+                        )
+                        }
+
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+
+
+            </MyModal>
+
+
+
+
+
+
+          </div>
+
+
+
+
+
+
+
+
+
+
           {/* عنوان و موقعیت */}
           <Card>
             <CardContent className="p-6">
               <h1 className="text-3xl font-bold mb-4">{property.title}</h1>
-              
+
               <div className="flex items-center gap-2 text-muted-foreground mb-6">
                 <MapPin className="h-5 w-5" />
                 <span>
@@ -391,7 +554,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                   {locationName && ` - ${locationName}`}
                 </span>
               </div>
-              
+
               {property.address && (
                 <div className="bg-muted p-4 rounded-lg">
                   <p className="text-sm">{property.address}</p>
@@ -399,7 +562,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
               )}
             </CardContent>
           </Card>
-          
+
           {/* مشخصات کلی */}
           <Card>
             <CardHeader>
@@ -416,7 +579,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                     <p className="font-bold">{property.measure} متر</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-primary/10 rounded-lg">
                     <Bed className="h-6 w-6 text-primary" />
@@ -426,7 +589,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                     <p className="font-bold">{property.rooms}</p>
                   </div>
                 </div>
-                
+
                 {property.year_built && (
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-primary/10 rounded-lg">
@@ -438,7 +601,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                     </div>
                   </div>
                 )}
-                
+
                 {property.floor && (
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-primary/10 rounded-lg">
@@ -450,7 +613,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                     </div>
                   </div>
                 )}
-                
+
                 {property.document_type && (
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-primary/10 rounded-lg">
@@ -462,7 +625,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                     </div>
                   </div>
                 )}
-                
+
                 {property.price_per_meter && (
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-primary/10 rounded-lg">
@@ -479,7 +642,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
               </div>
             </CardContent>
           </Card>
-          
+
           {/* امکانات و تجهیزات */}
           <Card>
             <CardHeader>
@@ -498,7 +661,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                     <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                   </div>
                 )}
-                
+
                 {property.has_storage && (
                   <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
                     <Warehouse className="h-5 w-5 flex-shrink-0 text-green-600" />
@@ -506,7 +669,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                     <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                   </div>
                 )}
-                
+
                 {property.has_elevator && (
                   <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
                     <ArrowUpDown className="h-5 w-5 flex-shrink-0 text-green-600" />
@@ -514,7 +677,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                     <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                   </div>
                 )}
-                
+
                 {property.has_balcony && (
                   <div className="flex items-center gap-3 p-3 rounded-lg border bg-green-50 border-green-200 text-green-700">
                     <Home className="h-5 w-5 flex-shrink-0 text-green-600" />
@@ -649,7 +812,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
               </div>
             </CardContent>
           </Card>
-          
+
           {/* توضیحات */}
           {property.description && (
             <Card>
@@ -657,7 +820,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                 <CardTitle>توضیحات</CardTitle>
               </CardHeader>
               <CardContent>
-                <div 
+                <div
                   className="prose prose-sm max-w-none"
                   dangerouslySetInnerHTML={{ __html: property.description }}
                 />
@@ -665,11 +828,12 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
             </Card>
           )}
         </div>
-        
+
         {/* ستون سمت چپ - قیمت و تماس */}
         <div className="space-y-6">
           {/* مالک / مشاور */}
-          <Card>
+
+          <Card className='my-2' >
             <CardHeader>
               <CardTitle>متعلق به</CardTitle>
             </CardHeader>
@@ -765,131 +929,133 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
               )}
             </CardContent>
           </Card>
+          <div className='sticky top-28'>
 
-          {/* قیمت */}
-          <Card className="sticky top-4">
-            <CardHeader>
-              <CardTitle>قیمت</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {property.transaction_type === 'sale' ? (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">قیمت کل</p>
-                  <p className="text-3xl font-bold text-primary">
-                    {formatPrice(property.price)}
-                  </p>
-                </div>
-              ) : (
-                <>
+            {/* قیمت */}
+            <Card className=" my-2 ">
+              <CardHeader >
+                <CardTitle>قیمت</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {property.transaction_type === 'sale' ? (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">رهن</p>
-                    <p className="text-2xl font-bold text-primary">
-                      {formatPrice(property.mortgage)}
+                    <p className="text-sm text-muted-foreground mb-1">قیمت کل</p>
+                    <p className="text-3xl font-bold text-primary">
+                      {formatPrice(property.price)}
                     </p>
                   </div>
-                  <Separator />
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">اجاره (ماهانه)</p>
-                    <p className="text-2xl font-bold text-primary">
-                      {formatPrice(property.rent)}
-                    </p>
-                  </div>
-                </>
-              )}
-              
-              <Separator />
-              
-              <Button 
-                className="w-full gap-2" 
-                size="lg"
-                onClick={() => {
-                  // برای ملک‌های گویا: شماره عمومی گویا نمایش داده می‌شود (بدون نیاز به لاگین)
-                  if (isGoooyaProperty) {
-                    setShowAgentPhoneDialog(true);
-                    return;
-                  }
-
-                  if (isAuthenticated) {
-                    // اگر لاگین بود، شماره agent را نمایش بده
-                    const agentPhone = typeof property.agent === 'object' && property.agent?.phone
-                      ? property.agent.phone
-                      : null;
-                    
-                    if (agentPhone) {
-                      setShowAgentPhoneDialog(true);
-                    } else {
-                      // اگر شماره agent موجود نبود
-                      alert('شماره تماس مشاور در دسترس نیست');
-                    }
-                  } else {
-                    // اگر لاگین نبود، به صفحه login هدایت کن
-                    router.push(`/login?from=${encodeURIComponent(`/properties/${slug}`)}`);
-                  }
-                }}
-              >
-                <Phone className="h-5 w-5" />
-                {isGoooyaProperty ? 'تماس با گویا' : 'تماس با مشاور'}
-              </Button>
-              
-              <div className="space-y-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full gap-2" 
-                  onClick={handleVisitRequest}
-                  disabled={isCreating || isCreatingBySlug}
-                >
-                  {(isCreating || isCreatingBySlug) ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Calendar className="h-4 w-4" />
-                  )}
-                  {(isCreating || isCreatingBySlug) ? 'در حال ثبت...' : 'درخواست بازدید'}
-                </Button>
-                
-                {isAuthenticated && (
-                  <FavoriteButtonLarge
-                    propertyId={property.id}
-                    isFavorite={property.is_favorite}
-                    className="w-full"
-                  />
+                ) : (
+                  <>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">رهن</p>
+                      <p className="text-2xl font-bold text-primary">
+                        {formatPrice(property.mortgage)}
+                      </p>
+                    </div>
+                    <Separator />
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">اجاره (ماهانه)</p>
+                      <p className="text-2xl font-bold text-primary">
+                        {formatPrice(property.rent)}
+                      </p>
+                    </div>
+                  </>
                 )}
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* اطلاعات اضافی */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">اطلاعات تکمیلی</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">شناسه ملک:</span>
-                <span className="font-mono">#{property.id}</span>
-              </div>
-              
-              <Separator />
-              
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">تاریخ ثبت:</span>
-                <span>
-                  {new Date(property.created_at).toLocaleDateString('fa-IR')}
-                </span>
-              </div>
-              
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">آخرین به‌روزرسانی:</span>
-                <span>
-                  {new Date(property.updated_at).toLocaleDateString('fa-IR')}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+
+                <Separator />
+
+                <Button
+                  className="w-full gap-2"
+                  size="lg"
+                  onClick={() => {
+                    // برای ملک‌های گویا: شماره عمومی گویا نمایش داده می‌شود (بدون نیاز به لاگین)
+                    if (isGoooyaProperty) {
+                      setShowAgentPhoneDialog(true);
+                      return;
+                    }
+
+                    if (isAuthenticated) {
+                      // اگر لاگین بود، شماره agent را نمایش بده
+                      const agentPhone = typeof property.agent === 'object' && property.agent?.phone
+                        ? property.agent.phone
+                        : null;
+
+                      if (agentPhone) {
+                        setShowAgentPhoneDialog(true);
+                      } else {
+                        // اگر شماره agent موجود نبود
+                        alert('شماره تماس مشاور در دسترس نیست');
+                      }
+                    } else {
+                      // اگر لاگین نبود، به صفحه login هدایت کن
+                      router.push(`/login?from=${encodeURIComponent(`/properties/${slug}`)}`);
+                    }
+                  }}
+                >
+                  <Phone className="h-5 w-5" />
+                  {isGoooyaProperty ? 'تماس با گویا' : 'تماس با مشاور'}
+                </Button>
+
+                <div className="space-y-3">
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={handleVisitRequest}
+                    disabled={isCreating || isCreatingBySlug}
+                  >
+                    {(isCreating || isCreatingBySlug) ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Calendar className="h-4 w-4" />
+                    )}
+                    {(isCreating || isCreatingBySlug) ? 'در حال ثبت...' : 'درخواست بازدید'}
+                  </Button>
+
+                  {isAuthenticated && (
+                    <FavoriteButtonLarge
+                      propertyId={property.id}
+                      isFavorite={property.is_favorite}
+                      className="w-full"
+                    />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* اطلاعات اضافی */}
+            <Card className='my-2'>
+              <CardHeader>
+                <CardTitle className="text-sm">اطلاعات تکمیلی</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">شناسه ملک:</span>
+                  <span className="font-mono">#{property.id}</span>
+                </div>
+
+                <Separator />
+
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">تاریخ ثبت:</span>
+                  <span>
+                    {new Date(property.created_at).toLocaleDateString('fa-IR')}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">آخرین به‌روزرسانی:</span>
+                  <span>
+                    {new Date(property.updated_at).toLocaleDateString('fa-IR')}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </div >
 
       {/* Dialog نمایش شماره تلفن agent */}
-      <Dialog open={showAgentPhoneDialog} onOpenChange={setShowAgentPhoneDialog}>
+      < Dialog open={showAgentPhoneDialog} onOpenChange={setShowAgentPhoneDialog} >
         <DialogContent dir="rtl" className="text-right">
           <DialogHeader>
             <DialogTitle>{isGoooyaProperty ? 'شماره تماس گویا' : 'شماره تماس مشاور'}</DialogTitle>
@@ -911,12 +1077,12 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                     <p className="font-semibold">{isGoooyaProperty ? 'گویا' : (property as any).agent?.full_name}</p>
                   </div>
                 )}
-                
+
                 {/* شماره تلفن */}
                 <div className="text-3xl font-bold text-primary">
                   {isGoooyaProperty ? GOOOYA_CONTACT_PHONE_DISPLAY : (property as any).agent?.phone}
                 </div>
-                
+
                 {/* شماره دفتر (اگر موجود باشد) */}
                 {!isGoooyaProperty && typeof property.agent === 'object' && property.agent?.office_phone && (
                   <div className="text-center">
@@ -924,7 +1090,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                     <p className="font-medium">{property.agent.office_phone}</p>
                   </div>
                 )}
-                
+
                 <div className="flex gap-2">
                   <Button
                     onClick={() => {
@@ -961,8 +1127,8 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
             )}
           </div>
         </DialogContent>
-      </Dialog>
-    </div>
+      </Dialog >
+    </div >
   );
 }
 

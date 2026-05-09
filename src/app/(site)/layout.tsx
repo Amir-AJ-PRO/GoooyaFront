@@ -13,13 +13,13 @@ export default function SiteLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <>
+    <div className=" bg-[#E0E0E0]">
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 ">
         {children}
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Home, Search, Info, User, Menu, MapPin, Building, LogOut, MessageCircle, Wrench, Settings, UserCircle, Plus, FileText, Briefcase, BookOpen, Heart } from "lucide-react";
+import { Home, Search, Info, User, Menu, MapPin, Building, LogOut, MessageCircle, Wrench, Settings, UserCircle, Plus, FileText, Briefcase, BookOpen, Heart, Phone } from "lucide-react";
 import { useState, memo, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginModal from "@/components/LoginModal";
@@ -27,38 +27,42 @@ const Header = memo(() => {
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [submitPropertyModalOpen, setSubmitPropertyModalOpen] = useState(false);
   const { user, backendUser, logout, isAuthenticated } = useAuth();
-  
+
   // بررسی اینکه آیا کاربر مشاور گویا است
   const isGooyaAdviser = backendUser?.agent_profile?.is_goooya_adviser === true;
-  
+
   // بررسی اینکه آیا کاربر agent است یا نه
   const isAgent = user?.type === 'agent' || !!backendUser?.agent_profile;
-  
+
   // فقط وقتی که کاربر مشاور گویا باشه، تعداد تیکت‌ها رو بگیر
   const { data: ticketsCount } = useAdviserTicketsCount(isGooyaAdviser);
-  
+
   const navItems = [
-    { name: "صفحه اصلی", path: "/", icon: Home },
-    { name: "املاک", path: "/properties", icon: Search },
+
+    { name: "املاک", path: "/properties", icon: Building  },
     { name: "مشاورین", path: "/agents", icon: UserCircle },
-    { name: "مقالات", path: "/blog", icon: BookOpen },
     { name: "خدمات مهندسی", path: "/engineering", icon: Wrench },
-    { name: "پشتیبانی", path: "/support", icon: MessageCircle },
+    { name: "مقالات", path: "/blog", icon: BookOpen },
+    // { name: "پشتیبانی", path: "/support", icon: MessageCircle },
     { name: "درباره ما", path: "/about", icon: Info },
+        { name: "تماس با ما", path: "/contact", icon: Phone },
+
   ];
 
   const isActive = (path: string) => pathname === path;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      
+
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <div className="h-10 w-10">
-              <img 
-                src="/logo-gooya.svg" 
-                alt="گویا" 
+              <img
+                src="/logo-gooya.svg"
+                alt="گویا"
                 className="h-full w-full object-contain"
               />
             </div>
@@ -73,11 +77,10 @@ const Header = memo(() => {
                 <Link key={item.path} href={item.path} className="relative" prefetch={true}>
                   <Button
                     variant={isActive(item.path) ? "default" : "ghost"}
-                    className={`gap-1.5 text-sm px-2.5 xl:px-3 h-9 ${
-                      isActive(item.path) 
-                        ? "bg-primary/80 hover:bg-primary/90" 
+                    className={`gap-1.5 text-sm px-2.5 xl:px-3 h-9 ${isActive(item.path)
+                        ? "bg-primary/80 hover:bg-primary/90"
                         : ""
-                    }`}
+                      }`}
                   >
                     <Icon className="h-4 w-4" />
                     <span className="whitespace-nowrap">{item.name}</span>
@@ -108,15 +111,15 @@ const Header = memo(() => {
                 </Button>
               </Link>
             )}
-            
+
             {/* دکمه ثبت ملک - برای همه کاربران */}
             {(!user || user.type === 'user') && (
-              <Button 
+              <Button
                 className="gap-1.5 hidden lg:flex text-sm px-2.5 xl:px-3 h-9"
                 onClick={() => setSubmitPropertyModalOpen(true)}
               >
                 <Plus className="h-4 w-4" />
-                <span className="hidden xl:inline whitespace-nowrap">درخواست ثبت آگهی</span>
+                <span className="hidden xl:inline whitespace-nowrap">سپردن ملک</span>
                 <span className="xl:hidden whitespace-nowrap">ثبت آگهی</span>
               </Button>
             )}
@@ -207,8 +210,8 @@ const Header = memo(() => {
               </>
             ) : (
               <>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="gap-1.5 hidden lg:flex text-sm px-2.5 xl:px-3 h-9"
                   onClick={() => setLoginModalOpen(true)}
                 >
@@ -218,7 +221,7 @@ const Header = memo(() => {
                 </Button>
               </>
             )}
-            
+
             <Button
               variant="ghost"
               size="icon"
@@ -247,17 +250,17 @@ const Header = memo(() => {
                 </Button>
               </Link>
             )}
-            
+
             {/* دکمه ثبت ملک در موبایل - برای همه کاربران */}
             {(!user || user.type === 'user') && (
-              <Button 
-                className="w-full justify-start gap-2"
+              <Button
+                className="w-full justify-start gap-2 my-2 "
                 onClick={() => {
                   setMobileMenuOpen(false);
                   setSubmitPropertyModalOpen(true);
                 }}
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4  " />
                 درخواست ثبت آگهی
               </Button>
             )}
@@ -268,7 +271,7 @@ const Header = memo(() => {
                 <Link key={item.path} href={item.path} onClick={() => setMobileMenuOpen(false)} prefetch={true}>
                   <Button
                     variant={isActive(item.path) ? "default" : "ghost"}
-                    className="w-full justify-start gap-2"
+                    className="w-full justify-start gap-2 "
                   >
                     <Icon className="h-4 w-4" />
                     {item.name}
@@ -310,8 +313,8 @@ const Header = memo(() => {
                 </Button>
               </>
             ) : (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start gap-2"
                 onClick={() => {
                   setMobileMenuOpen(false);
@@ -328,7 +331,7 @@ const Header = memo(() => {
 
       {/* Login Modal */}
       <LoginModal open={loginModalOpen} onOpenChange={setLoginModalOpen} />
-      
+
       {/* Submit Property Modal */}
       <SubmitPropertyModal open={submitPropertyModalOpen} onOpenChange={setSubmitPropertyModalOpen} />
     </header>

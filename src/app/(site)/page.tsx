@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import SearchBar from "@/components/common/SearchBar";
 import { ArrowLeft } from "lucide-react";
 import FeaturedProperties from "@/components/home/FeaturedProperties";
+import Threeboxx from "@/components/Threebox/Threeboxx"
+
 
 export const metadata: Metadata = {
   title: "گویا - پلتفرم املاک فارسی | خرید، فروش و اجاره ملک",
@@ -29,7 +31,7 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative min-h-[240px] md:min-h-[320px] overflow-visible mb-12 md:mb-20">
+      <section className="relative min-h-[240px] md:min-h-[320px] overflow-visible mb-12   md:mb-20  ">
         <div className="absolute inset-0 overflow-hidden">
           <Image
             src="/assets/picnew.png"
@@ -50,23 +52,40 @@ export default function Home() {
             </p>
           </div>
         </div>
-        
+
         {/* Search Bar - anchor to top so it grows downward (not upward) */}
-        <div className="absolute top-full -mt-10 md:-mt-14 left-0 right-0 z-20">
+        {/* <div className="absolute top-full -mt-10 md:-mt-14 left-0 right-0 z-20 ">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <SearchBar />
             </div>
           </div>
+        </div> */}
+
+
+        <div className="absolute top-full -mt-10 md:-mt-14 left-0 right-0 z-20 " >
+ {/* three bar */}
+          <Threeboxx />
+
+
+
+
         </div>
+
       </section>
+      
+
+     
+
 
       {/* Featured Properties */}
-      <FeaturedProperties />
+      <div className="  my-72">
+        <FeaturedProperties />
+      </div>
 
       {/* About Section Preview */}
-      <section className="py-16 bg-secondary/30">
-        <div className="container mx-auto px-4">
+      <section className="py-16 bg-secondary/30  ">
+        <div className="container mx-auto px-4 ">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-4">درباره گویا</h2>
             <p className="text-muted-foreground text-lg mb-6 leading-relaxed">

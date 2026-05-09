@@ -17,5 +17,5 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
-  return <BlogPostClient slug={slug} />;
+  return  <BlogPostClient slug={slug} />;
 }

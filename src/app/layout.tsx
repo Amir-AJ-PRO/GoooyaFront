@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { Providers } from "@/components/Providers";
 import DevLoginHelper from "@/components/DevLoginHelper";
 import "./globals.css";
+import localFont from 'next/font/local';
+
+  
+
+
 
 export const metadata: Metadata = {
   title: "گویا - پلتفرم املاک فارسی",
@@ -63,6 +68,13 @@ export const metadata: Metadata = {
     google: "google-site-verification-code",
   },
 };
+const myfont = localFont({
+  src: [
+    {
+      path:"../../public/Iransans/IRANSansXFaNum-Regular.ttf",
+      
+    }]
+})
 
 export default function RootLayout({
   children,
@@ -70,18 +82,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fa" dir="rtl">
+    <html  lang="fa" dir="rtl" className={myfont.className}>
       <head>
-        <link
-          href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
-          rel="stylesheet"
-          type="text/css"
-        />
+   
       </head>
-      <body className="antialiased">
+      <body className="antialiased   ">
         <Providers>
           <DevLoginHelper />
-          <div className="min-h-screen flex flex-col">
+          <div className="min-h-screen flex flex-col   ">
             {children}
           </div>
         </Providers>
