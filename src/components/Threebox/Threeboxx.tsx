@@ -17,11 +17,13 @@ import type { Metadata } from "next";
 import { engineeringServices } from "@/data/engineeringServices";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import localFont from 'next/font/local';
+import BgImage from './BgImage';
 
 
 
 
-const Threebox = () => {
+const Threebox = ({SetBoxNuber}) => {
+    
 
 
 
@@ -62,7 +64,7 @@ const Threebox = () => {
     const submitSearch = useCallback(() => {
         // ساخت پارامترهای جستجو
         const searchParams = new URLSearchParams();
-        console.log(tab)
+        
 
         searchParams.set('transaction_type', tab === 'buy' ? 'sale' : 'rent');
 
@@ -103,13 +105,16 @@ const Threebox = () => {
     //my code
     const [box, setbox] = useState(1)
 
-    return (<div>
+    useEffect(()=>{SetBoxNuber(box)},[box])
+
+    return (<div className=' hidden lg:block'>
         <div className='flex justify-center items-center '>
-            <div className='w-9/12 flex justify-center items-center '>
+            <div className='w-8/12 flex justify-center items-center '>
+            
 
-
+                {/* make flex */}
                 {/* the  box */}
-                <div onClick={() => { setbox(1); setTab("buy") }} className='mx-5 bg-[#FEFEFE] rounded-md w-5/12 h-24 relative border-black flex flex-col justify-around  '>
+                <div onClick={() => { setbox(1); setTab("buy") ; }} className='mx-5 bg-[#FEFEFE] rounded-md w-5/12 min-w-[305px] h-20 relative border-black flex flex-col justify-around  '>
                     <div className=' mx-3 flex justify-between cursor-pointer'>
                         <div className="font-bold text-3xl"  > خرید ملک</div>
 
@@ -121,7 +126,7 @@ const Threebox = () => {
 
 
                     {/* the square */}
-                    <div className="relative ">
+                    <div className="relative  ">
                         {box === 1 ? (
                             <div className="absolute w-full h-14 bottom-[-50px] bg-[#FEFEFE]">
                                 <div className="w-full h-full relative">
@@ -130,7 +135,7 @@ const Threebox = () => {
                             </div>
                         ) : <div></div>}
                         {/* THE BIG BOX */}
-                        {box === 1 ? (<div className="absolute top-5 h-40 w-[324%] rounded-sm bg-[#FEFEFE] flex flex-col justify-evenly">
+                        {box === 1 ? (<div className="absolute top-5 h-44 w-[328%] rounded-sm bg-[#FEFEFE] flex flex-col justify-evenly">   
                             <div className=' mx-3 font-bold text-xl  '> فیلتر ها و جستجو </div>
                             <div className='flex justify-around items-center  '>
                                 {/* شهر */}
@@ -219,8 +224,11 @@ const Threebox = () => {
 
 
 
+
+
+
                 {/* the scound box */}
-                <div onClick={() => { setbox(2); setTab("rent") }} className='cursor-pointer mx-5 bg-[#FEFEFE] rounded-md w-5/12 h-24 relative border-black flex flex-col justify-around  '>
+                <div onClick={() => { setbox(2); setTab("rent") }} className='cursor-pointer mx-5 bg-[#FEFEFE] min-w-[310px] rounded-md w-5/12 h-20 relative border-black flex flex-col justify-around  '>
                     <div className=' mx-3 flex justify-between'>
                         <div className='font-bold  text-3xl '> اجاره ملک</div>
                         <div><KeyIcon className='my-2 h-9 w-9' /></div>
@@ -240,7 +248,7 @@ const Threebox = () => {
                             </div>
                         ) : <div></div>}
                         {/* THE BIG BOX */}
-                        {box === 2 ? (<div className=" absolute top-5 -left-[113%] h-40 w-[324%] rounded-sm bg-[#FEFEFE] flex flex-col justify-evenly ">
+                        {box === 2 ? (<div className="h-44 absolute top-5 -left-[113%]  w-[326%] rounded-sm bg-[#FEFEFE] flex flex-col justify-evenly ">
                             <div className=' mx-3 font-bold text-xl '> فیلتر ها و جستجو </div>
                             <div className='flex justify-around items-center '>
                                 {/* شهر */}
@@ -335,7 +343,7 @@ const Threebox = () => {
 
 
                 {/* the third box */}
-                <div onClick={() => { setbox(3); }} className=' mx-5 bg-[#FEFEFE] rounded-md w-5/12 h-24 relative border-black flex flex-col justify-around  '>
+                <div onClick={() => { setbox(3); }} className=' min-w-[305px]  mx-5 bg-[#FEFEFE] rounded-md w-5/12 h-20 relative border-black flex flex-col justify-around  '>
                     <div className=' mx-3 flex justify-between cursor-pointer'>
                         <div className='font-bold text-3xl'> خدمات مهندسی </div>
                         <div><DraftingCompassIcon className='my-2 h-9 w-9' /></div>
@@ -348,14 +356,14 @@ const Threebox = () => {
                     {/* the square */}
                     <div className="relative ">
                         {box === 3 ? (
-                            <div className="absolute w-full h-14 bottom-[-50px] bg-[#FEFEFE] cursor-pointer rounded-sm">
+                            <div className="absolute w-full h-14 bottom-[-50px] bg-[#FEFEFE] cursor-pointer ">
                                 <div className="w-full h-full relative">
 
                                 </div>
                             </div>
                         ) : <div></div>}
                         {/* THE BIG BOX */}
-                        {box === 3 ? (<div className="absolute top-5 left-[0] h-40 w-[324%] rounded-sm bg-[#FEFEFE] flex flex-col justify-around   ">
+                        {box === 3 ? (<div className="h-44   absolute top-5 left-[0]  w-[326%] rounded-sm bg-[#FEFEFE] flex flex-col justify-around   ">
                             <div className=' mx-3 font-bold text-xl '>
                                 خدمات ما
                             </div>

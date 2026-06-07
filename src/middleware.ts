@@ -20,20 +20,23 @@ function tryGetOrigin(raw?: string): string | null {
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
-  
+
   // اضافه کردن Security Headers (ملایم‌تر برای development)
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('X-XSS-Protection', '1; mode=block');
-  
+
   // CSP Header - اجازه به external resources
   const isDevelopment = process.env.NODE_ENV === 'development';
   const supportOrigin =
     tryGetOrigin(process.env.VITE_SUPPORT_API_BASE_URL) ||
     tryGetOrigin(process.env.NEXT_PUBLIC_SUPPORT_API_BASE_URL) ||
     tryGetOrigin(process.env.NEXT_PUBLIC_SUPPORT_API_URL);
-  
+
+  const agentOrigin =
+    tryGetOrigin(process.env.NEXT_PUBLIC_AGENT_API_URL) || 'http://127.0.0.1:7070';
+
   if (isDevelopment) {
     // در حالت development، CSP را خیلی آزاد میگذاریم
     response.headers.set(
@@ -49,10 +52,13 @@ export async function middleware(request: NextRequest) {
           "connect-src 'self'",
           'https://api.goooya.ir',
           'http://localhost:8000',
+          agentOrigin,
           supportOrigin,
           'ws:',
           'wss:',
-        ].filter(Boolean).join(' '),
+        ]
+          .filter(Boolean)
+          .join(' '),
         "frame-src 'none'",
       ].join('; ')
     );
@@ -72,7 +78,9 @@ export async function middleware(request: NextRequest) {
           "connect-src 'self'",
           'https://api.goooya.ir',
           supportOrigin,
-        ].filter(Boolean).join(' '),
+        ]
+          .filter(Boolean)
+          .join(' '),
         "frame-src 'none'",
       ].join('; ')
     );

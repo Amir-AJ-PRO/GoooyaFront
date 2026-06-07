@@ -1,23 +1,25 @@
-# Multi-stage build (install + audit fix + build داخل Docker)
 
-FROM node:20-alpine AS base
+
+
+
+
+# -------- Base image --------
+FROM node:20-slim AS base
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# ---- deps: نصب dependency ها + audit fix ----
+# -------- deps: install dependencies --------
 FROM base AS deps
-
-# اگر نیاز شد بعضی پکیج‌ها روی alpine به libc نیاز دارند
-RUN apk add --no-cache libc6-compat
 
 COPY package.json package-lock.json ./
 
-# نصب دقیق بر اساس lockfile (شامل devDependencies برای build)
+# install dependencies (including dev for build)
 RUN npm ci --include=dev --no-fund --no-audit
 
-# اجرای npm audit fix (قابل کنترل با build-arg)
+# optional audit fix
 ARG NPM_AUDIT_FIX=true
 ARG NPM_AUDIT_FIX_FORCE=false
+
 RUN if [ "$NPM_AUDIT_FIX" = "true" ]; then \
       if [ "$NPM_AUDIT_FIX_FORCE" = "true" ]; then \
         npm audit fix --force || true; \
@@ -26,25 +28,25 @@ RUN if [ "$NPM_AUDIT_FIX" = "true" ]; then \
       fi; \
     fi
 
-# ---- builder: ساخت پروژه ----
+# -------- builder: build Next.js --------
 FROM base AS builder
 ENV NODE_ENV=production
 
-# این‌ها اگر ست شوند، روی build (به خصوص NEXT_PUBLIC_*) اثر می‌گذارند
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_SUPPORT_API_BASE_URL
 ARG API_BASE
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-ENV NEXT_PUBLIC_SUPPORT_API_BASE_URL=${NEXT_PUBLIC_SUPPORT_API_BASE_URL}
-ENV API_BASE=${API_BASE}
+
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_SUPPORT_API_BASE_URL=$NEXT_PUBLIC_SUPPORT_API_BASE_URL
+ENV API_BASE=$API_BASE
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 RUN npm run build
 
-# ---- runner: اجرای production (standalone) ----
-FROM node:20-alpine AS runner
+# -------- runner: production runtime --------
+FROM node:20-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -52,27 +54,25 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=8030
 ENV HOSTNAME=0.0.0.0
 
-# نصب wget برای healthcheck
-RUN apk add --no-cache wget
+# create non-root user
+RUN addgroup --system --gid 1001 nodejs \
+ && adduser --system --uid 1001 nextjs
 
-# ایجاد user غیر root
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
-
-# کپی فایل‌های public
+# copy public assets
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# کپی standalone output
+# copy standalone output
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 
-# کپی static files
+# copy static files
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
 EXPOSE 8030
 
+# healthcheck using Node's built‑in fetch (no wget needed)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --quiet --tries=1 --spider http://localhost:8030/ || exit 1
+  CMD node -e "fetch('http://127.0.0.1:8030/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", "server.js"]

@@ -44,12 +44,12 @@ All colors MUST be HSL.
     --ring: 222 94% 32%;
 
     --radius: 0.75rem;
-    
+
     /* سایه‌ها با رنگ آبی خفیف */
     --shadow-soft: 0 2px 8px rgba(16, 85, 201, 0.08);
     --shadow-medium: 0 4px 16px rgba(16, 85, 201, 0.12);
     --shadow-large: 0 8px 24px rgba(16, 85, 201, 0.15);
-    
+
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     /* Sidebar با تم آبی */
@@ -93,7 +93,7 @@ All colors MUST be HSL.
     --border: 222 50% 20%;
     --input: 222 50% 20%;
     --ring: 218 85% 55%;
-    
+
     --sidebar-background: 222 50% 10%;
     --sidebar-foreground: 218 50% 90%;
     --sidebar-primary: 218 85% 55%;
@@ -114,8 +114,13 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
     font-family: 'Vazirmatn', sans-serif;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Vazirmatn', sans-serif;
   }
 }
@@ -124,15 +129,15 @@ All colors MUST be HSL.
   .shadow-soft {
     box-shadow: var(--shadow-soft);
   }
-  
+
   .shadow-medium {
     box-shadow: var(--shadow-medium);
   }
-  
+
   .shadow-large {
     box-shadow: var(--shadow-large);
   }
-  
+
   .transition-smooth {
     transition: var(--transition-smooth);
   }
@@ -160,18 +165,38 @@ All colors MUST be HSL.
 .ql-toolbar {
   font-family: 'Vazirmatn', sans-serif !important;
 }
-html, body {
+
+html,
+body {
   height: 100vh !important;
-  margin: 0; /* Important: reset default body margin */
-  padding: 0; /* Important: reset default body padding */
+  margin: 0;
+  /* Important: reset default body margin */
+  padding: 0;
+  /* Important: reset default body padding */
 }
-  @font-face {
-    font-family: 'BoldIranSans'; /* This is the name you'll use in your HTML/JSX */
-    src: url('../../public/Iransans/IRANSansXFaNum-DemiBold.ttf') format('ttf'), /* Modern format */
-        url('../../public/Iransans/IRANSansXFaNum-DemiBold.ttf') format('ttf');   /* Older format for broader support */
-    font-weight: normal; /* Or 'bold', '400', '700', etc. */
-    font-style: normal;  /* Or 'italic' */
-  }
-  .boldIranSans{
-    font-family:'BoldIranSans'!important ;
-  }
+
+@font-face {
+  font-family: 'BoldIranSans';
+  /* This is the name you'll use in your HTML/JSX */
+  src: url('../../public/Iransans/IRANSansXFaNum-DemiBold.ttf') format('ttf'),
+    /* Modern format */
+    url('../../public/Iransans/IRANSansXFaNum-DemiBold.ttf') format('ttf');
+  /* Older format for broader support */
+  font-weight: normal;
+  /* Or 'bold', '400', '700', etc. */
+  font-style: normal;
+  /* Or 'italic' */
+}
+
+.boldIranSans {
+  font-family: 'BoldIranSans' !important;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

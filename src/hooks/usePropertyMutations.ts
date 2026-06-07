@@ -126,12 +126,12 @@ export const useProperty = (slugOrId: string | number) => {
  * Hook برای دریافت املاک صفحه اصلی
  * حداکثر 6 ملک برگشت میده
  */
-export const useHomepageProperties = () => {
-  return useQuery<PropertyListItem[], Error>({
-    queryKey: ['homepage-properties'],
-    queryFn: getHomepageProperties,
-    staleTime: 1000 * 60 * 60, // 1 hour (همانند cache backend)
-    refetchOnWindowFocus: false, // چون کش شده، نیازی به refetch نیست
-  });
-};
+  export const useHomepageProperties = () => {
+    return useQuery<PropertyListItem[], Error>({
+      queryKey: ['homepage-properties'],
+      queryFn: getHomepageProperties,
+      staleTime: 1000 * 60 * 60, // 1 hour (همانند cache backend)
+      refetchOnWindowFocus: false, // چون کش شده، نیازی به refetch نیست
+    });
+  };
 

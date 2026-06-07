@@ -3,7 +3,7 @@
 import { useHomepageProperties } from '@/hooks/usePropertyMutations';
 import PropertyCard from '@/components/PropertyCard';
 import { Card } from '@/components/ui/card';
-import { Loader2, Home, AlertCircle } from 'lucide-react';
+import { Loader2, Home, AlertCircle, Castle, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
@@ -12,8 +12,8 @@ import { Button } from '@/components/ui/button';
  * فقط املاک واقعی از API نمایش داده می‌شود
  */
 export default function FeaturedProperties() {
-  const { data: properties, isLoading, error } = useHomepageProperties();return (
-    <section className="py-16 bg-[#E0E0E0]">
+  const { data: properties, isLoading, error } = useHomepageProperties(); return (
+    <section className="  bg-[#E0E0E0]">
       <div className="container mx-auto px-4 ">
         {/* هدر */}
         {/* <div className="text-center mb-12">
@@ -43,8 +43,8 @@ export default function FeaturedProperties() {
             <p className="text-red-600 mb-4">
               {error.message || 'مشکلی در دریافت املاک پیش آمده است'}
             </p>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
               onClick={() => window.location.reload()}
             >
@@ -54,24 +54,33 @@ export default function FeaturedProperties() {
         ) : properties && properties.length > 0 ? (
           // نمایش املاک واقعی از API
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {/* دکمه مشاهده همه */}
+            <div className="  flex justify-between mt-8 mb-7">
+
+              <div className='flex'>
+                <div><Castle /></div>
+                <div className='text-lg'>املاک ویژه</div>
+
+              </div>
+              <Link href="/properties" >
+                <div className='flex '>
+                  <div className='mx-1'>
+                    بیشتر
+                  </div>
+                  <div className='text-sm'>
+                    <ChevronLeft className='size-5' />
+                  </div>
+                </div>
+
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
               {properties.map((property) => (
                 <PropertyCard key={property.id} property={property} />
               ))}
             </div>
 
-            {/* دکمه مشاهده همه */}
-            <div className="text-center">
-              <Link href="/properties">
-                <Button 
-                  size="lg" 
-                  className="bg-gradient-to-r from-primary to-blue-600 hover:from-primary-hover hover:to-blue-700 text-white px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
-                >
-                  <Home className="w-5 h-5 ml-2" />
-                  مشاهده تمام املاک
-                </Button>
-              </Link>
-            </div>
+
           </>
         ) : (
           // حالت خالی - هیچ ملکی موجود نیست

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Home, Phone, Mail, Instagram, Twitter, Briefcase } from "lucide-react";
 import { GOOOYA_CONTACT_EMAIL, GOOOYA_CONTACT_PHONE_DISPLAY } from "@/lib/constants";
 
+
 export default function Footer() {
   return (
     <footer className="border-t border-border bg-secondary/30 mt-20">
@@ -9,8 +10,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Home className="h-6 w-6" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg  ">
+                <img
+                  src="/logo-gooya.svg"
+                  alt="گویا"
+                  className="h-full w-full object-contain"
+                />
               </div>
               <span className="text-2xl font-bold">گویا</span>
             </Link>

@@ -1,33 +1,58 @@
 /** @type {import('next').NextConfig} */
 const path = require('path');
+const crypto = require('crypto');
+
+const ContentSecurityPolicy = `
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data: blob: https://api.goooya.ir https://c748821.parspack.net;
+  connect-src 'self'
+    https://api.goooya.ir
+    http://localhost:8000
+    https://localhost:7255
+    http://127.0.0.1:7070
+    ws:
+    wss:;
+  font-src 'self' data:;
+  frame-ancestors 'self';
+`;
 
 const nextConfig = {
-  // Output configuration for Docker
   output: 'standalone',
-  // Ensure Next traces files from the actual project root (fixes wrong root inference when multiple lockfiles exist)
+
   outputFileTracingRoot: path.join(__dirname),
-  
-  // Compiler optimizations
+
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  
-  // Image optimization
+
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: ContentSecurityPolicy.replace(/\n/g, ''),
+          },
+        ],
+      },
+    ];
+  },
+
   images: {
     remotePatterns: [
-      // Production server
       {
         protocol: 'https',
         hostname: 'api.goooya.ir',
         pathname: '/**',
       },
-      // CDN/Storage servers
       {
         protocol: 'https',
         hostname: 'c748821.parspack.net',
         pathname: '/**',
       },
-      // Development servers
       {
         protocol: 'http',
         hostname: '127.0.0.1',
@@ -52,17 +77,24 @@ const nextConfig = {
         port: '8000',
         pathname: '/**',
       },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '7070',
+        pathname: '/**',
+      },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
-  
-  // Environment variables
+
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE || 'https://api.goooya.ir',
-    // پشتیبانی: مقدار اصلی از .env با کلید VITE_SUPPORT_API_BASE_URL خوانده می‌شود
-    // و برای استفاده در Client Component به NEXT_PUBLIC_SUPPORT_API_BASE_URL مپ می‌کنیم
+    NEXT_PUBLIC_API_URL:
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.API_BASE ||
+      'https://api.goooya.ir',
+
     NEXT_PUBLIC_SUPPORT_API_BASE_URL:
       process.env.VITE_SUPPORT_API_BASE_URL ||
       process.env.NEXT_PUBLIC_SUPPORT_API_BASE_URL ||
@@ -71,18 +103,15 @@ const nextConfig = {
       process.env.API_BASE ||
       'https://api.goooya.ir',
   },
-  
-  // ESLint configuration
+
   eslint: {
     ignoreDuringBuilds: true,
   },
-  
-  // Performance optimizations
+
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
-  
-  // Experimental features
+
   experimental: {
     optimizePackageImports: [
       '@radix-ui/react-icons',
@@ -92,17 +121,15 @@ const nextConfig = {
       '@radix-ui/react-toast',
     ],
   },
-  
-  // Prefetching optimization
+
   webpack: (config, { dev, isServer }) => {
-    // بهینه‌سازی برای production
     if (!dev && !isServer) {
       config.optimization.splitChunks = {
         chunks: 'all',
         cacheGroups: {
           default: false,
           vendors: false,
-          // Vendor chunk برای کتابخانه‌های سنگین
+
           framework: {
             name: 'framework',
             chunks: 'all',
@@ -110,6 +137,7 @@ const nextConfig = {
             priority: 40,
             enforce: true,
           },
+
           lib: {
             test(module) {
               return (
@@ -118,7 +146,7 @@ const nextConfig = {
               );
             },
             name(module) {
-              const hash = require('crypto').createHash('sha1');
+              const hash = crypto.createHash('sha1');
               hash.update(module.identifier());
               return hash.digest('hex').substring(0, 8);
             },
@@ -126,16 +154,18 @@ const nextConfig = {
             minChunks: 1,
             reuseExistingChunk: true,
           },
+
           commons: {
             name: 'commons',
             minChunks: 2,
             priority: 20,
           },
+
           shared: {
             name(module, chunks) {
               return (
                 chunks.map((item) => item.name).join('~') ||
-                require('crypto')
+                crypto
                   .createHash('sha1')
                   .update(chunks.reduce((acc, chunk) => acc + chunk.name, ''))
                   .digest('hex')
@@ -151,9 +181,9 @@ const nextConfig = {
         minSize: 20000,
       };
     }
+
     return config;
   },
-}
+};
 
-module.exports = nextConfig
-
+module.exports = nextConfig;
