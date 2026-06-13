@@ -20,9 +20,13 @@ import localFont from 'next/font/local';
 import BgImage from './BgImage';
 
 
+interface ThreeboxProps {
+    SetBoxNuber: (n: number) => void;
+}
 
 
-const Threebox = ({SetBoxNuber}) => {
+const Threebox = ({SetBoxNuber }:ThreeboxProps) => {
+
     
 
 

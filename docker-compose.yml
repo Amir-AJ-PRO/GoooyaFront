@@ -6,12 +6,8 @@ services:
       target: runner
       args:
         NPM_AUDIT_FIX: "true"
-        # اگر لازم شد با آپدیت‌های major هم فیکس کنه (ریسکی‌تر):
-        # NPM_AUDIT_FIX_FORCE: "true"
-        # اگر می‌خوای NEXT_PUBLIC_API_URL داخل build هم embed بشه:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
-        # Base URL ساپورت (اجباری) - اگر ست نباشه compose خطا می‌دهد
-        NEXT_PUBLIC_SUPPORT_API_BASE_URL: ${NEXT_PUBLIC_SUPPORT_API_BASE_URL:?NEXT_PUBLIC_SUPPORT_API_BASE_URL is required}
+        NEXT_PUBLIC_SUPPORT_API_BASE_URL: ${NEXT_PUBLIC_SUPPORT_API_BASE_URL:-}
         API_BASE: ${API_BASE:-}
     image: gooya-nextjs:latest
     container_name: gooya-nextjs
@@ -22,36 +18,19 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
       - PORT=8030
       - HOSTNAME=0.0.0.0
-      # Support API Base URL - از .env خوانده می‌شود یا اینجا تنظیم کنید
-      # توجه: از default خالی استفاده نمی‌کنیم چون باعث می‌شود مقدار env_file شما overwrite شود
-      - NEXT_PUBLIC_SUPPORT_API_BASE_URL=${NEXT_PUBLIC_SUPPORT_API_BASE_URL:?NEXT_PUBLIC_SUPPORT_API_BASE_URL is required}
-      # Backend API URL - از .env خوانده می‌شود
-      # یا اینجا مستقیماً تنظیم کنید:
-      # - NEXT_PUBLIC_API_URL=https://api.goooya.ir
-    # استفاده از فایل .env اگر وجود داشت (اختیاری)
     env_file:
       - path: .env
         required: false
     restart: unless-stopped
     networks:
       - gooya-network
-    # Logging configuration
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-    # Resource limits (اختیاری - بر اساس نیاز تنظیم کنید)
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: '1'
-    #       memory: 1G
-    #     reservations:
-    #       cpus: '0.5'
-    #       memory: 512M
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8030/"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8030/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -60,4 +39,3 @@ services:
 networks:
   gooya-network:
     driver: bridge
-

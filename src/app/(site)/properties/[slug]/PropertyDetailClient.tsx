@@ -97,7 +97,8 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
   const [ModalHandeler, setModalHandeler] = useState(false)
   const [visibliti, setvisibliti] = useState(false)
   const MAX_THUMBNAILS = 6;
-  let remainig = property?.images.length - MAX_THUMBNAILS;
+  let remainig = (property?.images?.length ?? 0) - MAX_THUMBNAILS;
+
 
 
 
@@ -454,7 +455,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
             >
 
               <div className='relative '  >
-                <button className='  border border-black top-[15px] right-[15px] absolute' onClick={() => { setModalHandeler(false) }} ><X  /></button>
+                <button className='  border border-black top-[15px] right-[15px] absolute' onClick={() => { setModalHandeler(false) }} ><X /></button>
               </div>
 
 
@@ -467,7 +468,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                         src={imageUrl}
                         alt={property.title}
                         fill
-                       
+
                         className="object-contain"
 
                         priority
