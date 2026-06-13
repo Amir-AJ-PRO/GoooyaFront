@@ -20,8 +20,9 @@ import localFont from 'next/font/local';
 import BgImage from './BgImage';
 
 
+
 interface ThreeboxProps {
-    SetBoxNuber: (n: number) => void;
+    SetBoxNuber: (n: 1 | 2 | 3) => void;
 }
 
 
@@ -107,7 +108,7 @@ const Threebox = ({SetBoxNuber }:ThreeboxProps) => {
 
 
     //my code
-    const [box, setbox] = useState(1)
+const [box, setbox] = useState<1 | 2 | 3>(1)
 
     useEffect(()=>{SetBoxNuber(box)},[box])
 

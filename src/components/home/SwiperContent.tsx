@@ -31,6 +31,9 @@ const SwiperContent = ({ property }: PropertyCardProps) => {
     const imageUrl = mainImage?.image
         ? (mainImage.image.startsWith('http') ? mainImage.image : `${API_BASE_URL}${mainImage.image.startsWith('/') ? mainImage.image : `/${mainImage.image}`}`)
         : '/placeholder-property.jpg';
+        const locationName = typeof property.location === 'object' && property.location !== null
+  ? property.location.name
+  : property.location;
 
     return (
         <div>
@@ -55,7 +58,7 @@ const SwiperContent = ({ property }: PropertyCardProps) => {
                 {/* Content */}
                 <div className="p-5 flex flex-col gap-3 text-right">
                     <h3 className="text-lg font-bold text-gray-900">{property.title}</h3>
-                    <p className="text-sm text-gray-500">{property.location}</p>
+                    <p className="text-sm text-gray-500">{locationName}</p>
 
                     {/* Details Row */}
                     <div className="flex items-center justify-between mt-2 text-sm text-gray-700">
