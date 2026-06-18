@@ -1,429 +1,342 @@
 "use client"
 
-import { Home, KeyIcon, DraftingCompassIcon } from 'lucide-react'
-
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from "lucide-react";
-import { useState, memo, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useCities } from "@/hooks/useCities";
-import { usePropertyTypes } from "@/hooks/usePropertyMutations";
-import { useLocations } from "@/hooks/useLocations";
-import Link from "next/link";
-import { set } from 'date-fns';
-import type { Metadata } from "next";
-
-import { engineeringServices } from "@/data/engineeringServices";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import localFont from 'next/font/local';
-import BgImage from './BgImage';
-
-
+import {
+    Home,
+    KeyIcon,
+    DraftingCompassIcon,
+    Search,
+    ChevronLeft,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { useState, useCallback, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useCities } from "@/hooks/useCities"
+import { usePropertyTypes } from "@/hooks/usePropertyMutations"
+import { useLocations } from "@/hooks/useLocations"
+import { engineeringServices } from "@/data/engineeringServices"
+import { cn } from "@/lib/utils"
 
 interface ThreeboxProps {
-    SetBoxNuber: (n: 1 | 2 | 3) => void;
+    SetBoxNuber: (n: 1 | 2 | 3) => void
 }
 
+const PRIMARY = "#221188"
 
-const Threebox = ({SetBoxNuber }:ThreeboxProps) => {
+const TABS = [
+    {
+        id: 1 as const,
+        title: "خرید ملک",
+        subtitle: "پیدا کردن بهترین گزینه‌های خرید ملک.",
+        icon: Home,
+        transaction: "buy" as const,
+    },
+    {
+        id: 2 as const,
+        title: "اجاره ملک",
+        subtitle: "املاک آماده اجاره با فیلترهای دقیق و سریع.",
+        icon: KeyIcon,
+        transaction: "rent" as const,
+    },
+    {
+        id: 3 as const,
+        title: "خدمات مهندسی",
+        subtitle: "از نقشه تا تاییدیه؛ خدمات مهندسی کامل.",
+        icon: DraftingCompassIcon,
+        transaction: null,
+    },
+]
 
-    
+const Threebox = ({ SetBoxNuber }: ThreeboxProps) => {
+    const router = useRouter()
+    const [box, setBox] = useState<1 | 2 | 3>(1)
+    const [tab, setTab] = useState<"buy" | "rent">("buy")
+    const [city, setCity] = useState<string | undefined>(undefined)
+    const [location, setLocation] = useState<string | undefined>(undefined)
+    const [type, setType] = useState<string | undefined>(undefined)
+    const [price, setPrice] = useState<string | undefined>(undefined)
+    const [selectedService, setSelectedService] = useState<string>(
+        engineeringServices[0].name
+    )
 
+    const { data: cities = [], isLoading: citiesLoading } = useCities()
+    const { data: propertyTypes = [], isLoading: propertyTypesLoading } =
+        usePropertyTypes()
+    const selectedCityId = city ? Number(city) : undefined
+    const { data: locations = [], isLoading: locationsLoading } = useLocations(
+        selectedCityId,
+        { enabled: !!selectedCityId }
+    )
 
+    const currentService =
+        engineeringServices.find((s) => s.name === selectedService) ||
+        engineeringServices[0]
 
-    //engieering 
+    useEffect(() => {
+        SetBoxNuber(box)
+    }, [box, SetBoxNuber])
 
-
-
-    const [selectedService, setSelectedService] = useState<string>(engineeringServices[0].name);
-    const currentService = engineeringServices.find(s => s.name === selectedService) || engineeringServices[0];
-    //
-
-    const router = useRouter();
-    const [tab, setTab] = useState<"buy" | "rent">("buy");
-    const [city, setCity] = useState<string | undefined>(undefined);
-    const [location, setLocation] = useState<string | undefined>(undefined);
-    const [type, setType] = useState<string | undefined>(undefined);
-    const [price, setPrice] = useState<string | undefined>(undefined);
-
-
-    // دریافت شهرها
-    const { data: cities = [], isLoading: citiesLoading } = useCities();
-
-    // دریافت انواع ملک از دیتابیس
-    const { data: propertyTypes = [], isLoading: propertyTypesLoading } = usePropertyTypes();
-
-    const selectedCity = city ? cities.find((c) => c.id === Number(city)) : undefined;
-    const selectedCityId = city ? Number(city) : undefined;
-
-    // دریافت مناطق (ترجیحاً بعد از انتخاب شهر)
-    const { data: locations = [], isLoading: locationsLoading } = useLocations(selectedCityId, {
-        enabled: !!selectedCityId,
-    });
-
-    const selectedLocation = location
-        ? locations.find((l) => l.id === Number(location))
-        : undefined;
+    const selectTab = (id: 1 | 2 | 3, transaction: "buy" | "rent" | null) => {
+        setBox(id)
+        if (transaction) setTab(transaction)
+    }
 
     const submitSearch = useCallback(() => {
-        // ساخت پارامترهای جستجو
-        const searchParams = new URLSearchParams();
-        
-
-        searchParams.set('transaction_type', tab === 'buy' ? 'sale' : 'rent');
-
-        if (city) {
-            searchParams.set('city', city);
-        }
-
-        if (location) {
-            searchParams.set('location', location);
-        }
-
-        if (type) {
-            // type حالا ID است (از دیتابیس)
-            searchParams.set('property_type', type);
-        }
-
+        const searchParams = new URLSearchParams()
+        searchParams.set("transaction_type", tab === "buy" ? "sale" : "rent")
+        if (city) searchParams.set("city", city)
+        if (location) searchParams.set("location", location)
+        if (type) searchParams.set("property_type", type)
         if (price) {
-            // تبدیل محدوده قیمت
-            const priceRanges: Record<string, { min: string, max: string }> = {
-                'low': { min: '0', max: '5000000000' },
-                'mid': { min: '5000000000', max: '20000000000' },
-                'high': { min: '20000000000', max: '100000000000' }
-            };
+            const priceRanges: Record<string, { min: string; max: string }> = {
+                low: { min: "0", max: "5000000000" },
+                mid: { min: "5000000000", max: "20000000000" },
+                high: { min: "20000000000", max: "100000000000" },
+            }
             if (priceRanges[price]) {
-                searchParams.set('min_price', priceRanges[price].min);
-                searchParams.set('max_price', priceRanges[price].max);
+                searchParams.set("min_price", priceRanges[price].min)
+                searchParams.set("max_price", priceRanges[price].max)
             }
         }
+        router.push(`/properties?${searchParams.toString()}`)
+    }, [router, tab, city, location, type, price])
 
-        // انتقال به صفحه املاک
-        router.push(`/properties?${searchParams.toString()}`);
-    }, [router, tab, city, location, type, price]);
-
-
-
-
-
-    //my code
-const [box, setbox] = useState<1 | 2 | 3>(1)
-
-    useEffect(()=>{SetBoxNuber(box)},[box])
-
-    return (<div className=' hidden lg:block'>
-        <div className='flex justify-center items-center '>
-            <div className='w-8/12 flex justify-center items-center '>
-            
-
-                {/* make flex */}
-                {/* the  box */}
-                <div onClick={() => { setbox(1); setTab("buy") ; }} className='mx-5 bg-[#FEFEFE] rounded-md w-5/12 min-w-[305px] h-20 relative border-black flex flex-col justify-around  '>
-                    <div className=' mx-3 flex justify-between cursor-pointer'>
-                        <div className="font-bold text-3xl"  > خرید ملک</div>
-
-                        <div><Home className='my-2 h-9 w-9' /></div>
-                    </div>
-                    <div className=' cursor-pointer mx-3 mb-1'>
-                        پیدا کردن بهترین گزینه های خرید ملک
-                    </div>
-
-
-                    {/* the square */}
-                    <div className="relative  ">
-                        {box === 1 ? (
-                            <div className="absolute w-full h-14 bottom-[-50px] bg-[#FEFEFE]">
-                                <div className="w-full h-full relative">
-
-                                </div>
-                            </div>
-                        ) : <div></div>}
-                        {/* THE BIG BOX */}
-                        {box === 1 ? (<div className="absolute top-5 h-44 w-[328%] rounded-sm bg-[#FEFEFE] flex flex-col justify-evenly">   
-                            <div className=' mx-3 font-bold text-xl  '> فیلتر ها و جستجو </div>
-                            <div className='flex justify-around items-center  '>
-                                {/* شهر */}
-                                <div className='w-60 h-10'>
-                                    <Select
-                                        value={city}
-                                        onValueChange={(value) => {
-                                            setCity(value);
-                                            setLocation(undefined); // تغییر شهر => ریست منطقه
-                                        }}
-                                    >
-                                        <SelectTrigger dir="rtl">
-                                            <SelectValue placeholder=" شهر" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {citiesLoading ? (
-                                                <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
-                                            ) : (
-                                                cities.map((city) => (
-                                                    <SelectItem key={city.id} value={city.id.toString()}>
-                                                        {city.name}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                {/* منطقه */}
-                                <div className='w-60 h-10'>
-                                    <Select
-                                        value={location}
-                                        onValueChange={setLocation}
-                                        disabled={!selectedCityId}
-                                    >
-                                        <SelectTrigger dir="rtl">
-                                            <SelectValue placeholder={selectedCityId ? "منطقه" : "منطقه"} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {!selectedCityId ? (
-                                                <SelectItem value="disabled" disabled>ابتدا شهر را انتخاب کنید</SelectItem>
-                                            ) : locationsLoading ? (
-                                                <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
-                                            ) : locations.length === 0 ? (
-                                                <SelectItem value="empty" disabled>منطقه‌ای یافت نشد</SelectItem>
-                                            ) : (
-                                                locations.map((loc) => (
-                                                    <SelectItem key={loc.id} value={loc.id.toString()}>
-                                                        {loc.name}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                {/* نوع ملک */}
-                                <div className='w-60 h-10'>
-                                    <Select value={type} onValueChange={setType}>
-                                        <SelectTrigger dir="rtl">
-                                            <SelectValue placeholder="نوع ملک" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {propertyTypesLoading ? (
-                                                <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
-                                            ) : (
-                                                propertyTypes.map((pt) => (
-                                                    <SelectItem key={pt.id} value={pt.id.toString()}>
-                                                        {pt.title}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectContent>
-                                    </Select>
+    return (
+        <div className="hidden lg:flex lg:justify-center" dir="rtl">
+            <div className="relative w-8/12 min-w-[960px] max-w-[1050px]">
+                {/* ── تب‌ها ── */}
+                <div className="relative z-10 flex items-end justify-between gap-3">
+                    {TABS.map((t) => {
+                        const Icon = t.icon
+                        const isActive = box === t.id
+                        return (
+                            <button
+                                key={t.id}
+                                type="button"
+                                onClick={() => selectTab(t.id, t.transaction)}
+                                className={cn(
+                                    "relative flex-1 text-right transition-all duration-200",
+                                    isActive
+                                        ? "z-20 rounded-t-[16px] bg-white px-5 pb-8 pt-4"
+                                        : "z-10 mb-4 cursor-pointer rounded-[16px] bg-white px-5 py-4 shadow-[0_2px_16px_rgba(0,0,0,0.12)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.15)]"
+                                )}
+                            >
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="flex flex-col items-start gap-0.5">
+                                        <span className="text-[26px] font-bold leading-tight text-black">
+                                            {t.title}
+                                        </span>
+                                        <span className="text-[13px] leading-snug text-neutral-500">
+                                            {t.subtitle}
+                                        </span>
+                                    </div>
+                                    <Icon
+                                        className="h-10 w-10 shrink-0 text-black"
+                                        strokeWidth={1.25}
+                                    />
                                 </div>
 
-                                <Button className='w-3/12 h-10 rounded-sm bg-[#221188] text-white' onClick={submitSearch}>
-                                    <Search className="h-4 w-4 inline-block ml-2" /> جستجو
-                                </Button>
-
-
-                            </div>
-
-                        </div>) : <div></div>}
-                    </div>
-
+                                {/* پل اتصال تب فعال به پنل پایین */}
+                                {isActive && (
+                                    <div className="absolute -bottom-1 left-0 right-0 h-4 bg-white" />
+                                )}
+                            </button>
+                        )
+                    })}
                 </div>
 
-
-
-
-
-
-                {/* the scound box */}
-                <div onClick={() => { setbox(2); setTab("rent") }} className='cursor-pointer mx-5 bg-[#FEFEFE] min-w-[310px] rounded-md w-5/12 h-20 relative border-black flex flex-col justify-around  '>
-                    <div className=' mx-3 flex justify-between'>
-                        <div className='font-bold  text-3xl '> اجاره ملک</div>
-                        <div><KeyIcon className='my-2 h-9 w-9' /></div>
-                    </div>
-                    <div className='mx-3 cursor-pointer mb-1'>
-                        املاک اماده اجاره با فیلتر دهای دقیق وسریع
-                    </div>
-
-
-                    {/* the square */}
-                    <div className="relative ">
-                        {box === 2 ? (
-                            <div className="absolute w-full h-14 bottom-[-50px] bg-[#FEFEFE] cursor-pointer">
-                                <div className="w-full h-full relative">
-
-                                </div>
-                            </div>
-                        ) : <div></div>}
-                        {/* THE BIG BOX */}
-                        {box === 2 ? (<div className="h-44 absolute top-5 -left-[113%]  w-[326%] rounded-sm bg-[#FEFEFE] flex flex-col justify-evenly ">
-                            <div className=' mx-3 font-bold text-xl '> فیلتر ها و جستجو </div>
-                            <div className='flex justify-around items-center '>
-                                {/* شهر */}
-                                <div className='w-60 h-10'>
-                                    <Select
-                                        value={city}
-                                        onValueChange={(value) => {
-                                            setCity(value);
-                                            setLocation(undefined); // تغییر شهر => ریست منطقه
-                                        }}
+                {/* ── پنل محتوا ── */}
+                <div
+                    className={cn(
+                        "relative z-0 -mt-1 rounded-b-[16px] bg-white px-6 py-5 shadow-[0_4px_24px_rgba(0,0,0,0.13)]",
+                        box === 1 && "rounded-tl-[16px] rounded-tr-none",
+                        box === 2 && "rounded-t-[16px]",
+                        box === 3 && "rounded-tr-[16px] rounded-tl-none max-h-[280px]",
+                        box <= 2 ? "min-h-[148px]" : ""
+                    )}
+                >
+                    {box <= 2 ? (
+                        /* ── فیلترها و جستجو ── */
+                        <div
+                            className="flex flex-col justify-evenly gap-4"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h3 className="pr-1 text-xl font-bold text-black">
+                                فیلترها و جستجو
+                            </h3>
+                            <div className="flex items-center justify-between gap-3">
+                                <Select
+                                    value={city}
+                                    onValueChange={(value) => {
+                                        setCity(value)
+                                        setLocation(undefined)
+                                    }}
+                                >
+                                    <SelectTrigger
+                                        dir="rtl"
+                                        className="h-10 w-[210px] rounded-lg border-neutral-300 bg-white shadow-none"
                                     >
-                                        <SelectTrigger dir="rtl">
-                                            <SelectValue placeholder=" شهر" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {citiesLoading ? (
-                                                <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
-                                            ) : (
-                                                cities.map((city) => (
-                                                    <SelectItem key={city.id} value={city.id.toString()}>
-                                                        {city.name}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                {/* منطقه */}
-                                <div className='w-60 h-10'>
-                                    <Select
-                                        value={location}
-                                        onValueChange={setLocation}
-                                        disabled={!selectedCityId}
-                                    >
-                                        <SelectTrigger dir="rtl">
-                                            <SelectValue placeholder={selectedCityId ? "منطقه" : "منطقه"} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {!selectedCityId ? (
-                                                <SelectItem value="disabled" disabled>ابتدا شهر را انتخاب کنید</SelectItem>
-                                            ) : locationsLoading ? (
-                                                <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
-                                            ) : locations.length === 0 ? (
-                                                <SelectItem value="empty" disabled>منطقه‌ای یافت نشد</SelectItem>
-                                            ) : (
-                                                locations.map((loc) => (
-                                                    <SelectItem key={loc.id} value={loc.id.toString()}>
-                                                        {loc.name}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                {/* نوع ملک */}
-                                <div className='w-60 h-10'>
-                                    <Select value={type} onValueChange={setType}>
-                                        <SelectTrigger dir="rtl">
-                                            <SelectValue placeholder="نوع ملک" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {propertyTypesLoading ? (
-                                                <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
-                                            ) : (
-                                                propertyTypes.map((pt) => (
-                                                    <SelectItem key={pt.id} value={pt.id.toString()}>
-                                                        {pt.title}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                                        <SelectValue placeholder="شهر" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {citiesLoading ? (
+                                            <SelectItem value="loading" disabled>
+                                                در حال بارگذاری...
+                                            </SelectItem>
+                                        ) : (
+                                            cities.map((c) => (
+                                                <SelectItem
+                                                    key={c.id}
+                                                    value={c.id.toString()}
+                                                >
+                                                    {c.name}
+                                                </SelectItem>
+                                            ))
+                                        )}
+                                    </SelectContent>
+                                </Select>
 
-                                <Button className='w-3/12 h-10 rounded-sm bg-[#221188] text-white' onClick={submitSearch}>
-                                    <Search className="h-4 w-4 inline-block ml-2" /> جستجو
+                                <Select
+                                    value={location}
+                                    onValueChange={setLocation}
+                                    disabled={!selectedCityId}
+                                >
+                                    <SelectTrigger
+                                        dir="rtl"
+                                        className="h-10 w-[210px] rounded-lg border-neutral-300 bg-white shadow-none"
+                                    >
+                                        <SelectValue placeholder="منطقه" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {!selectedCityId ? (
+                                            <SelectItem value="disabled" disabled>
+                                                ابتدا شهر را انتخاب کنید
+                                            </SelectItem>
+                                        ) : locationsLoading ? (
+                                            <SelectItem value="loading" disabled>
+                                                در حال بارگذاری...
+                                            </SelectItem>
+                                        ) : locations.length === 0 ? (
+                                            <SelectItem value="empty" disabled>
+                                                منطقه‌ای یافت نشد
+                                            </SelectItem>
+                                        ) : (
+                                            locations.map((loc) => (
+                                                <SelectItem
+                                                    key={loc.id}
+                                                    value={loc.id.toString()}
+                                                >
+                                                    {loc.name}
+                                                </SelectItem>
+                                            ))
+                                        )}
+                                    </SelectContent>
+                                </Select>
+
+                                <Select value={type} onValueChange={setType}>
+                                    <SelectTrigger
+                                        dir="rtl"
+                                        className="h-10 w-[210px] rounded-lg border-neutral-300 bg-white shadow-none"
+                                    >
+                                        <SelectValue placeholder="نوع ملک" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {propertyTypesLoading ? (
+                                            <SelectItem value="loading" disabled>
+                                                در حال بارگذاری...
+                                            </SelectItem>
+                                        ) : (
+                                            propertyTypes.map((pt) => (
+                                                <SelectItem
+                                                    key={pt.id}
+                                                    value={pt.id.toString()}
+                                                >
+                                                    {pt.title}
+                                                </SelectItem>
+                                            ))
+                                        )}
+                                    </SelectContent>
+                                </Select>
+
+                                <Button
+                                    className="h-10 flex-1 rounded-lg text-white hover:opacity-90"
+                                    style={{ backgroundColor: PRIMARY }}
+                                    onClick={submitSearch}
+                                >
+                                    <Search className="h-4 w-4" />
+                                    جستجو ملک مورد نظر
                                 </Button>
-
-
                             </div>
-
-                        </div>) : <div></div>}
-
-                    </div>
-
-                </div>
-
-
-
-
-
-
-
-                {/* the third box */}
-                <div onClick={() => { setbox(3); }} className=' min-w-[305px]  mx-5 bg-[#FEFEFE] rounded-md w-5/12 h-20 relative border-black flex flex-col justify-around  '>
-                    <div className=' mx-3 flex justify-between cursor-pointer'>
-                        <div className='font-bold text-3xl'> خدمات مهندسی </div>
-                        <div><DraftingCompassIcon className='my-2 h-9 w-9' /></div>
-                    </div>
-                    <div className='cursor-pointer mx-3 mb-1'>
-                        از نقشه تا تایید و خدمات مهندسی
-                    </div>
-
-
-                    {/* the square */}
-                    <div className="relative ">
-                        {box === 3 ? (
-                            <div className="absolute w-full h-14 bottom-[-50px] bg-[#FEFEFE] cursor-pointer ">
-                                <div className="w-full h-full relative">
-
-                                </div>
-                            </div>
-                        ) : <div></div>}
-                        {/* THE BIG BOX */}
-                        {box === 3 ? (<div className="h-44   absolute top-5 left-[0]  w-[326%] rounded-sm bg-[#FEFEFE] flex flex-col justify-around   ">
-                            <div className=' mx-3 font-bold text-xl '>
+                        </div>
+                    ) : (
+                        /* ── خدمات مهندسی ── */
+                        <div
+                            className="flex flex-col justify-around gap-3 "
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h3 className="pr-1 text-xl font-bold text-black">
                                 خدمات ما
-                            </div>
-                            <div className=''>
-                                {/* Service Buttons */}
-                                <div className="flex flex-wrap gap-2 mx-1  " dir="rtl">
-                                    {engineeringServices.map((service) => {
-                                        const Icon = service.icon;
-                                        const isSelected = selectedService === service.name;
-                                        return (
-                                            <button
-                                                key={service.name}
-                                                onClick={() => setSelectedService(service.name)}
-                                                className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium transition-all border-1 border-blue-900 border-solid ${isSelected
-                                                    ? 'bg-blue-900 text-white shadow-lg '
-                                                    : 'bg-card hover:bg-secondary border text-blue-900 border-input hover:shadow-md'
-                                                    }`}
-                                            >
-                                                <Icon className="h-4 w-4" />
-                                                <span className="text-sm md:text-sm">{service.name}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                            </h3>
 
+                            <div className="flex flex-wrap gap-2 px-1">
+                                {engineeringServices.map((service) => {
+                                    const Icon = service.icon
+                                    const isSelected =
+                                        selectedService === service.name
+                                    return (
+                                        <button
+                                            key={service.name}
+                                            type="button"
+                                            onClick={() =>
+                                                setSelectedService(service.name)
+                                            }
+                                            className={cn(
+                                                "flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-all",
+                                                isSelected
+                                                    ? "border-transparent text-white shadow-md"
+                                                    : "border-[#221188] bg-white text-[#221188] hover:bg-neutral-50"
+                                            )}
+                                            style={
+                                                isSelected
+                                                    ? { backgroundColor: PRIMARY }
+                                                    : undefined
+                                            }
+                                        >
+                                            <Icon className="h-4 w-4 shrink-0" />
+                                            <span>{service.name}</span>
+                                        </button>
+                                    )
+                                })}
                             </div>
-                            {/* Service Details Card */}
-                            <div className='line-clamp-2 mb-1  mx-1 flex'>
-                                <div className='line-clamp-2 mb-1 text-sm  mx-1 basis-9/12'>
+
+                            {/* توضیحات راست + دکمه چپ — مثل Figma */}
+                            <div className="flex items-end gap-4 px-1">
+                                <p className="line-clamp-2 flex-1 text-right text-sm leading-7 text-neutral-600">
                                     {currentService.details}
-                                </div>
-                                <div className='basis-3/12'>
-                                    <button className='bg-blue-900 w-full rounded-sm h-5/6 text-white' onClick={() => { router.push("/engineering") }}>
+                                </p>
+                                <button
+                                    type="button"
+                                    className="shrink-0 rounded-lg px-5 py-3 text-sm font-medium text-white hover:opacity-90"
+                                    style={{ backgroundColor: PRIMARY }}
+                                    onClick={() => router.push("/engineering")}
+                                >
+                                    <span className="flex items-center gap-1 whitespace-nowrap">
                                         مشاهده اطلاعات بیشتر
-                                    </button>
-                                </div>
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </span>
+                                </button>
                             </div>
-
-
-                        </div>) : <div></div>}
-
-                    </div>
-
+                        </div>
+                    )}
                 </div>
-
-
-
-
-
-
-
-
             </div>
         </div>
-    </div>
     )
 }
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import AiWidget from "@/components/aiwidget/AiWidget"
 
 export const metadata: Metadata = {
   title: "گویا - پلتفرم املاک فارسی",
@@ -17,6 +18,11 @@ export default function SiteLayout({
       <Header />
       <main className="flex-1 ">
         {children}
+          <div className="fixed bottom-0 right-0 z-50">
+        <AiWidget/>
+
+
+      </div>
       </main>
       <Footer />
     </div>

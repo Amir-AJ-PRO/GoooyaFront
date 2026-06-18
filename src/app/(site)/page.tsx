@@ -65,11 +65,7 @@ export default function Home() {
       </div>
       {/* خدمات مهندسی  */}
       <EnginneringHomepage />
-      <div className="fixed bottom-0 right-0 z-50">
-        <AiWidget/>
-
-
-      </div>
+    
 
 
     </>

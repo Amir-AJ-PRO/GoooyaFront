@@ -57,7 +57,7 @@ const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
 
   const p = properties[current];
 
-  return (
+  return ( 
     <div className="relative w-full mt-2 rounded-xl border max-h-[350px] min-h-[350px] border-blue-100 min-w-[300px] max-w-[300px] shadow-sm bg-white">
       <div className="relative w-full h-40 overflow-hidden rounded-t-xl">
         {p.image_url ? (
@@ -224,7 +224,7 @@ const AiWidget: React.FC = () => {
     }
   };
 
-  return (
+  return ( 
     <div className="absolute bottom-5 right-5 z-[9999] flex flex-col items-end font-sans">
       {isOpen && (
         <div
