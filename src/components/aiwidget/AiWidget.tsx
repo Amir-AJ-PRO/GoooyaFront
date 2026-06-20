@@ -6,7 +6,9 @@ import { ThreeDots } from "react-loader-spinner";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-const API_BASE_URL = "http://127.0.0.1:8020";
+// const API_BASE_URL = "http://127.0.0.1:8020";
+const API_BASE_URL = "http://shahrgpt.goooya.ir";
+
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
