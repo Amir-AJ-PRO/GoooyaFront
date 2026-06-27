@@ -60,7 +60,7 @@ export default function QuickSearch() {
           setTimeout(() => setShowSuggestions(false), 200);
         }}
         className={cn(
-          "h-[32px] w-full rounded-[8px] border border-[#242424] bg-white py-0 pl-3 pr-9 text-right text-[13.5px] font-normal text-[#111111] shadow-none xl:h-[34px]",
+          "h-[32px] w-full rounded-[8px] border border-[#242424] bg-white py-0 pl-3 pr-9 text-right text-[13.5px] font-normal text-[#111111] shadow-none",
           "placeholder:text-right placeholder:text-[13px] placeholder:text-[#555555]",
           "focus-visible:border-[#242424] focus-visible:ring-0 focus-visible:ring-offset-0"
         )}

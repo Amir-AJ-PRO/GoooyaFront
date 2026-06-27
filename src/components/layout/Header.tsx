@@ -71,24 +71,24 @@ const Header = memo(() => {
 
   return (
     <header className="sticky top-0 z-50 w-full max-w-[100vw] overflow-x-clip border-b border-[#E8ECF2] bg-white">
-      <div className="container mx-auto pe-3 ps-0 lg:pe-4 xl:pe-6">
-        <div className="flex h-[72px] min-w-0 items-center justify-between gap-4 lg:grid lg:grid-cols-[auto_1fr_auto] lg:items-center lg:justify-normal lg:gap-x-4 xl:gap-x-6">
-          <div className="flex shrink-0 items-center gap-3 lg:gap-4 xl:gap-5">
+      <div className="mx-auto w-full px-4 sm:px-5 lg:px-6 xl:px-8">
+        <div className="flex h-[72px] min-h-[72px] max-h-[72px] min-w-0 items-center justify-between gap-2 sm:gap-3 lg:gap-4">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-4">
             <Link
               href="/"
-              className="group -ms-1.5 flex shrink-0 items-center gap-2 pe-0 transition-opacity hover:opacity-85 xl:-ms-2"
+              className="group flex shrink-0 items-center gap-2 transition-opacity hover:opacity-85"
             >
-              <div className="flex h-8 w-8 items-center justify-center xl:h-9 xl:w-9">
+              <div className="flex h-8 w-8 items-center justify-center">
                 <img
                   src="/logo-gooya.svg"
                   alt="گویا"
                   className="h-full w-full object-contain"
                 />
               </div>
-              <span className="text-[17px] font-bold text-[#111111] xl:text-[19px]">گویا</span>
+              <span className="text-[17px] font-bold leading-none text-[#111111]">گویا</span>
             </Link>
 
-            <nav className="hidden shrink-0 items-center gap-1.5 lg:flex xl:gap-2.5">
+            <nav className="hidden min-w-0 items-center gap-2 lg:flex">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.path);
@@ -98,7 +98,7 @@ const Header = memo(() => {
                     href={item.path}
                     prefetch={true}
                     className={cn(
-                      "group inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-1 py-0.5 text-[13px] transition-all duration-200 xl:gap-2 xl:px-1.5 xl:py-1 xl:text-[14px]",
+                      "group inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-1.5 py-1 text-[14px] transition-all duration-200",
                       active
                         ? "font-bold text-[#251785]"
                         : "font-medium text-[#111111] hover:bg-[#251785]/[0.08] hover:text-[#251785]"
@@ -106,7 +106,7 @@ const Header = memo(() => {
                   >
                     <Icon
                       className={cn(
-                        "h-[18px] w-[18px] shrink-0 transition-colors duration-200 xl:h-[20px] xl:w-[20px]",
+                        "h-[20px] w-[20px] shrink-0 transition-colors duration-200",
                         active
                           ? "text-[#251785]"
                           : "text-[#111111] group-hover:text-[#251785]"
@@ -119,13 +119,11 @@ const Header = memo(() => {
             </nav>
           </div>
 
-          <div className="hidden min-w-0 justify-center px-2 lg:flex xl:px-4">
-            <div className="w-full max-w-[300px] xl:max-w-[340px]">
-              <QuickSearch />
-            </div>
+          <div className="hidden shrink-0 lg:block lg:w-[300px]">
+            <QuickSearch />
           </div>
 
-          <div className="flex shrink-0 items-center gap-4 lg:justify-end lg:gap-5 xl:gap-6">
+          <div className="flex shrink-0 items-center gap-3 sm:gap-4 lg:gap-4">
 
             {isGooyaAdviser && (
               <Link href="/admin/tickets" className="hidden lg:block">
@@ -147,9 +145,7 @@ const Header = memo(() => {
 
             {(!user || user.type === 'user') && (
               <Button
-                className="hidden h-[34px] gap-1.5 rounded-[10px] px-3.5 text-[13px] font-medium text-white
-                 transition-colors duration-200 hover:brightness-110 lg:flex xl:h-[36px]
-                  xl:gap-2 xl:px-4 xl:text-[13px]"
+                className="hidden h-[34px] gap-1.5 rounded-[10px] px-3.5 text-[13px] font-medium text-white transition-colors duration-200 hover:brightness-110 lg:flex"
                 style={{ backgroundColor: PRIMARY }}
                 onClick={() => setSubmitPropertyModalOpen(true)}
               >
@@ -249,10 +245,10 @@ const Header = memo(() => {
             ) : (
               <button
                 type="button"
-                className="group hidden items-center gap-2 rounded-[10px] px-1 py-1.5 text-[13px] font-medium text-[#111111] transition-all duration-200 hover:bg-[#251785]/[0.08] hover:text-[#251785] lg:flex xl:gap-2.5 xl:px-2 xl:py-2 xl:text-[14px]"
+                className="group hidden items-center gap-2 rounded-[10px] px-1 py-1.5 text-[13px] font-medium text-[#111111] transition-all duration-200 hover:bg-[#251785]/[0.08] hover:text-[#251785] lg:flex"
                 onClick={() => setLoginModalOpen(true)}
               >
-                <LoginNavIcon className="size-[22px] shrink-0 text-[#161616] transition-colors duration-200 group-hover:text-[#251785] xl:size-[24px]" />
+                <LoginNavIcon className="size-[22px] shrink-0 text-[#161616] transition-colors duration-200 group-hover:text-[#251785]" />
                 <span>ورود / ثبت نام</span>
               </button>
             )}

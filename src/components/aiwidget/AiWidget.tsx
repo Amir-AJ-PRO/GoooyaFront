@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 
 // const API_BASE_URL = "http://127.0.0.1:8020";
-const API_BASE_URL = "http://shahrgpt.goooya.ir";
+const API_BASE_URL = "https://shahrgpt.goooya.ir";
 
 
 
@@ -61,85 +61,94 @@ const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
 
   const p = properties[current];
 
+  const CardWrapper = p.property_url ? "a" : "div";
+  const cardLinkProps = p.property_url
+    ? {
+        href: p.property_url,
+        target: "_blank" as const,
+        rel: "noopener noreferrer",
+      }
+    : {};
+
   return ( 
-    <div className="relative w-full mt-2 rounded-xl border max-h-[350px] min-h-[350px] border-blue-100 min-w-[300px] max-w-[300px] shadow-sm bg-white">
-      <div className="relative w-full h-40 overflow-hidden rounded-t-xl">
-        {p.image_url ? (
-          <Image
-            src={p.image_url}
-            alt={p.title}
-            fill
-            className="object-cover"
-            unoptimized
-          />
-        ) : (
-          <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
-            بدون تصویر
+    <div className="relative w-full mt-2 min-w-[300px] max-w-[300px]">
+      <CardWrapper
+        {...cardLinkProps}
+        className={`relative block w-full rounded-xl border max-h-[350px] min-h-[350px] border-blue-100 shadow-sm bg-white overflow-hidden ${
+          p.property_url
+            ? "cursor-pointer transition-shadow hover:shadow-md"
+            : ""
+        }`}
+      >
+        <div className="relative w-full h-40 overflow-hidden">
+          {p.image_url ? (
+            <Image
+              src={p.image_url}
+              alt={p.title}
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+              بدون تصویر
+            </div>
+          )}
+        </div>
+
+        <div className="p-3 text-right" dir="rtl">
+          <p className="font-bold text-sm text-gray-800 leading-snug mb-1">
+            {p.title}
+          </p>
+          <p className="text-xs text-blue-700 font-semibold mb-2">
+            {formatPrice(p.price)}
+          </p>
+
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600 mb-2">
+            {p.location && <span>📍 {p.location}</span>}
+            {p.measure && <span>📐 {p.measure} متر</span>}
+            {p.rooms && <span>🛏 {p.rooms} خواب</span>}
+            {p.floor && <span>🏢 طبقه {p.floor}</span>}
+          </div>
+
+          {p.facilities && (
+            <p className="text-xs text-gray-500 mb-2">
+              امکانات: {p.facilities}
+            </p>
+          )}
+
+          {p.agent && (
+            <p className="text-xs text-gray-500">
+              {p.agent}
+              {p.agent_phonenumber && ` · ${p.agent_phonenumber}`}
+            </p>
+          )}
+        </div>
+
+        {total > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full z-10">
+            {total} / {current + 1}
           </div>
         )}
-      </div>
+      </CardWrapper>
 
       {total > 1 && (
         <>
           <button
+            type="button"
             onClick={next}
-            className="absolute -right-[30px] transition-transform duration-200 hover:scale-125"
+            className="absolute -right-[30px] top-1/2 -translate-y-1/2 transition-transform duration-200 hover:scale-125"
           >
             <ChevronRight />
           </button>
           <button
+            type="button"
             onClick={prev}
-            className="absolute -left-[30px] transition-transform duration-200 hover:scale-125"
+            className="absolute -left-[30px] top-1/2 -translate-y-1/2 transition-transform duration-200 hover:scale-125"
           >
             <ChevronLeft />
           </button>
         </>
-      )}
-
-      <div className="p-3 text-right" dir="rtl">
-        <p className="font-bold text-sm text-gray-800 leading-snug mb-1">
-          {p.title}
-        </p>
-        <p className="text-xs text-blue-700 font-semibold mb-2">
-          {formatPrice(p.price)}
-        </p>
-
-        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600 mb-2">
-          {p.location && <span>📍 {p.location}</span>}
-          {p.measure && <span>📐 {p.measure} متر</span>}
-          {p.rooms && <span>🛏 {p.rooms} خواب</span>}
-          {p.floor && <span>🏢 طبقه {p.floor}</span>}
-        </div>
-
-        {p.facilities && (
-          <p className="text-xs text-gray-500 mb-2">
-            امکانات: {p.facilities}
-          </p>
-        )}
-
-        {p.agent && (
-          <p className="text-xs text-gray-500">
-            {p.agent}
-            {p.agent_phonenumber && ` · ${p.agent_phonenumber}`}
-          </p>
-        )}
-
-        {p.property_url && (
-          <a
-            href={p.property_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 inline-block text-xs text-blue-600 underline"
-          >
-            مشاهده ملک
-          </a>
-        )}
-      </div>
-
-      {total > 1 && (
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full z-10">
-          {total} / {current + 1}
-        </div>
       )}
     </div>
   );
@@ -183,11 +192,15 @@ const AiWidget: React.FC = () => {
     setTimeout(scrollToBottom, 50);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/agent/response/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_input: userText }),
-      });
+    const response = await fetch(`${API_BASE_URL}/agent/response/`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    user_input: userText,
+  }),
+});
 
       if (!response.ok)
         throw new Error(`HTTP error ${response.status}`);

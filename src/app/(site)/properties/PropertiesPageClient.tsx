@@ -15,12 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { Loader2, Search, Building2, SlidersHorizontal, X, Sparkles } from 'lucide-react';
 import { PropertyListItem } from '@/types/property';
 import { SearchParams, SearchResult } from '@/types/search';
 import { PaginatedPropertiesResponse } from '@/services/propertyApi';
-import { events } from '@elastic/elasticsearch';
 
 // Type guard function برای بررسی اینکه data از نوع SearchResult است
 function isSearchResult(data: SearchResult | PaginatedPropertiesResponse | undefined): data is SearchResult {
@@ -40,7 +38,7 @@ export default function PropertiesPageClient() {
   const [searchTerm, setSearchTerm] = useState('');
   const [cityFilter, setCityFilter] = useState<string>('all');
   const [locationFilter, setLocationFilter] = useState<string>('all');
-  const [transactionFilter, setTransactionFilter] = useState<string>('all');
+  const [transactionFilter, setTransactionFilter] = useState<string>('sale');
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('newest');
   const [showFilters, setShowFilters] = useState(true);
@@ -90,10 +88,12 @@ export default function PropertiesPageClient() {
     }
 
     const transactionType = searchParams.get('transaction_type');
-    if (transactionType && (transactionType === 'sale' || transactionType === 'rent')) {
-      params.transaction_type = transactionType;
-      setTransactionFilter(transactionType);
+    if (transactionType === 'rent') {
+      params.transaction_type = 'rent';
+      setTransactionFilter('rent');
       hasAdvancedParams = true;
+    } else {
+      setTransactionFilter('sale');
     }
 
     const minPrice = searchParams.get('min_price');
@@ -176,17 +176,15 @@ export default function PropertiesPageClient() {
   // بررسی اینکه آیا فیلتر یا جستجو اعمال شده است
   const hasSearchParams = Object.keys(advancedSearchParams).some(key => {
     const value = advancedSearchParams[key as keyof SearchParams];
-    // اگر key برابر page یا page_size باشد، ignore کن
     if (key === 'page' || key === 'page_size') {
       return false;
     }
-    // اگر value وجود داشته باشد و خالی نباشد
     return value !== undefined && value !== null && value !== '';
-  });
+  }) || transactionFilter === 'sale' || transactionFilter === 'rent';
 
-  // استفاده از Search API فقط اگر فیلتر یا جستجو وجود داشته باشد
   const searchParamsWithPagination: SearchParams = {
     ...advancedSearchParams,
+    transaction_type: transactionFilter as 'sale' | 'rent',
   };
 
   // همیشه page و page_size را تنظیم می‌کنیم
@@ -241,9 +239,7 @@ export default function PropertiesPageClient() {
       params.set('location', locationFilter);
     }
 
-    if (transactionFilter !== 'all') {
-      params.set('transaction_type', transactionFilter);
-    }
+    params.set('transaction_type', transactionFilter);
 
     if (propertyTypeFilter !== 'all') {
       params.set('property_type', propertyTypeFilter);
@@ -297,15 +293,25 @@ export default function PropertiesPageClient() {
     );
   }
 
-  // تعداد فیلترهای فعال
   const activeFiltersCount = [
     searchTerm && 1,
     cityFilter !== 'all' && 1,
     locationFilter !== 'all' && 1,
-    transactionFilter !== 'all' && 1,
+    transactionFilter !== 'sale' && 1,
     propertyTypeFilter !== 'all' && 1,
-    sortBy !== 'newest' && 1
   ].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setCityFilter('all');
+    setLocationFilter('all');
+    setTransactionFilter('sale');
+    setPropertyTypeFilter('all');
+    setSortBy('newest');
+    router.push('/properties?transaction_type=sale');
+  };
+
+  const selectTriggerClass = 'h-11 bg-white border-gray-200';
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -349,69 +355,52 @@ export default function PropertiesPageClient() {
       </div>
 
       {/* فیلترها */}
-      <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-md border border-gray-100 p-6 mb-8 space-y-4">
-        <div className="flex items-center justify-between mb-4">
+      <div className="rounded-xl border border-gray-100 bg-white shadow-sm mb-8 overflow-hidden">
+        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100 bg-gray-50/60">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-primary/10 rounded-lg">
               <SlidersHorizontal className="h-5 w-5 text-primary" />
             </div>
-            <h2 className="font-semibold text-lg">فیلترها و جستجو</h2>
+            <h2 className="font-semibold text-lg">فیلتر املاک</h2>
             {activeFiltersCount > 0 && (
-              <span className="px-2 py-1 bg-primary text-white text-xs font-bold rounded-full">
+              <span className="px-2 py-0.5 bg-primary text-white text-xs font-bold rounded-full min-w-[1.25rem] text-center">
                 {activeFiltersCount}
               </span>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-            className="md:hidden"
-          >
-            {showFilters ? <X className="h-4 w-4" /> : <SlidersHorizontal className="h-4 w-4" />}
-          </Button>
+          <div className="flex items-center gap-2">
+            {activeFiltersCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllFilters}
+                className="hidden sm:inline-flex gap-1.5 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+                پاک کردن
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="md:hidden"
+            >
+              {showFilters ? <X className="h-4 w-4" /> : <SlidersHorizontal className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
 
-        <div className={`space-y-4 transition-all duration-300 ${showFilters ? 'block' : 'hidden md:block'}`}>
-          {/* ردیف اول فیلترها */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* جستجو */}
-            <div className="relative md:col-span-2 lg:col-span-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-              <Input
-                placeholder="جستجو در عنوان، شهر، منطقه..."
-                value={searchTerm}
-                onKeyDown={(e) => {
-                  if (e.key=="Enter") {
-                    
-                    applyLocalFilters();
-
-                  }
-
-                }}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-10 h-11 bg-white border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <X className="h-3 w-3 text-muted-foreground" />
-                </button>
-              )}
-            </div>
-
-            {/* شهر */}
+        <div className={`p-5 transition-all duration-300 ${showFilters ? 'block' : 'hidden md:block'}`}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
             <Select
               value={cityFilter}
               onValueChange={(value) => {
                 setCityFilter(value);
-                // تغییر شهر => ریست منطقه
                 setLocationFilter('all');
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className={selectTriggerClass}>
                 <SelectValue placeholder="شهر" />
               </SelectTrigger>
               <SelectContent>
@@ -428,14 +417,13 @@ export default function PropertiesPageClient() {
               </SelectContent>
             </Select>
 
-            {/* منطقه */}
             <Select
               value={locationFilter}
               onValueChange={setLocationFilter}
               disabled={cityFilter === 'all'}
             >
-              <SelectTrigger>
-                <SelectValue placeholder={cityFilter === 'all' ? 'ابتدا شهر' : 'منطقه'} />
+              <SelectTrigger className={selectTriggerClass}>
+                <SelectValue placeholder={cityFilter === 'all' ? 'ابتدا شهر را انتخاب کنید' : 'منطقه'} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">همه مناطق</SelectItem>
@@ -455,25 +443,22 @@ export default function PropertiesPageClient() {
               </SelectContent>
             </Select>
 
-            {/* نوع معامله */}
             <Select value={transactionFilter} onValueChange={setTransactionFilter}>
-              <SelectTrigger>
+              <SelectTrigger className={selectTriggerClass}>
                 <SelectValue placeholder="نوع معامله" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">همه</SelectItem>
                 <SelectItem value="sale">فروش</SelectItem>
                 <SelectItem value="rent">اجاره</SelectItem>
               </SelectContent>
             </Select>
 
-            {/* نوع ملک */}
             <Select value={propertyTypeFilter} onValueChange={setPropertyTypeFilter}>
-              <SelectTrigger>
+              <SelectTrigger className={selectTriggerClass}>
                 <SelectValue placeholder="نوع ملک" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">همه</SelectItem>
+                <SelectItem value="all">انواع ملک </SelectItem>
                 {propertyTypesLoading ? (
                   <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
                 ) : (
@@ -485,88 +470,40 @@ export default function PropertiesPageClient() {
                 )}
               </SelectContent>
             </Select>
-          </div>
 
-          {/* ردیف دوم فیلترها */}
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {/* مرتب‌سازی */}
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger>
-                <SelectValue placeholder="مرتب‌سازی" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">جدیدترین</SelectItem>
-                <SelectItem value="oldest">قدیمی‌ترین</SelectItem>
-                <SelectItem value="price-high">گران‌ترین</SelectItem>
-                <SelectItem value="price-low">ارزان‌ترین</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* تعداد در هر صفحه */}
-            
-            {/* <Select
-              value={pageSize.toString()}
-              onValueChange={(value) => {
-                setPageSize(Number(value));
-                setPage(1);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="تعداد در صفحه" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="12">12 ملک</SelectItem>
-                <SelectItem value="20">20 ملک</SelectItem>
-                <SelectItem value="30">30 ملک</SelectItem>
-                <SelectItem value="50">50 ملک</SelectItem>
-              </SelectContent>
-            </Select> */}
-
-            {/* دکمه اعمال فیلترها */}
             <Button
               onClick={applyLocalFilters}
-              className="bg-primary hover:bg-primary-hover text-white"
+              className="h-11 w-full bg-primary hover:bg-primary-hover text-white sm:col-span-2 xl:col-span-1"
               disabled={isLoading}
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Loader2 className="h-4 w-4 animate-spin ml-2" />
               ) : (
-                <Search className="h-4 w-4 mr-2" />
+                <Search className="h-4 w-4 ml-2" />
               )}
-              اعمال فیلترها
+              اعمال فیلتر
             </Button>
-
-            {/* فضای خالی برای تراز */}
-            <div className="hidden lg:block"></div>
           </div>
+
+          {searchTerm && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              نتیجه جستجو برای:{' '}
+              <span className="font-medium text-foreground">&laquo;{searchTerm}&raquo;</span>
+            </p>
+          )}
+
+          {activeFiltersCount > 0 && (
+            <div className="flex items-center justify-between gap-2 mt-4 pt-4 border-t border-gray-100 sm:hidden">
+              <span className="text-sm text-muted-foreground">
+                {activeFiltersCount} فیلتر فعال
+              </span>
+              <Button variant="outline" size="sm" onClick={clearAllFilters} className="gap-1.5">
+                <X className="h-4 w-4" />
+                پاک کردن
+              </Button>
+            </div>
+          )}
         </div>
-
-        {/* دکمه پاک کردن فیلترها */}
-        {activeFiltersCount > 0 && (
-          <div className="flex items-center gap-2 pt-2 border-t">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSearchTerm('');
-                setCityFilter('all');
-                setLocationFilter('all');
-                setTransactionFilter('all');
-                setPropertyTypeFilter('all');
-                setSortBy('newest');
-                // پاک کردن URL params
-                router.push('/properties');
-              }}
-              className="gap-2"
-            >
-              <X className="h-4 w-4" />
-              پاک کردن همه فیلترها
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              {activeFiltersCount} فیلتر فعال
-            </span>
-          </div>
-        )}
       </div>
 
       {/* لیست املاک */}
@@ -581,25 +518,12 @@ export default function PropertiesPageClient() {
           </div>
           <h2 className="text-2xl font-bold mb-2">ملکی یافت نشد</h2>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            {propertiesArray.length === 0
-              ? 'هنوز ملکی در سیستم ثبت نشده است. به زودی املاک جدید اضافه خواهند شد.'
-              : 'با فیلترهای انتخاب شده ملکی یافت نشد. لطفاً فیلترها را تغییر دهید.'
-            }
+            {hasSearchParams
+              ? 'با فیلترهای انتخاب‌شده ملکی یافت نشد. لطفاً فیلترها را تغییر دهید.'
+              : 'هنوز ملکی در سیستم ثبت نشده است. به زودی املاک جدید اضافه خواهند شد.'}
           </p>
-          {propertiesArray.length > 0 && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSearchTerm('');
-                setCityFilter('all');
-                setLocationFilter('all');
-                setTransactionFilter('all');
-                setPropertyTypeFilter('all');
-                setSortBy('newest');
-                router.push('/properties');
-              }}
-              className="gap-2"
-            >
+          {activeFiltersCount > 0 && (
+            <Button variant="outline" onClick={clearAllFilters} className="gap-2">
               <X className="h-4 w-4" />
               نمایش همه املاک
             </Button>

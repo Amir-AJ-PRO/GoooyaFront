@@ -35,15 +35,16 @@ export async function middleware(request: NextRequest) {
 
   const agentOrigin =
     tryGetOrigin(process.env.NEXT_PUBLIC_AGENT_API_URL) ||
-    'http://127.0.0.1:8020'; // ✅ پورت درست شما
+    'https://shahrgpt.goooya.ir';
 
   const connectSources = [
     "'self'",
     'https://api.goooya.ir',
+    'https://shahrgpt.goooya.ir',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'http://localhost:8020',
-    'http://127.0.0.1:8020', // ✅ این خط مشکل را حل می‌کند
+    'http://127.0.0.1:8020',
     agentOrigin,
     supportOrigin,
     'ws:',

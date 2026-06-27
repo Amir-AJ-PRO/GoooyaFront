@@ -9,6 +9,7 @@ const ContentSecurityPolicy = `
   img-src 'self' data: blob: https://api.goooya.ir https://c748821.parspack.net;
   connect-src 'self'
     https://api.goooya.ir
+    https://shahrgpt.goooya.ir
     http://localhost:8000
     https://localhost:7255
     http://127.0.0.1:7070
