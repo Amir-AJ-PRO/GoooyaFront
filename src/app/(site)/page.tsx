@@ -20,7 +20,7 @@ export default function Home() {
 
 
   return (
-    <>
+    <div className="home-page">
       {/* Hero Section */}
       <TopSection />
 
@@ -65,10 +65,7 @@ export default function Home() {
       </div>
       {/* خدمات مهندسی  */}
       <EnginneringHomepage />
-    
-
-
-    </>
+    </div>
   );
 }
 

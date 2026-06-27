@@ -68,13 +68,22 @@ export const metadata: Metadata = {
     google: "google-site-verification-code",
   },
 };
-const myfont = localFont({
+const iranSans = localFont({
   src: [
     {
-      path:"../../public/Iransans/IRANSansXFaNum-Regular.ttf",
-      
-    }]
-})
+      path: "../../public/Iransans/IRANSansX-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/Iransans/IRANSansX-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-iransans",
+  display: "swap",
+});
 
 export default function RootLayout({
   children,
@@ -82,7 +91,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html  lang="fa" dir="rtl" className={myfont.className}>
+    <html lang="fa" dir="rtl" className={`${iranSans.variable} ${iranSans.className}`}>
       <head>
    
       </head>

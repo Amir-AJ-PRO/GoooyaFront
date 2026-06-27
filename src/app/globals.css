@@ -112,7 +112,7 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Vazirmatn', sans-serif;
+    font-family: var(--font-iransans), sans-serif;
   }
 
   h1,
@@ -121,7 +121,7 @@ All colors MUST be HSL.
   h4,
   h5,
   h6 {
-    font-family: 'Vazirmatn', sans-serif;
+    font-family: var(--font-iransans), sans-serif;
   }
 }
 
@@ -141,13 +141,19 @@ All colors MUST be HSL.
   .transition-smooth {
     transition: var(--transition-smooth);
   }
+
+  /* Home page only: primary button color #1055CB */
+  .home-page {
+    --primary: 218 85% 43%;
+    --ring: 218 85% 43%;
+  }
 }
 
 /* Quill Editor RTL Support */
 .ql-editor {
   direction: rtl;
   text-align: right;
-  font-family: 'Vazirmatn', sans-serif !important;
+  font-family: var(--font-iransans), sans-serif !important;
 }
 
 .ql-editor p,
@@ -163,7 +169,7 @@ All colors MUST be HSL.
 }
 
 .ql-toolbar {
-  font-family: 'Vazirmatn', sans-serif !important;
+  font-family: var(--font-iransans), sans-serif !important;
 }
 
 html,

@@ -50,7 +50,7 @@ export default function QuickSearch({ compact = false }: { compact?: boolean }) 
       <Input
         type="text"
         aria-label="جستجو در املاک"
-        placeholder={compact ? "جستجو..." : "جستجو در عنوان، شهر، منطقه..."}
+        placeholder="جستجو در عنوان،شهر،منطقه..."
         value={searchTerm}
         onChange={(e) => handleSearchInputChange(e.target.value)}
         onKeyDown={handleKeyDown}

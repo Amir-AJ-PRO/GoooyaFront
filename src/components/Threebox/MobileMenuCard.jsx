@@ -110,7 +110,7 @@ export default function MobileMenuCard({ setphoto }) {
         <button
           onClick={() => { setActiveTab('buy'); setphoto(1); setTab("buy") }}
           className={`py-4 rounded-[14px] transition-colors shadow-sm ${activeTab === 'buy'
-            ? 'bg-[#1b1464] text-white'
+            ? 'bg-[#1055CB] text-white'
             : 'bg-white text-gray-800'
             }`}
         >
@@ -119,7 +119,7 @@ export default function MobileMenuCard({ setphoto }) {
         <button
           onClick={() => { setActiveTab('rent'); setphoto(2); setTab("rent") }}
           className={`py-4 rounded-[14px] transition-colors shadow-sm ${activeTab === 'rent'
-            ? 'bg-[#1b1464] text-white'
+            ? 'bg-[#1055CB] text-white'
             : 'bg-white text-gray-800'
             }`}
         >
@@ -128,7 +128,7 @@ export default function MobileMenuCard({ setphoto }) {
         <button
           onClick={() => { setActiveTab('engineering'); setphoto(3) }}
           className={`py-4 rounded-[14px] transition-colors shadow-sm ${activeTab === 'engineering'
-            ? 'bg-[#1b1464] text-white'
+            ? 'bg-[#1055CB] text-white'
             : 'bg-white text-gray-800'
             }`}
         >
@@ -148,8 +148,8 @@ export default function MobileMenuCard({ setphoto }) {
                 onClick={() => setActiveSubTab('design')}
                 className={`
                 flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${activeSubTab === 'design'
-                  ? 'bg-[#1b1464] text-white border-[#1b1464]'
-                  : 'bg-white text-[#1b1464] border-[#1b1464]'
+                  ? 'bg-[#1055CB] text-white border-[#1055CB]'
+                  : 'bg-white text-[#1055CB] border-[#1055CB]'
                   }`}
               >
                 <RulerIcon />
@@ -165,9 +165,9 @@ export default function MobileMenuCard({ setphoto }) {
                     <button
                       key={service.name}
                       onClick={() => setSelectedService(service.name)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium transition-all border-1 border-blue-900 border-solid ${isSelected
-                        ? 'bg-blue-900 text-white shadow-lg '
-                        : 'bg-card hover:bg-secondary border text-blue-900 border-input hover:shadow-md'
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium transition-all border-1 border-[#1055CB] border-solid ${isSelected
+                        ? 'bg-[#1055CB] text-white shadow-lg '
+                        : 'bg-card hover:bg-secondary border text-[#1055CB] border-input hover:shadow-md'
                         }`}
                     >
                       <Icon className="h-4 w-4" />
@@ -188,7 +188,7 @@ export default function MobileMenuCard({ setphoto }) {
             </div>
 
             {/* Action Button */}
-            <button onClick={() => { router.push("/engineering") }} className="w-full bg-[#1b1464] text-white rounded-xl py-3.5 flex justify-center items-center gap-2 font-medium hover:bg-opacity-90 transition-all">
+            <button onClick={() => { router.push("/engineering") }} className="w-full bg-[#1055CB] text-white rounded-xl py-3.5 flex justify-center items-center gap-2 font-medium hover:bg-opacity-90 transition-all">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
@@ -212,7 +212,7 @@ export default function MobileMenuCard({ setphoto }) {
                       setLocation(undefined); // تغییر شهر => ریست منطقه
                     }}
                   >
-                    <SelectTrigger dir="rtl">
+                    <SelectTrigger dir="rtl" className="border-2 border-black bg-white shadow-none">
                       <SelectValue placeholder=" شهر" />
                     </SelectTrigger>
                     <SelectContent className=' w-48 h-44'>
@@ -235,7 +235,7 @@ export default function MobileMenuCard({ setphoto }) {
                     onValueChange={setLocation}
                     disabled={!selectedCityId}
                   >
-                    <SelectTrigger dir="rtl">
+                    <SelectTrigger dir="rtl" className="border-2 border-black bg-white shadow-none">
                       <SelectValue placeholder={selectedCityId ? "منطقه" : "منطقه"} />
                     </SelectTrigger>
                     <SelectContent className=' w-48 h-44'>
@@ -258,7 +258,7 @@ export default function MobileMenuCard({ setphoto }) {
                 {/* نوع ملک */}
                 <div className='w-36  h-7'>
                   <Select value={type} onValueChange={setType}>
-                    <SelectTrigger dir="rtl">
+                    <SelectTrigger dir="rtl" className="border-2 border-black bg-white shadow-none">
                       <SelectValue placeholder="نوع ملک" />
                     </SelectTrigger>
                     <SelectContent className=' w-48 h-44'>
@@ -277,7 +277,7 @@ export default function MobileMenuCard({ setphoto }) {
               </div>
               <div className='my-3'>
 
-                <Button className='w-full h-10 rounded-sm bg-[#221188] text-white' onClick={submitSearch}>
+                <Button className='w-full h-10 rounded-sm bg-[#1055CB] text-white hover:bg-[#1055CB]/90' onClick={submitSearch}>
                   <Search className="h-4 w-full inline-block ml-2" /> جستجو
                 </Button>
               </div>
@@ -299,7 +299,7 @@ export default function MobileMenuCard({ setphoto }) {
                       setLocation(undefined); // تغییر شهر => ریست منطقه
                     }}
                   >
-                    <SelectTrigger dir="rtl">
+                    <SelectTrigger dir="rtl" className="border-2 border-black bg-white shadow-none">
                       <SelectValue placeholder=" شهر" />
                     </SelectTrigger>
                     <SelectContent className=' w-48 h-44'>
@@ -322,7 +322,7 @@ export default function MobileMenuCard({ setphoto }) {
                     onValueChange={setLocation}
                     disabled={!selectedCityId}
                   >
-                    <SelectTrigger dir="rtl">
+                    <SelectTrigger dir="rtl" className="border-2 border-black bg-white shadow-none">
                       <SelectValue placeholder={selectedCityId ? "منطقه" : "منطقه"} />
                     </SelectTrigger>
                     <SelectContent className=' w-48 h-44'>
@@ -345,7 +345,7 @@ export default function MobileMenuCard({ setphoto }) {
                 {/* نوع ملک */}
                 <div className='w-36  h-7'>
                   <Select value={type} onValueChange={setType}>
-                    <SelectTrigger dir="rtl">
+                    <SelectTrigger dir="rtl" className="border-2 border-black bg-white shadow-none">
                       <SelectValue placeholder="نوع ملک" />
                     </SelectTrigger>
                     <SelectContent className=' w-48 h-44'>
@@ -364,7 +364,7 @@ export default function MobileMenuCard({ setphoto }) {
               </div>
               <div className='my-3'>
 
-                <Button className='w-full h-10 rounded-sm bg-[#221188] text-white' onClick={submitSearch}>
+                <Button className='w-full h-10 rounded-sm bg-[#1055CB] text-white hover:bg-[#1055CB]/90' onClick={submitSearch}>
                   <Search className="h-4 w-full inline-block ml-2" /> جستجو
                 </Button>
               </div>

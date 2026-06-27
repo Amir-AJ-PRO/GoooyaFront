@@ -27,27 +27,25 @@ interface ThreeboxProps {
     SetBoxNuber: (n: 1 | 2 | 3) => void
 }
 
-const PRIMARY = "#221188"
-
 const TABS = [
     {
         id: 1 as const,
         title: "خرید ملک",
-        subtitle: "پیدا کردن بهترین گزینه‌های خرید ملک.",
+        subtitle: "پیدا کردن بهترین گزینه‌های خرید ملک",
         icon: Home,
         transaction: "buy" as const,
     },
     {
         id: 2 as const,
         title: "اجاره ملک",
-        subtitle: "املاک آماده اجاره با فیلترهای دقیق و سریع.",
+        subtitle: "املاک آماده اجاره با فیلترهای دقیق ",
         icon: KeyIcon,
         transaction: "rent" as const,
     },
     {
         id: 3 as const,
         title: "خدمات مهندسی",
-        subtitle: "از نقشه تا تاییدیه؛ خدمات مهندسی کامل.",
+        subtitle: "از نقشه تا تاییدیه؛ خدمات مهندسی کامل",
         icon: DraftingCompassIcon,
         transaction: null,
     },
@@ -181,7 +179,7 @@ const Threebox = ({ SetBoxNuber }: ThreeboxProps) => {
                                 >
                                     <SelectTrigger
                                         dir="rtl"
-                                        className="h-10 w-[210px] rounded-lg border-neutral-300 bg-white shadow-none"
+                                        className="h-10 w-[210px] rounded-lg border-2 border-black bg-white shadow-none"
                                     >
                                         <SelectValue placeholder="شهر" />
                                     </SelectTrigger>
@@ -210,7 +208,7 @@ const Threebox = ({ SetBoxNuber }: ThreeboxProps) => {
                                 >
                                     <SelectTrigger
                                         dir="rtl"
-                                        className="h-10 w-[210px] rounded-lg border-neutral-300 bg-white shadow-none"
+                                        className="h-10 w-[210px] rounded-lg border-2 border-black bg-white shadow-none"
                                     >
                                         <SelectValue placeholder="منطقه" />
                                     </SelectTrigger>
@@ -243,7 +241,7 @@ const Threebox = ({ SetBoxNuber }: ThreeboxProps) => {
                                 <Select value={type} onValueChange={setType}>
                                     <SelectTrigger
                                         dir="rtl"
-                                        className="h-10 w-[210px] rounded-lg border-neutral-300 bg-white shadow-none"
+                                        className="h-10 w-[210px] rounded-lg border-2 border-black bg-white shadow-none"
                                     >
                                         <SelectValue placeholder="نوع ملک" />
                                     </SelectTrigger>
@@ -266,8 +264,7 @@ const Threebox = ({ SetBoxNuber }: ThreeboxProps) => {
                                 </Select>
 
                                 <Button
-                                    className="h-10 flex-1 rounded-lg text-white hover:opacity-90"
-                                    style={{ backgroundColor: PRIMARY }}
+                                    className="h-10 flex-1 rounded-lg bg-[#1055CB] text-white hover:bg-[#1055CB]/90"
                                     onClick={submitSearch}
                                 >
                                     <Search className="h-4 w-4" />
@@ -300,14 +297,9 @@ const Threebox = ({ SetBoxNuber }: ThreeboxProps) => {
                                             className={cn(
                                                 "flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-all",
                                                 isSelected
-                                                    ? "border-transparent text-white shadow-md"
-                                                    : "border-[#221188] bg-white text-[#221188] hover:bg-neutral-50"
+                                                    ? "border-transparent bg-[#1055CB] text-white shadow-md hover:bg-[#1055CB]/90"
+                                                    : "border-[#1055CB] bg-white text-[#1055CB] hover:bg-neutral-50"
                                             )}
-                                            style={
-                                                isSelected
-                                                    ? { backgroundColor: PRIMARY }
-                                                    : undefined
-                                            }
                                         >
                                             <Icon className="h-4 w-4 shrink-0" />
                                             <span>{service.name}</span>
@@ -323,8 +315,7 @@ const Threebox = ({ SetBoxNuber }: ThreeboxProps) => {
                                 </p>
                                 <button
                                     type="button"
-                                    className="shrink-0 rounded-lg px-5 py-3 text-sm font-medium text-white hover:opacity-90"
-                                    style={{ backgroundColor: PRIMARY }}
+                                    className="shrink-0 rounded-lg bg-[#1055CB] px-5 py-3 text-sm font-medium text-white hover:bg-[#1055CB]/90"
                                     onClick={() => router.push("/engineering")}
                                 >
                                     <span className="flex items-center gap-1 whitespace-nowrap">
