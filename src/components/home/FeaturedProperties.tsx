@@ -3,7 +3,7 @@
 import { useHomepageProperties } from '@/hooks/usePropertyMutations';
 import HomepagePropertyCard from '@/components/home/HomepagePropertyCard';
 import { Card } from '@/components/ui/card';
-import { Loader2, Home, AlertCircle, Castle, ChevronLeft } from 'lucide-react';
+import { Home, AlertCircle, Castle, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -13,8 +13,26 @@ import 'swiper/css';
  * کامپوننت نمایش املاک ویژه در صفحه اصلی
  * فقط املاک واقعی از API نمایش داده می‌شود
  */
+function PropertyCardSkeleton() {
+  return (
+    <article className="mx-auto w-full max-w-[380px] animate-pulse rounded-2xl bg-white p-3 shadow-sm">
+      <div className="h-[200px] w-full rounded-xl bg-gray-200 sm:h-[220px]" />
+      <div className="flex flex-col gap-3 px-1 pb-2 pt-4">
+        <div className="h-5 w-3/4 rounded bg-gray-200" />
+        <div className="h-4 w-full rounded bg-gray-200" />
+        <div className="flex justify-between">
+          <div className="h-4 w-20 rounded bg-gray-200" />
+          <div className="h-4 w-16 rounded bg-gray-200" />
+        </div>
+        <div className="h-7 w-28 self-end rounded bg-gray-200" />
+      </div>
+    </article>
+  );
+}
+
 export default function FeaturedProperties() {
-  const { data: properties, isLoading, error } = useHomepageProperties();
+  const { data: properties, isLoading, isPending, error } = useHomepageProperties();
+  const loading = isPending || isLoading;
 
   const sectionHeader = (
     <div className="mb-5 mt-8 flex items-center justify-between">
@@ -49,12 +67,25 @@ export default function FeaturedProperties() {
         </div> */}
 
         {/* محتوا */}
-        {isLoading ? (
-          // حالت بارگذاری
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-            <p className="text-gray-600 text-lg">در حال بارگذاری املاک...</p>
-          </div>
+        {loading ? (
+          <>
+            {sectionHeader}
+            <div className="mb-8 sm:hidden">
+              <div className="-mx-4 flex gap-4 overflow-hidden px-4">
+                <div className="w-[85%] shrink-0">
+                  <PropertyCardSkeleton />
+                </div>
+                <div className="w-[15%] shrink-0">
+                  <PropertyCardSkeleton />
+                </div>
+              </div>
+            </div>
+            <div className="mb-12 hidden grid-cols-1 justify-items-center gap-6 sm:grid sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+              {[1, 2, 3].map((item) => (
+                <PropertyCardSkeleton key={item} />
+              ))}
+            </div>
+          </>
         ) : error ? (
           // حالت خطا - نمایش پیام خطا
           <Card className="p-8 text-center border-2 border-red-200 bg-red-50">

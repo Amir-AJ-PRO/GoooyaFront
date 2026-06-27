@@ -419,19 +419,16 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                         className="object-contain bg-gray-100"
                       />
                       {isLastVisible && remainig > 0 && (
-                        <div onClick={() => {
-                          if (isLastVisible && remainig > 0) {
-                            // open modal with all images
+                        <div
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             setModalHandeler(true);
-                          }
-
-                        }
-
-                        }
-                          className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-sm font-medium">
+                          }}
+                          className="absolute inset-0 flex items-center justify-center bg-black/60 text-sm font-medium text-white"
+                        >
                           +{remainig} more
                         </div>
-
                       )}
 
                     </button>
@@ -446,93 +443,68 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
           </Card>
 
 
-          <div className='fixed h-screen -z-50 '>
-            <MyModal
-              className={"fixed   justify-center items-center rounded-sm z-[100]  h-screen w-screen  text-white  "}
-              isOpen={ModalHandeler}
-              overlayClassName={"fixed flex   z-[1000]  h-screen w-screen   bg-black/90 bg-opacity-5  inset-0"}
-              onRequestClose={() => { setModalHandeler(false) }}
+          <MyModal
+            className="fixed inset-0 z-[10001] flex flex-col outline-none"
+            isOpen={ModalHandeler}
+            overlayClassName="fixed inset-0 z-[10000] bg-black/90"
+            onRequestClose={() => setModalHandeler(false)}
+            ariaHideApp={false}
+            shouldCloseOnOverlayClick
+          >
+            <button
+              type="button"
+              aria-label="بستن گالری"
+              onClick={() => setModalHandeler(false)}
+              className="absolute right-4 top-4 z-[10002] flex h-11 w-11 touch-manipulation items-center justify-center rounded-full border border-white/20 bg-white/95 text-black shadow-lg transition-colors hover:bg-white"
             >
+              <X className="h-6 w-6" />
+            </button>
 
-              <div className='relative '  >
-                <button className='  border border-black top-[15px] right-[15px] absolute' onClick={() => { setModalHandeler(false) }} ><X /></button>
+            <div className="flex h-full min-h-0 flex-col">
+              <div className="flex min-h-0 flex-1 items-center justify-center px-4 pb-4 pt-16">
+                <div className="relative h-full w-full max-w-4xl">
+                  <Image
+                    src={imageUrl}
+                    alt={property.title}
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
               </div>
 
 
-
-              <div className='flex flex-col h-full '>
-                <div className=' flex items-center justify-center h-full   '>
-                  <div className=' h-full md:w-3/6 w-full flex justify-center items-center     '>
-                    <div className="relative h-full w-full">
-                      <Image
-                        src={imageUrl}
-                        alt={property.title}
-                        fill
-
-                        className="object-contain"
-
-                        priority
-                      />
-                    </div>
+              {property.images && property.images.length > 1 && (
+                <div className="shrink-0 border-t border-white/10 p-4">
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {property.images.map((img, index) => (
+                      <button
+                        key={img.id}
+                        type="button"
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={`relative h-20 w-20 overflow-hidden rounded-lg border-2 transition-all ${
+                          index === selectedImageIndex
+                            ? 'border-primary ring-1 ring-primary/70'
+                            : 'border-transparent hover:border-gray-300'
+                        }`}
+                      >
+                        <Image
+                          src={
+                            img.image.startsWith('http://') || img.image.startsWith('https://')
+                              ? img.image
+                              : `${API_BASE_URL}${img.image.startsWith('/') ? img.image : `/${img.image}`}`
+                          }
+                          alt={`تصویر ${index + 1}`}
+                          fill
+                          className="object-cover bg-gray-100"
+                        />
+                      </button>
+                    ))}
                   </div>
                 </div>
-
-
-
-                {/* گالری تصاویر */}
-                <div className=''>
-                  {property.images && property.images.length > 1 && (
-                    <div className="p-4 flex justify-center items-start">
-                      <div className='flex justify-center items-start flex-wrap'>
-                        {property.images.map((img, index) => {
-
-
-
-                          return <button
-                            key={img.id}
-                            onClick={() => setSelectedImageIndex(index)}
-                            className={`mx-1 relative aspect-square rounded-lg overflow-hidden border-2 transition-all \   h-20 ${index === selectedImageIndex
-                              ? 'border-primary ring-1 ring-primary/70'
-                              : 'border-transparent hover:border-gray-300'
-                              }`}
-                          >
-
-                            <Image
-
-                              src={
-                                img.image.startsWith('http://') || img.image.startsWith('https://')
-                                  ? img.image
-                                  : `${API_BASE_URL}${img.image.startsWith('/') ? img.image : `/${img.image}`}`
-                              }
-                              alt={`تصویر ${index + 1}`}
-                              width={100}
-                              height={100}
-                              className="object-contain bg-gray-100"
-                            />
-
-
-                          </button>
-
-                        }
-                        )
-                        }
-
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-
-
-            </MyModal>
-
-
-
-
-
-
-          </div>
+              )}
+            </div>
+          </MyModal>
 
 
 

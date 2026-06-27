@@ -42,7 +42,7 @@ export default function PropertiesPageClient() {
   const [transactionFilter, setTransactionFilter] = useState<string>('sale');
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('newest');
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
 
   // دریافت شهرها
   const { data: cities = [], isLoading: citiesLoading } = useCities();
@@ -198,7 +198,7 @@ export default function PropertiesPageClient() {
   }
 
   // استفاده از Search API اگر فیلتر وجود دارد
-  const { data: searchData, isLoading: searchLoading, error: searchError } = useSearchProperties(
+  const { data: searchData, isLoading: searchLoading, isFetching: searchFetching, isPending: searchPending, error: searchError } = useSearchProperties(
     searchParamsWithPagination,
     {
       enabled: hasSearchParams // فقط اگر فیلتر وجود داشته باشد
@@ -208,14 +208,18 @@ export default function PropertiesPageClient() {
   // استفاده از List API اگر فیلتر وجود ندارد
   const currentPage = page || 1;
   const currentPageSize = pageSize || 20;
-  const { data: listData, isLoading: listLoading, error: listError } = useProperties(
+  const { data: listData, isLoading: listLoading, isFetching: listFetching, isPending: listPending, error: listError } = useProperties(
     currentPage,
     currentPageSize,
     !hasSearchParams // فقط اگر فیلتر وجود نداشته باشد فعال باشد
   );
 
   // انتخاب داده‌ها بر اساس اینکه آیا فیلتر وجود دارد یا نه
-  const isLoading = hasSearchParams ? searchLoading : listLoading;
+  const isLoading = hasSearchParams
+    ? (searchPending || searchLoading)
+    : (listPending || listLoading);
+  const isRefreshing =
+    (hasSearchParams ? searchFetching : listFetching) && !isLoading && !!data;
   const error = hasSearchParams ? searchError : listError;
   const data = hasSearchParams ? searchData : listData;
 
@@ -549,6 +553,15 @@ export default function PropertiesPageClient() {
           )}
         </div>
       ) : (
+        <div className="relative">
+          {isRefreshing && (
+            <div className="absolute inset-0 z-10 flex items-start justify-center bg-white/60 pt-20 backdrop-blur-[1px]">
+              <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-md">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-sm text-muted-foreground">در حال بارگذاری...</span>
+              </div>
+            </div>
+          )}
         <>
           {/* نمایش تعداد نتایج */}
           {paginationInfo && (
@@ -594,6 +607,7 @@ export default function PropertiesPageClient() {
             </div>
           )}
         </>
+        </div>
       )}
     </div>
   );

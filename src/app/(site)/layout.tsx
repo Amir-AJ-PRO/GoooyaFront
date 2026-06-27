@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import AiWidget from "@/components/aiwidget/AiWidget"
+import NavigationProgress from "@/components/common/NavigationProgress"
+
 
 export const metadata: Metadata = {
   title: "گویا - پلتفرم املاک فارسی",
@@ -15,6 +17,7 @@ export default function SiteLayout({
 }>) {
   return (
     <div className=" bg-[#E0E0E0]">
+      <NavigationProgress />
       <Header />
       <main className="flex-1 ">
         {children}

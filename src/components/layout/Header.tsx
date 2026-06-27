@@ -45,7 +45,6 @@ import {
 } from "./HeaderNavIcons";
 
 const PRIMARY = "#251785";
-const HOME_PRIMARY = "#1055CB";
 
 type NavIconComponent = ComponentType<{ className?: string }>;
 
@@ -70,8 +69,6 @@ const Header = memo(() => {
   const { data: ticketsCount } = useAdviserTicketsCount(isGooyaAdviser);
 
   const isActive = (path: string) => pathname === path;
-  const isHomePage = pathname === "/";
-  const submitButtonColor = isHomePage ? HOME_PRIMARY : PRIMARY;
 
   return (
     <header className="sticky top-0 z-50 w-full max-w-[100vw] overflow-x-clip border-b border-[#E8ECF2] bg-white">
@@ -147,8 +144,7 @@ const Header = memo(() => {
 
             {(!user || user.type === 'user') && (
               <Button
-                className="header-submit-btn flex h-8 shrink-0 gap-1 rounded-[10px] px-2.5 text-[11px] font-medium text-white transition-colors duration-200 hover:brightness-110 sm:h-[34px] sm:gap-1.5 sm:px-3.5 sm:text-[13px]"
-                style={{ backgroundColor: submitButtonColor }}
+                className="header-submit-btn flex h-8 shrink-0 gap-1 rounded-[10px] bg-[#1055CB] px-2.5 text-[11px] font-medium text-white transition-colors duration-200 hover:bg-[#1055CB]/90 sm:h-[34px] sm:gap-1.5 sm:px-3.5 sm:text-[13px]"
                 onClick={() => setSubmitPropertyModalOpen(true)}
               >
                 <Plus className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" strokeWidth={2.5} />
