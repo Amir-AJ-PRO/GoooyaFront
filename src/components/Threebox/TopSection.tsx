@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 
 import BgImage from "@/components/Threebox/BgImage";
 import Threeboxx from "@/components/Threebox/Threeboxx"
@@ -7,6 +7,9 @@ import MobileMenuCard from "@/components/Threebox/MobileMenuCard"
 
 const TopSection = () => {
   const [Photo, setPhoto] = useState<1 | 2 | 3>(1)
+  const handlePhotoChange = useCallback((value: 1 | 2 | 3) => {
+    setPhoto(value)
+  }, [])
 
   return (
     <div>
@@ -24,13 +27,13 @@ const TopSection = () => {
         </div>
 
         <div className="absolute top-48 lg:top-52 -mt-10 lg:-mt-20 left-0 right-0 z-20">
-          <Threeboxx SetBoxNuber={(value: 1 | 2 | 3) => { setPhoto(value) }} />
+          <Threeboxx SetBoxNuber={handlePhotoChange} />
         </div>
       </section>
 
       {/* mobile three bar */}
       <div className='sm:hidden mb-6'>
-        <MobileMenuCard setphoto={(value: 1 | 2 | 3) => { setPhoto(value) }} />
+        <MobileMenuCard setphoto={handlePhotoChange} />
       </div>
     </div>
   )

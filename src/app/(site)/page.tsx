@@ -4,7 +4,6 @@ import TopSection from "@/components/Threebox/TopSection";
 import AgentHome from "@/components/agent/AgentHome"
 import EnginneringHomepage from "@/components/home/EnginneringHomepage"
 import TabletPropertySwiper from "@/components/home/TabletPropertySwiper"
-import MobileSwiper from "@/components/home/MobileSwiper"
 import { useHomepageProperties } from "@/hooks/usePropertyMutations";
 import AiWidget from "@/components/aiwidget/AiWidget"
 
@@ -31,9 +30,7 @@ export default function Home() {
 
 
       {/* Featured Properties */}
-      <div className=" hidden sm:block">
-        <FeaturedProperties />
-      </div>
+      <FeaturedProperties />
 
       {/* About Section Preview */}
       {/* <section className="py-16 bg-secondary/30  ">
@@ -54,10 +51,6 @@ export default function Home() {
         </div>
       </section> */}
    
-      <div className="sm:hidden ">
-        <MobileSwiper/>
-      </div>
-
       {/* مشاورین */}
       <div  >
         <AgentHome />

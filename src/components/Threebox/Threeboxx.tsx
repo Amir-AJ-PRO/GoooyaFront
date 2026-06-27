@@ -15,7 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useCities } from "@/hooks/useCities"
 import { usePropertyTypes } from "@/hooks/usePropertyMutations"
@@ -76,12 +76,9 @@ const Threebox = ({ SetBoxNuber }: ThreeboxProps) => {
         engineeringServices.find((s) => s.name === selectedService) ||
         engineeringServices[0]
 
-    useEffect(() => {
-        SetBoxNuber(box)
-    }, [box, SetBoxNuber])
-
     const selectTab = (id: 1 | 2 | 3, transaction: "buy" | "rent" | null) => {
         setBox(id)
+        SetBoxNuber(id)
         if (transaction) setTab(transaction)
     }
 

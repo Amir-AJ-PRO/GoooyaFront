@@ -294,7 +294,7 @@ const AiWidget: React.FC = () => {
   };
 
   return ( 
-    <div className="absolute bottom-5 right-5 z-[9999] flex flex-col items-end font-sans">
+    <div className="absolute bottom-4 right-2 z-[9999] flex flex-col items-end font-sans sm:bottom-5 sm:right-5">
       {isOpen && (
         <div
           dir="rtl"

@@ -6,13 +6,33 @@ import { Card } from '@/components/ui/card';
 import { Loader2, Home, AlertCircle, Castle, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import 'swiper/css';
 
 /**
  * کامپوننت نمایش املاک ویژه در صفحه اصلی
  * فقط املاک واقعی از API نمایش داده می‌شود
  */
 export default function FeaturedProperties() {
-  const { data: properties, isLoading, error } = useHomepageProperties(); return (
+  const { data: properties, isLoading, error } = useHomepageProperties();
+
+  const sectionHeader = (
+    <div className="mb-5 mt-8 flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <Castle className="size-6 text-black" />
+        <h2 className="text-lg font-bold text-black">املاک ویژه</h2>
+      </div>
+      <Link
+        href="/properties"
+        className="flex items-center gap-1 text-sm text-black transition-colors hover:text-gray-700"
+      >
+        <span>بیشتر</span>
+        <ChevronLeft className="size-5" />
+      </Link>
+    </div>
+  );
+
+  return (
     <section className="  bg-[#E0E0E0]">
       <div className="container mx-auto px-4 ">
         {/* هدر */}
@@ -52,29 +72,32 @@ export default function FeaturedProperties() {
             </Button>
           </Card>
         ) : properties && properties.length > 0 ? (
-          // نمایش املاک واقعی از API
           <>
-            {/* دکمه مشاهده همه */}
-            <div className="mb-5 mt-8 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Castle className="size-6 text-black" />
-                <h2 className="text-lg font-bold text-black">املاک ویژه</h2>
+            {sectionHeader}
+
+            {/* mobile swiper */}
+            <div className="mb-8 sm:hidden">
+              <div className="-mx-4 px-4">
+                <Swiper
+                  spaceBetween={16}
+                  slidesPerView={1.2}
+                  className="w-full"
+                >
+                  {properties.map((property) => (
+                    <SwiperSlide key={property.id} className="pb-4">
+                      <HomepagePropertyCard property={property} />
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
               </div>
-              <Link
-                href="/properties"
-                className="flex items-center gap-1 text-sm text-black transition-colors hover:text-gray-700"
-              >
-                <span>بیشتر</span>
-                <ChevronLeft className="size-5" />
-              </Link>
             </div>
-            <div className="mb-12 grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+
+            {/* desktop / tablet grid */}
+            <div className="mb-12 hidden grid-cols-1 justify-items-center gap-6 sm:grid sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
               {properties.map((property) => (
                 <HomepagePropertyCard key={property.id} property={property} />
               ))}
             </div>
-
-
           </>
         ) : (
           // حالت خالی - هیچ ملکی موجود نیست

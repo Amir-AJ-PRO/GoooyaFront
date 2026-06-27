@@ -8,7 +8,7 @@ interface BgImageProps {
 
 const BgImage = ({ imageNum }: BgImageProps) => {
   return (
-    <div>
+    <div className="relative h-full w-full">
       {imageNum === 1 && (
         <Image
           src="/publicPhotos/box1.jpg"

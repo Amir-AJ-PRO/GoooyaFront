@@ -147,12 +147,12 @@ const Header = memo(() => {
 
             {(!user || user.type === 'user') && (
               <Button
-                className="header-submit-btn hidden h-[34px] gap-1.5 rounded-[10px] px-3.5 text-[13px] font-medium text-white transition-colors duration-200 hover:brightness-110 lg:flex"
+                className="header-submit-btn flex h-8 shrink-0 gap-1 rounded-[10px] px-2.5 text-[11px] font-medium text-white transition-colors duration-200 hover:brightness-110 sm:h-[34px] sm:gap-1.5 sm:px-3.5 sm:text-[13px]"
                 style={{ backgroundColor: submitButtonColor }}
                 onClick={() => setSubmitPropertyModalOpen(true)}
               >
-                <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
-                <span className="leading-none">سپردن ملک</span>
+                <Plus className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" strokeWidth={2.5} />
+                <span className="leading-none whitespace-nowrap">سپردن ملک</span>
               </Button>
             )}
 
@@ -287,20 +287,6 @@ const Header = memo(() => {
                   )}
                 </Button>
               </Link>
-            )}
-
-            {(!user || user.type === 'user') && (
-              <Button
-                className="my-2 w-full justify-start gap-2 text-white"
-                style={{ backgroundColor: submitButtonColor }}
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setSubmitPropertyModalOpen(true);
-                }}
-              >
-                <Plus className="h-4 w-4" />
-                سپردن ملک
-              </Button>
             )}
 
             {navItems.map((item) => {
