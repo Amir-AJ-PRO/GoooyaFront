@@ -41,6 +41,7 @@ const SearchBar = memo(() => {
     const searchParams = new URLSearchParams();
     
     searchParams.set('transaction_type', tab === 'buy' ? 'sale' : 'rent');
+    searchParams.set('from', 'home');
     
     if (city) {
       searchParams.set('city', city);

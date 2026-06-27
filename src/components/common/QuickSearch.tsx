@@ -8,7 +8,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchSuggestions } from "@/hooks/useSearch";
 import { cn } from "@/lib/utils";
 
-export default function QuickSearch() {
+export default function QuickSearch({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -49,7 +49,8 @@ export default function QuickSearch() {
     <div className="relative w-full" dir="rtl">
       <Input
         type="text"
-        placeholder="جستجو در عنوان، شهر، منطقه..."
+        aria-label="جستجو در املاک"
+        placeholder={compact ? "جستجو..." : "جستجو در عنوان، شهر، منطقه..."}
         value={searchTerm}
         onChange={(e) => handleSearchInputChange(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -60,14 +61,14 @@ export default function QuickSearch() {
           setTimeout(() => setShowSuggestions(false), 200);
         }}
         className={cn(
-          "h-[32px] w-full rounded-[8px] border border-[#242424] bg-white py-0 pl-3 pr-9 text-right text-[13.5px] font-normal text-[#111111] shadow-none",
+          "header-search-input h-[32px] w-full rounded-[8px] border border-[#242424] bg-white py-0 pl-3 pr-9 text-right text-[13.5px] font-normal text-[#111111] shadow-none",
           "placeholder:text-right placeholder:text-[13px] placeholder:text-[#555555]",
           "focus-visible:border-[#242424] focus-visible:ring-0 focus-visible:ring-offset-0"
         )}
         dir="rtl"
       />
       <Search
-        className="pointer-events-none absolute right-3 top-1/2 h-[15px] w-[15px] -translate-y-1/2 text-[#6B7280]"
+        className="header-search-icon pointer-events-none absolute right-3 top-1/2 h-[15px] w-[15px] -translate-y-1/2 text-[#6B7280]"
         strokeWidth={2}
       />
 

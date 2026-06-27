@@ -19,6 +19,7 @@ import { Loader2, Search, Building2, SlidersHorizontal, X, Sparkles } from 'luci
 import { PropertyListItem } from '@/types/property';
 import { SearchParams, SearchResult } from '@/types/search';
 import { PaginatedPropertiesResponse } from '@/services/propertyApi';
+import { cn } from '@/lib/utils';
 
 // Type guard function برای بررسی اینکه data از نوع SearchResult است
 function isSearchResult(data: SearchResult | PaginatedPropertiesResponse | undefined): data is SearchResult {
@@ -308,10 +309,14 @@ export default function PropertiesPageClient() {
     setTransactionFilter('sale');
     setPropertyTypeFilter('all');
     setSortBy('newest');
-    router.push('/properties?transaction_type=sale');
+    router.push('/properties');
   };
 
   const selectTriggerClass = 'h-11 bg-white border-gray-200';
+  const transactionLabel = transactionFilter === 'rent' ? 'اجاره' : 'فروش';
+
+  const fromHomeSearch = searchParams.get('from') === 'home';
+  const showTransactionFilter = !fromHomeSearch;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -392,7 +397,12 @@ export default function PropertiesPageClient() {
         </div>
 
         <div className={`p-5 transition-all duration-300 ${showFilters ? 'block' : 'hidden md:block'}`}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+          <div
+            className={cn(
+              'grid grid-cols-1 sm:grid-cols-2 gap-3',
+              showTransactionFilter ? 'xl:grid-cols-5' : 'xl:grid-cols-4'
+            )}
+          >
             <Select
               value={cityFilter}
               onValueChange={(value) => {
@@ -443,15 +453,17 @@ export default function PropertiesPageClient() {
               </SelectContent>
             </Select>
 
-            <Select value={transactionFilter} onValueChange={setTransactionFilter}>
-              <SelectTrigger className={selectTriggerClass}>
-                <SelectValue placeholder="نوع معامله" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sale">فروش</SelectItem>
-                <SelectItem value="rent">اجاره</SelectItem>
-              </SelectContent>
-            </Select>
+            {showTransactionFilter ? (
+              <Select value={transactionFilter} onValueChange={setTransactionFilter}>
+                <SelectTrigger className={selectTriggerClass}>
+                  <SelectValue placeholder="نوع معامله" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sale">فروش</SelectItem>
+                  <SelectItem value="rent">اجاره</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : null}
 
             <Select value={propertyTypeFilter} onValueChange={setPropertyTypeFilter}>
               <SelectTrigger className={selectTriggerClass}>
@@ -484,6 +496,13 @@ export default function PropertiesPageClient() {
               اعمال فیلتر
             </Button>
           </div>
+
+          {fromHomeSearch && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              نوع معامله:{' '}
+              <span className="font-medium text-foreground">{transactionLabel}</span>
+            </p>
+          )}
 
           {searchTerm && (
             <p className="mt-3 text-sm text-muted-foreground">

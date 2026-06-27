@@ -71,69 +71,67 @@ const Header = memo(() => {
 
   return (
     <header className="sticky top-0 z-50 w-full max-w-[100vw] overflow-x-clip border-b border-[#E8ECF2] bg-white">
-      <div className="mx-auto w-full px-4 sm:px-5 lg:px-6 xl:px-8">
-        <div className="flex h-[72px] min-h-[72px] max-h-[72px] min-w-0 items-center justify-between gap-2 sm:gap-3 lg:gap-4">
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3 lg:gap-4">
-            <Link
-              href="/"
-              className="group flex shrink-0 items-center gap-2 transition-opacity hover:opacity-85"
-            >
-              <div className="flex h-8 w-8 items-center justify-center">
-                <img
-                  src="/logo-gooya.svg"
-                  alt="گویا"
-                  className="h-full w-full object-contain"
-                />
-              </div>
-              <span className="text-[17px] font-bold leading-none text-[#111111]">گویا</span>
-            </Link>
+      <div className="mx-auto w-full px-4 sm:px-5 lg:px-5 min-[1400px]:px-8">
+        <div className="site-header-bar flex h-[72px] min-h-[72px] max-h-[72px] min-w-0 items-center justify-between gap-2 sm:gap-3 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:justify-normal lg:gap-x-3 min-[1400px]:gap-x-4">
+          <Link
+            href="/"
+            className="group flex shrink-0 items-center gap-2 transition-opacity hover:opacity-85"
+          >
+            <div className="header-logo-img flex h-8 w-8 items-center justify-center">
+              <img
+                src="/logo-gooya.svg"
+                alt="گویا"
+                className="h-full w-full object-contain"
+              />
+            </div>
+            <span className="header-logo-text text-[17px] font-bold leading-none text-[#111111]">گویا</span>
+          </Link>
 
-            <nav className="hidden min-w-0 items-center gap-2 lg:flex">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.path);
-                return (
-                  <Link
-                    key={item.path}
-                    href={item.path}
-                    prefetch={true}
+          <nav className="header-nav hidden min-w-0 flex-nowrap items-center gap-2 lg:flex min-[1400px]:gap-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  prefetch={true}
+                  title={item.name}
+                  className={cn(
+                    "header-nav-link group inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-1.5 py-1 text-[14px] transition-all duration-200",
+                    active
+                      ? "font-bold text-[#251785]"
+                      : "font-medium text-[#111111] hover:bg-[#251785]/[0.08] hover:text-[#251785]"
+                  )}
+                >
+                  <Icon
                     className={cn(
-                      "group inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-1.5 py-1 text-[14px] transition-all duration-200",
+                      "header-nav-icon h-5 w-5 shrink-0 transition-colors duration-200",
                       active
-                        ? "font-bold text-[#251785]"
-                        : "font-medium text-[#111111] hover:bg-[#251785]/[0.08] hover:text-[#251785]"
+                        ? "text-[#251785]"
+                        : "text-[#111111] group-hover:text-[#251785]"
                     )}
-                  >
-                    <Icon
-                      className={cn(
-                        "h-[20px] w-[20px] shrink-0 transition-colors duration-200",
-                        active
-                          ? "text-[#251785]"
-                          : "text-[#111111] group-hover:text-[#251785]"
-                      )}
-                    />
-                    <span>{item.name}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
+                  />
+                  <span className="header-nav-text">{item.name}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
-          <div className="hidden shrink-0 lg:block lg:w-[300px]">
-            <QuickSearch />
-          </div>
-
-          <div className="flex shrink-0 items-center gap-3 sm:gap-4 lg:gap-4">
+          <div className="header-actions flex shrink-0 items-center gap-2 min-[1400px]:gap-3">
+            <div className="header-search-wrap hidden shrink-0 lg:block min-[1400px]:w-[260px] 2xl:w-[300px]">
+              <QuickSearch compact />
+            </div>
 
             {isGooyaAdviser && (
               <Link href="/admin/tickets" className="hidden lg:block">
                 <Button
-                  className="h-9 gap-1.5 rounded-[10px] px-4 text-[13px] text-white shadow-sm transition-all duration-200 hover:brightness-110 hover:shadow-md"
+                  className="header-ticket-btn h-9 gap-1.5 rounded-[10px] px-4 text-[13px] text-white shadow-sm transition-all duration-200 hover:brightness-110 hover:shadow-md"
                   style={{ backgroundColor: PRIMARY }}
                 >
                   <FileText className="h-4 w-4" />
-                  <span className="hidden xl:inline">تیکت‌های ثبت ملک</span>
-                  <span className="xl:hidden">تیکت‌ها</span>
+                  <span className="header-ticket-long hidden min-[1400px]:inline">تیکت‌های ثبت ملک</span>
+                  <span className="header-ticket-short min-[1400px]:hidden">تیکت‌ها</span>
                   {ticketsCount !== undefined && ticketsCount > 0 && (
                     <Badge className="mr-1 bg-white px-1.5 text-xs text-[#251785]">
                       {ticketsCount}
@@ -145,7 +143,7 @@ const Header = memo(() => {
 
             {(!user || user.type === 'user') && (
               <Button
-                className="hidden h-[34px] gap-1.5 rounded-[10px] px-3.5 text-[13px] font-medium text-white transition-colors duration-200 hover:brightness-110 lg:flex"
+                className="header-submit-btn hidden h-[34px] gap-1.5 rounded-[10px] px-3.5 text-[13px] font-medium text-white transition-colors duration-200 hover:brightness-110 lg:flex"
                 style={{ backgroundColor: PRIMARY }}
                 onClick={() => setSubmitPropertyModalOpen(true)}
               >
@@ -174,7 +172,7 @@ const Header = memo(() => {
                               : 'U'}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="max-w-[100px] truncate">
+                      <span className="header-user-name max-w-[100px] truncate">
                         {user.name || user.phone || 'کاربر'}
                       </span>
                     </button>
@@ -245,7 +243,7 @@ const Header = memo(() => {
             ) : (
               <button
                 type="button"
-                className="group hidden items-center gap-2 rounded-[10px] px-1 py-1.5 text-[13px] font-medium text-[#111111] transition-all duration-200 hover:bg-[#251785]/[0.08] hover:text-[#251785] lg:flex"
+                className="header-login-btn group hidden items-center gap-2 rounded-[10px] px-1 py-1.5 text-[13px] font-medium text-[#111111] transition-all duration-200 hover:bg-[#251785]/[0.08] hover:text-[#251785] lg:flex"
                 onClick={() => setLoginModalOpen(true)}
               >
                 <LoginNavIcon className="size-[22px] shrink-0 text-[#161616] transition-colors duration-200 group-hover:text-[#251785]" />

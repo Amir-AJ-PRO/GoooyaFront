@@ -90,6 +90,7 @@ const Threebox = ({ SetBoxNuber }: ThreeboxProps) => {
     const submitSearch = useCallback(() => {
         const searchParams = new URLSearchParams()
         searchParams.set("transaction_type", tab === "buy" ? "sale" : "rent")
+        searchParams.set("from", "home")
         if (city) searchParams.set("city", city)
         if (location) searchParams.set("location", location)
         if (type) searchParams.set("property_type", type)

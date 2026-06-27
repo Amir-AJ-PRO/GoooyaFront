@@ -65,6 +65,7 @@ export default function MobileMenuCard({ setphoto }) {
     console.log(tab)
 
     searchParams.set('transaction_type', tab === 'buy' ? 'sale' : 'rent');
+    searchParams.set('from', 'home');
 
     if (city) {
       searchParams.set('city', city);
