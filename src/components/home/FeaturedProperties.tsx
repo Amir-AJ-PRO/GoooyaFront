@@ -1,7 +1,7 @@
 'use client';
 
 import { useHomepageProperties } from '@/hooks/usePropertyMutations';
-import PropertyCard from '@/components/PropertyCard';
+import HomepagePropertyCard from '@/components/home/HomepagePropertyCard';
 import { Card } from '@/components/ui/card';
 import { Loader2, Home, AlertCircle, Castle, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -55,28 +55,22 @@ export default function FeaturedProperties() {
           // نمایش املاک واقعی از API
           <>
             {/* دکمه مشاهده همه */}
-            <div className="  flex justify-between mt-8 mb-7">
-
-              <div className='flex'>
-                <div><Castle /></div>
-                <div className='text-lg'>املاک ویژه</div>
-
+            <div className="mb-5 mt-8 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Castle className="size-6 text-black" />
+                <h2 className="text-lg font-bold text-black">املاک ویژه</h2>
               </div>
-              <Link href="/properties" >
-                <div className='flex '>
-                  <div className='mx-1'>
-                    بیشتر
-                  </div>
-                  <div className='text-sm'>
-                    <ChevronLeft className='size-5' />
-                  </div>
-                </div>
-
+              <Link
+                href="/properties"
+                className="flex items-center gap-1 text-sm text-black transition-colors hover:text-gray-700"
+              >
+                <span>بیشتر</span>
+                <ChevronLeft className="size-5" />
               </Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            <div className="mb-12 grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
               {properties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
+                <HomepagePropertyCard key={property.id} property={property} />
               ))}
             </div>
 

@@ -1,52 +1,92 @@
-"use client"
+"use client";
 
-import React from 'react'
-import { Ruler, Map, NotepadText, Building, DraftingCompass, ChevronLeftIcon } from "lucide-react"
-import Link from 'next/link'
+import React from "react";
+import {
+    Ruler,
+    TriangleRight,
+    PencilRuler,
 
-const EnginneringHomepage = () => {
-    const services = [
-        { icon: <Ruler />, title: "طراحی نقشه", desc: "تهیه نقشه های معماری سازه و تاسیسات" },
-        { icon: <Map />, title: "نقشه برداری", desc: "برداشت utm مسافت تعین ارتفاع" },
-        { icon: <NotepadText />, title: "پایان کار", desc: "پیگیری پرونده شهرداری و دریافت پایان کار" },
-        { icon: <Building />, title: "اجرا نظارت", desc: "نظارت واجرای پروژه طبق قرارداد ساختمان" },
-    ];
+    
+  Triangle,
+  FileText,
+  Building2,
+  Pencil,
+  DraftingCompass,
+  ChevronLeft,
+} from "lucide-react";
+import Link from "next/link";
 
-    return (
-        <div>
+const services = [
+  {
+    icon: Pencil,
+    bgIcon: Ruler,
+    title: "طراحی نقشه",
+    desc: "تهیه نقشه‌های معماری، سازه و تاسیسات",
+  },
+  {
+    icon: TriangleRight,
+    bgIcon: TriangleRight,
+    title: "نقشه برداری",
+    desc: "برداشت UTM، مساحت، تعیین ارتفاع",
+  },
+  {
+    icon: FileText,
+    bgIcon: FileText,
+    title: "پایان کار",
+    desc: "پیگیری پرونده شهرداری و دریافت پایان‌کار",
+  },
+  {
+    icon: Building2,
+    bgIcon: Building2,
+    title: "اجرا و نظارت",
+    desc: "نظارت و اجرای پروژه طبق مقررات ساختمان",
+  },
+];
 
-
-
-            <div className="flex flex-col justify-center items-center w-full p-4">
-                <div className='w-full max-w-[79rem]  justify-between hidden lg:flex '>
-                    <div className='flex my-2'>
-                        <div className='size-5 mx-2'><DraftingCompass className='w-full h-full' /></div>
-                        <div>خدمات مهندسی</div>
-                    </div>
-                    <Link href={"/engineering"}>
-                        <div className='flex'>
-                            <div>مشاهده کامل خدمات مهندسی </div>
-                            <div><ChevronLeftIcon /></div>
-                        </div>
-                    </Link>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-7xl ">
-                    {services.map((item, index) => (
-                        <div key={index}
-                         className="bg-white h-20 rounded-3xl flex flex-col justify-evenly
-                          p-2 shadow-sm border border-gray-100">
-                            <div className="flex items-center gap-2">
-                                {item.icon}
-                                <h3 className="text-lg font-bold">{item.title}</h3>
-                            </div>
-                            <p className="text-sm text-gray-600 px-1">{item.desc}</p>
-                        </div>
-                    ))}
-                </div>
-            </div>
+function ServiceCard({ icon: Icon, bgIcon: BgIcon, title, desc }) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl bg-white px-5 py-4">
+      <div className="relative z-10 flex flex-col gap-1.5 text-right">
+        <div className="flex items-center justify-start gap-2">
+          <Icon className="size-[18px] shrink-0 text-black" strokeWidth={1.75} />
+          <h3 className="text-base font-bold text-black">{title}</h3>
         </div>
-
-    )
+        <p className="text-sm leading-6 text-[#666666]">{desc}</p>
+      </div>
+      <BgIcon
+        className="pointer-events-none absolute -bottom-3 -left-2 size-[72px] text-[#D9D9D9]"
+        strokeWidth={1.25}
+      />
+    </div>
+  );
 }
 
-export default EnginneringHomepage
+const EnginneringHomepage = () => {
+  return (
+    <section className="bg-[#E0E0E0]">
+      <div className="container mx-auto px-4">
+        <div className="mb-5 mt-8 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <DraftingCompass className="size-6 text-black" strokeWidth={1.75} />
+            <h2 className="text-lg font-bold text-black">خدمات مهندسی</h2>
+          </div>
+          <Link
+            href="/engineering"
+            className="flex items-center gap-1 text-sm text-black transition-colors hover:text-gray-700"
+          >
+            <span>مشاهده کامل خدمات مهندسی</span>
+            <ChevronLeft className="size-5" />
+          </Link>
+        </div>
+
+        <div className="mb-12 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+          {services.map((item) => (
+            <ServiceCard key={item.title} {...item} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default EnginneringHomepage;

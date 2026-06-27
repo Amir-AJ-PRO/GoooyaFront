@@ -109,7 +109,7 @@ const Threebox = ({ SetBoxNuber }: ThreeboxProps) => {
 
     return (
         <div className="hidden lg:flex lg:justify-center" dir="rtl">
-            <div className="relative w-8/12 min-w-[960px] max-w-[1050px]">
+            <div className="relative w-8/12 min-w-[960px] max-w-[1050px] ">
                 {/* ── تب‌ها ── */}
                 <div className="relative z-10 flex items-end justify-between gap-3">
                     {TABS.map((t) => {
@@ -132,7 +132,7 @@ const Threebox = ({ SetBoxNuber }: ThreeboxProps) => {
                                         <span className="text-[26px] font-bold leading-tight text-black">
                                             {t.title}
                                         </span>
-                                        <span className="text-[13px] leading-snug text-neutral-500">
+                                        <span className="text-[13px] leading-snug text-neutral-500 line-clamp-1">
                                             {t.subtitle}
                                         </span>
                                     </div>
