@@ -215,13 +215,13 @@ export default function PropertiesPageClient() {
   );
 
   // انتخاب داده‌ها بر اساس اینکه آیا فیلتر وجود دارد یا نه
+  const error = hasSearchParams ? searchError : listError;
+  const data = hasSearchParams ? searchData : listData;
   const isLoading = hasSearchParams
     ? (searchPending || searchLoading)
     : (listPending || listLoading);
   const isRefreshing =
     (hasSearchParams ? searchFetching : listFetching) && !isLoading && !!data;
-  const error = hasSearchParams ? searchError : listError;
-  const data = hasSearchParams ? searchData : listData;
 
   // Reset به صفحه اول هنگام تغییر فیلترها
   useEffect(() => {
