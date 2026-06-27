@@ -14,42 +14,66 @@ const stroke = {
   strokeLinejoin: "round" as const,
 };
 
-/** املاک — خانه ساده با دودکش */
+/** املاک */
 export function PropertyNavIcon({ className }: NavIconProps) {
   return (
-    <svg viewBox="0 0 24 24" className={cn(iconBase, className)} aria-hidden>
-      <path {...stroke} d="M4.5 11.5 12 5.5l7.5 6" />
-      <path {...stroke} d="M6.5 11.5V19h11V11.5" />
-      <path {...stroke} d="M15.8 8.2V5.8h1.7v3.8" />
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={cn(iconBase, "-translate-y-[2px]", className)}
+      aria-hidden
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M8.5 7L22 12V22H8.5V7Z"
+        {...stroke}
+        strokeWidth={2}
+      />
+      <path d="M8.5 7L2 12V22H8.5" {...stroke} strokeWidth={2} />
+      <path d="M17.5 22V16L13 14.5V22" {...stroke} strokeWidth={2} />
+      <path d="M22 22H8.5" {...stroke} strokeWidth={2} />
     </svg>
   );
 }
 
-/** مشاورین — سپر با سر و شانه */
+/** مشاورین */
 export function ConsultantNavIcon({ className }: NavIconProps) {
   return (
-    <svg viewBox="0 0 24 24" className={cn(iconBase, className)} aria-hidden>
+    <svg viewBox="0 0 24 24" fill="none" className={cn(iconBase, className)} aria-hidden>
       <path
+        d="M3 4.62782L12.0043 2L21 4.62782V10.0169C21 15.6811 17.3751 20.2097 12.0013 22.0002C6.62605 20.2097 3 15.68 3 10.0143V4.62782Z"
         {...stroke}
-        d="M12 21.5c4.8-2.2 7.5-5.8 7.5-10.2V7.2L12 4.8 4.5 7.2v4.1c0 4.4 2.7 8 7.5 10.2z"
+        strokeWidth={2}
+        strokeLinejoin="round"
       />
-      <circle {...stroke} cx="12" cy="10.2" r="1.8" />
-      <path {...stroke} d="M9.1 13.8c.7-1.1 1.7-1.7 2.9-1.7s2.2.6 2.9 1.7" />
+      <path
+        d="M12 11.5C13.3807 11.5 14.5 10.3807 14.5 9C14.5 7.61929 13.3807 6.5 12 6.5C10.6193 6.5 9.5 7.61929 9.5 9C9.5 10.3807 10.6193 11.5 12 11.5Z"
+        {...stroke}
+        strokeWidth={2}
+      />
+      <path d="M16 15.5C16 13.2908 14.2092 11.5 12 11.5C9.79085 11.5 8 13.2908 8 15.5" {...stroke} strokeWidth={2} />
     </svg>
   );
 }
 
-/** خدمات مهندسی — پرگار نقشه‌کشی */
+/** خدمات مهندسی */
 export function EngineeringNavIcon({ className }: NavIconProps) {
   return (
-    <svg viewBox="0 0 24 24" className={cn(iconBase, className)} aria-hidden>
-      <circle {...stroke} cx="12" cy="6.5" r="1.4" />
-      <path {...stroke} d="M12 8v2.2" />
-      <path {...stroke} d="M12 10.2 7.2 20.5" />
-      <path {...stroke} d="M12 10.2 16.8 20.5" />
-      <path {...stroke} d="M9.2 15.8h5.6" />
-      <circle {...stroke} cx="7.2" cy="20.5" r="0.9" />
-      <path {...stroke} d="M15.9 19.6 16.8 20.5 15.9 21.4" />
+    <svg viewBox="0 0 24 24" fill="none" className={cn(iconBase, className)} aria-hidden>
+      <path d="M6 22L11.3438 7.75" {...stroke} strokeWidth={2} />
+      <path d="M18 22L12.6562 7.75" {...stroke} strokeWidth={2} />
+      <path
+        d="M12 8C13.1046 8 14 7.10457 14 6C14 4.89543 13.1046 4 12 4C10.8954 4 10 4.89543 10 6C10 7.10457 10.8954 8 12 8Z"
+        {...stroke}
+        strokeWidth={2}
+      />
+      <path
+        d="M18.785 16.5C16.8309 17.7653 14.5012 18.5 11.9999 18.5C9.49864 18.5 7.16894 17.7653 5.21484 16.5"
+        {...stroke}
+        strokeWidth={2}
+      />
+      <path d="M12 4V2" {...stroke} strokeWidth={2} />
     </svg>
   );
 }
@@ -71,13 +95,25 @@ export function ArticleNavIcon({ className }: NavIconProps) {
   );
 }
 
-/** تماس با ما — گوشی */
+/** تماس با ما */
 export function ContactNavIcon({ className }: NavIconProps) {
   return (
-    <svg viewBox="0 0 24 24" className={cn(iconBase, className)} aria-hidden>
+    <svg viewBox="0 0 24 24" fill="none" className={cn(iconBase, className)} aria-hidden>
       <path
+        d="M20.8901 10.3033C21.0165 9.4554 20.9751 8.58735 20.7658 7.7527C20.4893 6.6501 19.9199 5.6059 19.0577 4.74365C18.1954 3.88141 17.1512 3.31205 16.0487 3.03558C15.214 2.82629 14.3459 2.78484 13.498 2.91123"
         {...stroke}
-        d="M6.8 4.5h2.2c.6 0 1.1.4 1.2 1l.4 2.2a1.2 1.2 0 0 1-.3 1l-1.1 1.1a12.5 12.5 0 0 0 5.2 5.2l1.1-1.1a1.2 1.2 0 0 1 1-.3l2.2.4c.6.1 1 .6 1 1.2v2.2a1.2 1.2 0 0 1-1.1 1.2 18.5 18.5 0 0 1-8.1-1.9 18.2 18.2 0 0 1-5.8-5.8A18.5 18.5 0 0 1 5.6 5.6 1.2 1.2 0 0 1 6.8 4.5z"
+        strokeWidth={2}
+      />
+      <path
+        d="M17.0943 9.90173C17.2297 8.99343 16.9478 8.03493 16.2486 7.33573C15.5494 6.63653 14.5909 6.35458 13.6826 6.48998"
+        {...stroke}
+        strokeWidth={2}
+      />
+      <path
+        d="M7.18735 4.39722C7.55065 4.39722 7.88535 4.59423 8.06165 4.91185L9.2849 7.11525C9.44505 7.40375 9.45255 7.7527 9.305 8.04785L8.1266 10.4047C8.1266 10.4047 8.4681 12.1604 9.8973 13.5896C11.3265 15.0188 13.0764 15.3544 13.0764 15.3544L15.4328 14.1762C15.7282 14.0285 16.0774 14.0362 16.366 14.1966L18.5756 15.4251C18.8929 15.6015 19.0897 15.9361 19.0897 16.2991V18.8359C19.0897 20.1277 17.8898 21.0608 16.6657 20.6477C14.1518 19.7995 10.2494 18.1844 7.776 15.7109C5.30255 13.2375 3.68745 9.33515 2.83918 6.8212C2.42617 5.59715 3.35922 4.39722 4.65104 4.39722H7.18735Z"
+        {...stroke}
+        strokeWidth={2}
+        strokeLinejoin="round"
       />
     </svg>
   );

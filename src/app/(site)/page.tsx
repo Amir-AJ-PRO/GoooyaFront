@@ -22,7 +22,7 @@ export default function Home() {
   return (
     <div className="home-page">
       {/* Hero Section */}
-      <TopSection />
+      <TopSection />  
 
 
 

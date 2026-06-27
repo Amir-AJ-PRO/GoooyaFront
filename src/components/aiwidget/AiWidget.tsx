@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, FormEvent } from "react";
+import React, { useState, useRef, useEffect, FormEvent } from "react";
 import Image from "next/image";
 import { ThreeDots } from "react-loader-spinner";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -156,8 +156,12 @@ const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
 
 // ─── AI WIDGET ────────────────────────────────────────────────────────────────
 
+const ATTENTION_INITIAL_DELAY_MS = 10_000;
+const ATTENTION_ANIMATION_MS = 900;
+
 const AiWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isAttention, setIsAttention] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
@@ -169,6 +173,54 @@ const AiWidget: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const attentionDelayRef = useRef<number>(ATTENTION_INITIAL_DELAY_MS);
+  const attentionTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsAttention(false);
+      attentionDelayRef.current = ATTENTION_INITIAL_DELAY_MS;
+      if (attentionTimeoutRef.current !== null) {
+        window.clearTimeout(attentionTimeoutRef.current);
+        attentionTimeoutRef.current = null;
+      }
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    if (prefersReducedMotion) return;
+
+    attentionDelayRef.current = ATTENTION_INITIAL_DELAY_MS;
+
+    const scheduleAttention = () => {
+      attentionTimeoutRef.current = window.setTimeout(() => {
+        setIsAttention(true);
+        attentionDelayRef.current *= 2;
+        scheduleAttention();
+      }, attentionDelayRef.current);
+    };
+
+    scheduleAttention();
+
+    return () => {
+      if (attentionTimeoutRef.current !== null) {
+        window.clearTimeout(attentionTimeoutRef.current);
+        attentionTimeoutRef.current = null;
+      }
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isAttention) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setIsAttention(false);
+    }, ATTENTION_ANIMATION_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isAttention]);
 
   const toggleChat = () => setIsOpen((o) => !o);
 
@@ -252,7 +304,7 @@ const AiWidget: React.FC = () => {
         >
           <div className="flex items-center justify-between border-b border-gray-200 bg-white p-4 flex-shrink-0">
             <span className="text-base font-bold text-gray-800">
-              سیستم پشتیبانی آنلاین
+             شهر GPT - دستیار هوشمند املاک
             </span>
             <button
               onClick={toggleChat}
@@ -336,18 +388,48 @@ const AiWidget: React.FC = () => {
       )}
 
       {!isOpen && (
-        <button
-          onClick={toggleChat}
-          className="block w-[100px] h-[100px] transition-transform hover:scale-105"
-        >
-          <Image
-            src="/ai/aiIcon.png"
-            alt="AI Support"
-            className="drop-shadow-md"
-            fill
-            priority
-          />
-        </button>
+        <div className="group relative flex items-center">
+          <div
+            dir="rtl"
+            className={`pointer-events-none absolute right-full top-1/2 z-10 mr-4 -translate-y-1/2 transition-all duration-300 ease-out ${
+              isAttention
+                ? "translate-x-0 opacity-100"
+                : "translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100"
+            }`}
+          >
+            <div className="relative whitespace-nowrap rounded-2xl bg-gradient-to-l from-[#2a1b8d] to-[#4338ca] px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_24px_rgba(42,27,141,0.35)]">
+              دستیار هوشمند گویا
+              <span
+                className="absolute -right-2 top-1/2 size-0 -translate-y-1/2 border-y-[7px] border-l-[8px] border-y-transparent border-l-[#4338ca]"
+                aria-hidden
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={toggleChat}
+            aria-label="دستیار هوشمند گویا"
+            className="relative block size-[85px] rounded-full transition-transform duration-300 hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2a1b8d]"
+          >
+            {isAttention && (
+              <>
+                <span className="pointer-events-none absolute inset-0 rounded-full border-2 border-[#4338ca] animate-ai-widget-pulse-ring" />
+                <span
+                  className="pointer-events-none absolute inset-0 rounded-full border-2 border-[#2a1b8d] animate-ai-widget-pulse-ring"
+                  style={{ animationDelay: "150ms" }}
+                />
+              </>
+            )}
+            <Image
+              src="/ai/aiIcon.png"
+              alt="دستیار هوشمند گویا"
+              className="drop-shadow-[0_4px_14px_rgba(42,27,141,0.25)]"
+              fill
+              priority
+            />
+          </button>
+        </div>
       )}
     </div>
   );
