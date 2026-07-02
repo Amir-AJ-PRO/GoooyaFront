@@ -10,9 +10,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 // const API_BASE_URL = "http://127.0.0.1:8020";
 const API_BASE_URL = "https://shahrgpt.goooya.ir";
 
-
-
-// ─── TYPES ───────────────────────────────────────────────────────────────────
+const CHAT_STORAGE_KEY = "ai-widget-messages";
+const MAX_HISTORY_ENTRIES = 5; // 5 user + 5 AI messages
 
 interface Property {
   image_url?: string;
@@ -34,7 +33,60 @@ interface Message {
   properties: Property[] | null;
 }
 
+interface HistoryEntry {
+  user_input: string;
+  agent_response: string;
+}
+
+const WELCOME_MESSAGE: Message = {
+  role: "ai",
+  text: "سلام، خوش اومدید. چطور می‌تونم کمکتون کنم؟",
+  properties: null,
+};
+
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
+
+const loadMessages = (): Message[] => {
+  if (typeof window === "undefined") return [WELCOME_MESSAGE];
+
+  try {
+    const stored = sessionStorage.getItem(CHAT_STORAGE_KEY);
+    if (!stored) return [WELCOME_MESSAGE];
+
+    const parsed = JSON.parse(stored) as Message[];
+    return Array.isArray(parsed) && parsed.length > 0
+      ? parsed
+      : [WELCOME_MESSAGE];
+  } catch {
+    return [WELCOME_MESSAGE];
+  }
+};
+
+const saveMessages = (msgs: Message[]) => {
+  try {
+    sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs));
+  } catch {
+    // quota exceeded or private browsing
+  }
+};
+
+const buildHistory = (msgs: Message[]): HistoryEntry[] => {
+  const history: HistoryEntry[] = [];
+  let startIndex = msgs[0]?.role === "ai" ? 1 : 0;
+
+  for (let i = startIndex; i < msgs.length; i += 2) {
+    const userMsg = msgs[i];
+    const aiMsg = msgs[i + 1];
+    if (userMsg?.role === "user" && aiMsg?.role === "ai") {
+      history.push({
+        user_input: userMsg.text,
+        agent_response: aiMsg.text,
+      });
+    }
+  }
+
+  return history.slice(-MAX_HISTORY_ENTRIES);
+};
 
 const formatPrice = (price?: string | number): string => {
   const num = parseInt(String(price ?? "0"));
@@ -162,19 +214,24 @@ const ATTENTION_ANIMATION_MS = 900;
 const AiWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isAttention, setIsAttention] = useState<boolean>(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "ai",
-      text: "سلام، خوش اومدید. چطور می‌تونم کمکتون کنم؟",
-      properties: null,
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
+  const [isStorageReady, setIsStorageReady] = useState(false);
   const [inputText, setInputText] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const attentionDelayRef = useRef<number>(ATTENTION_INITIAL_DELAY_MS);
   const attentionTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setMessages(loadMessages());
+    setIsStorageReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isStorageReady) return;
+    saveMessages(messages);
+  }, [messages, isStorageReady]);
 
   useEffect(() => {
     if (isOpen) {
@@ -233,6 +290,7 @@ const AiWidget: React.FC = () => {
     if (!inputText.trim()) return;
 
     const userText = inputText.trim();
+    const history = buildHistory(messages);
 
     setMessages((prev) => [
       ...prev,
@@ -244,15 +302,16 @@ const AiWidget: React.FC = () => {
     setTimeout(scrollToBottom, 50);
 
     try {
-    const response = await fetch(`${API_BASE_URL}/agent/response/`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    user_input: userText,
-  }),
-});
+      const response = await fetch(`${API_BASE_URL}/agent/response/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_input: userText,
+          history,
+        }),
+      });
 
       if (!response.ok)
         throw new Error(`HTTP error ${response.status}`);
