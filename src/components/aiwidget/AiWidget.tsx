@@ -44,6 +44,30 @@ const WELCOME_MESSAGE: Message = {
   properties: null,
 };
 
+type RecommendationCategory = "property_search" | "context";
+
+interface RecommendationPrompt {
+  category: RecommendationCategory;
+  label: string;
+  text: string;
+}
+
+const RECOMMENDATION_PROMPTS: RecommendationPrompt[] = [
+  {
+    category: "property_search",
+    label: "جستجوی ملک",
+    text: "به دنبال آپارتمان دو خوابه برای اجاره در دماوند هستم",
+  },
+  {
+    category: "context",
+    label: "راهنما و اطلاعات",
+    text: "پلتفرم گویا چه خدماتی در حوزه املاک ارائه می‌دهد؟",
+  },
+];
+
+const isInitialChat = (msgs: Message[]): boolean =>
+  msgs.length === 1 && msgs[0]?.role === "ai";
+
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
 const loadMessages = (): Message[] => {
@@ -285,11 +309,9 @@ const AiWidget: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSendMessage = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!inputText.trim()) return;
+  const sendMessage = async (userText: string) => {
+    if (!userText.trim() || isLoading) return;
 
-    const userText = inputText.trim();
     const history = buildHistory(messages);
 
     setMessages((prev) => [
@@ -352,6 +374,19 @@ const AiWidget: React.FC = () => {
     }
   };
 
+  const handleSendMessage = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!inputText.trim()) return;
+    await sendMessage(inputText.trim());
+  };
+
+  const handlePromptClick = (text: string) => {
+    void sendMessage(text);
+  };
+
+  const showRecommendationPrompts =
+    isInitialChat(messages) && !isLoading;
+
   return ( 
     <div className="absolute bottom-4 right-2 z-[9999] flex flex-col items-end font-sans sm:bottom-5 sm:right-5">
       {isOpen && (
@@ -404,6 +439,51 @@ const AiWidget: React.FC = () => {
                 </div>
               </div>
             ))}
+
+            {showRecommendationPrompts && (
+              <div className="mt-1 flex w-full flex-col gap-3 px-1">
+                <p className="text-center text-xs text-gray-500">
+                  پیشنهادات:
+                </p>
+                <div className="flex flex-col gap-2">
+                  {RECOMMENDATION_PROMPTS.map((prompt) => (
+                    <button
+                      key={prompt.category}
+                      type="button"
+                      onClick={() => handlePromptClick(prompt.text)}
+                      className={`group flex w-full cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-right text-sm shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${
+                        prompt.category === "property_search"
+                          ? "border-[#2a1b8d]/25 bg-[#2a1b8d]/5 hover:border-[#2a1b8d]/45 hover:bg-[#2a1b8d]/10 focus-visible:ring-[#2a1b8d]/40"
+                          : "border-sky-200 bg-sky-50 hover:border-sky-300 hover:bg-sky-100 focus-visible:ring-sky-300"
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <span
+                          className={`mb-1 block text-xs font-semibold ${
+                            prompt.category === "property_search"
+                              ? "text-[#2a1b8d]"
+                              : "text-sky-700"
+                          }`}
+                        >
+                          {prompt.label}
+                        </span>
+                        <span className="block leading-relaxed text-gray-700">
+                          {prompt.text}
+                        </span>
+                      </div>
+                      <ChevronLeft
+                        className={`size-4 shrink-0 opacity-35 transition-all duration-200 group-hover:opacity-70 group-hover:-translate-x-0.5 ${
+                          prompt.category === "property_search"
+                            ? "text-[#2a1b8d]"
+                            : "text-sky-600"
+                        }`}
+                        aria-hidden
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {isLoading && (
               <div className="flex w-full justify-end">
