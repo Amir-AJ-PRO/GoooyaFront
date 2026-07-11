@@ -22,7 +22,6 @@ interface Property {
   location?: string;
   measure?: string | number;
   rooms?: string | number;
-  floor?: string | number;
   facilities?: string;
   agent?: string;
   agent_phonenumber?: string;
@@ -175,10 +174,19 @@ interface PropertySwiperProps {
 
 const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
   const [current, setCurrent] = useState<number>(0);
+  const navLockUntilRef = useRef(0);
   const total = properties.length;
 
-  const prev = () => setCurrent((i) => (i - 1 + total) % total);
-  const next = () => setCurrent((i) => (i + 1) % total);
+  const navigate = (direction: 1 | -1) => (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const now = Date.now();
+    if (now < navLockUntilRef.current) return;
+    navLockUntilRef.current = now + 400;
+
+    setCurrent((i) => (i + direction + total) % total);
+  };
 
   const p = properties[current];
 
@@ -199,24 +207,24 @@ const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
       {total > 1 && (
         <button
           type="button"
-          onClick={prev}
+          onClick={navigate(-1)}
           aria-label="ملک قبلی"
-          className="shrink-0 transition-transform duration-200 hover:scale-125"
+          className="shrink-0 touch-manipulation p-2 transition-transform duration-200 hover:scale-110"
         >
-          <ChevronLeft />
+          <ChevronLeft className="pointer-events-none" />
         </button>
       )}
 
       <div className="relative min-w-0 flex-1">
         <CardWrapper
           {...cardLinkProps}
-          className={`relative flex h-[420px] w-full min-w-0 flex-col overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm ${
+          className={`relative flex h-[clamp(300px,52svh,420px)] w-full min-w-0 flex-col overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm ${
             p.property_url
               ? "cursor-pointer transition-shadow hover:shadow-md"
               : ""
           }`}
         >
-          <div className="relative h-[200px] w-full shrink-0 overflow-hidden bg-gray-100">
+          <div className="relative min-h-0 w-full flex-1 overflow-hidden bg-gray-100">
             {p.image_url ? (
               <Image
                 src={p.image_url}
@@ -232,59 +240,60 @@ const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
             )}
           </div>
 
-          <div
-            className={`min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-3 text-right ${
-              total > 1 ? "pb-9" : "pb-3"
-            }`}
-            dir="rtl"
-          >
-            <p className="mb-1 line-clamp-2 text-sm font-bold leading-snug text-gray-800">
-              {p.title}
-            </p>
-            <PropertyPricing property={p} />
+          <div className="flex w-full shrink-0 flex-col bg-white">
+            <div
+              className="min-w-0 max-h-[9.5rem] overflow-x-hidden overflow-y-auto p-3 text-right"
+              dir="rtl"
+            >
+              <p className="mb-1 line-clamp-2 text-sm font-bold leading-snug text-gray-800">
+                {p.title}
+              </p>
+              <PropertyPricing property={p} />
 
-            <div className="mb-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
-              {p.location && (
-                <span className="max-w-full break-words">📍 {p.location}</span>
+              <div className="mb-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
+                {p.location && (
+                  <span className="max-w-full break-words">📍 {p.location}</span>
+                )}
+                {p.measure && <span>📐 {p.measure} متر</span>}
+                {p.rooms && <span>🛏 {p.rooms} خواب</span>}
+              </div>
+
+              {p.facilities && (
+                <p className="mb-2 line-clamp-2 break-words text-xs text-gray-500">
+                  امکانات: {p.facilities}
+                </p>
               )}
-              {p.measure && <span>📐 {p.measure} متر</span>}
-              {p.rooms && <span>🛏 {p.rooms} خواب</span>}
-              {p.floor && <span>🏢 طبقه {p.floor}</span>}
+
+              {p.agent && (
+                <p className="break-words text-xs text-gray-500">
+                  {p.agent}
+                  {p.agent_phonenumber && ` · ${p.agent_phonenumber}`}
+                </p>
+              )}
             </div>
 
-            {p.facilities && (
-              <p className="mb-2 line-clamp-2 break-words text-xs text-gray-500">
-                امکانات: {p.facilities}
-              </p>
-            )}
-
-            {p.agent && (
-              <p className="break-words text-xs text-gray-500">
-                {p.agent}
-                {p.agent_phonenumber && ` · ${p.agent_phonenumber}`}
-              </p>
+            {total > 1 && (
+              <div
+                dir="ltr"
+                className="flex shrink-0 items-center justify-center border-t border-blue-50 bg-white py-2"
+              >
+                <span className="rounded-full bg-black/50 px-2.5 py-0.5 text-xs text-white">
+                  {current + 1} / {total}
+                </span>
+              </div>
             )}
           </div>
-
-          {total > 1 && (
-            <div
-              dir="ltr"
-              className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/50 px-2 py-0.5 text-xs text-white"
-            >
-              {current + 1} / {total}
-            </div>
-          )}
         </CardWrapper>
       </div>
 
       {total > 1 && (
         <button
           type="button"
-          onClick={next}
+          onClick={navigate(1)}
           aria-label="ملک بعدی"
-          className="shrink-0 transition-transform duration-200 hover:scale-125"
+          className="shrink-0 touch-manipulation p-2 transition-transform duration-200 hover:scale-110"
         >
-          <ChevronRight />
+          <ChevronRight className="pointer-events-none" />
         </button>
       )}
     </div>
