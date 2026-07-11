@@ -133,19 +133,25 @@ const PropertyPricing: React.FC<{ property: Property }> = ({ property }) => {
 
   if (showMortgage || showRent) {
     return (
-      <div className="mb-2 space-y-1.5">
+      <div
+        className={`mb-2 ${
+          showMortgage && showRent ? "grid grid-cols-2 gap-2" : ""
+        }`}
+      >
         {showMortgage && (
           <div>
-            <p className="text-xs text-gray-500">رهن</p>
-            <p className="text-xs text-blue-700 font-semibold">
+            <p className="text-[10px] text-gray-500 leading-tight">رهن</p>
+            <p className="text-xs text-blue-700 font-semibold leading-snug">
               {formatPrice(property.mortgage)}
             </p>
           </div>
         )}
         {showRent && (
           <div>
-            <p className="text-xs text-gray-500">اجاره (ماهانه)</p>
-            <p className="text-xs text-blue-700 font-semibold">
+            <p className="text-[10px] text-gray-500 leading-tight">
+              اجاره (ماهانه)
+            </p>
+            <p className="text-xs text-blue-700 font-semibold leading-snug">
               {formatPrice(property.rent)}
             </p>
           </div>
@@ -185,83 +191,101 @@ const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
       }
     : {};
 
-  return ( 
-    <div className="relative w-full mt-2 min-w-[300px] max-w-[300px]">
-      <CardWrapper
-        {...cardLinkProps}
-        className={`relative block w-full rounded-xl border max-h-[350px] min-h-[350px] border-blue-100 shadow-sm bg-white overflow-hidden ${
-          p.property_url
-            ? "cursor-pointer transition-shadow hover:shadow-md"
-            : ""
-        }`}
-      >
-        <div className="relative w-full h-40 overflow-hidden">
-          {p.image_url ? (
-            <Image
-              src={p.image_url}
-              alt={p.title}
-              fill
-              className="object-cover"
-              unoptimized
-            />
-          ) : (
-            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
-              بدون تصویر
+  return (
+    <div
+      dir="ltr"
+      className="mt-2 flex w-full min-w-0 max-w-full items-center gap-1"
+    >
+      {total > 1 && (
+        <button
+          type="button"
+          onClick={prev}
+          aria-label="ملک قبلی"
+          className="shrink-0 transition-transform duration-200 hover:scale-125"
+        >
+          <ChevronLeft />
+        </button>
+      )}
+
+      <div className="relative min-w-0 flex-1">
+        <CardWrapper
+          {...cardLinkProps}
+          className={`relative flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm ${
+            p.property_url
+              ? "cursor-pointer transition-shadow hover:shadow-md"
+              : ""
+          }`}
+        >
+          <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-gray-100">
+            {p.image_url ? (
+              <Image
+                src={p.image_url}
+                alt={p.title}
+                fill
+                className="object-contain"
+                unoptimized
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">
+                بدون تصویر
+              </div>
+            )}
+          </div>
+
+          <div
+            className={`min-w-0 overflow-x-hidden p-3 text-right ${
+              total > 1 ? "pb-9" : "pb-3"
+            }`}
+            dir="rtl"
+          >
+            <p className="mb-1 line-clamp-2 text-sm font-bold leading-snug text-gray-800">
+              {p.title}
+            </p>
+            <PropertyPricing property={p} />
+
+            <div className="mb-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
+              {p.location && (
+                <span className="max-w-full break-words">📍 {p.location}</span>
+              )}
+              {p.measure && <span>📐 {p.measure} متر</span>}
+              {p.rooms && <span>🛏 {p.rooms} خواب</span>}
+              {p.floor && <span>🏢 طبقه {p.floor}</span>}
+            </div>
+
+            {p.facilities && (
+              <p className="mb-2 line-clamp-2 break-words text-xs text-gray-500">
+                امکانات: {p.facilities}
+              </p>
+            )}
+
+            {p.agent && (
+              <p className="break-words text-xs text-gray-500">
+                {p.agent}
+                {p.agent_phonenumber && ` · ${p.agent_phonenumber}`}
+              </p>
+            )}
+          </div>
+
+          {total > 1 && (
+            <div
+              dir="ltr"
+              className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/50 px-2 py-0.5 text-xs text-white"
+            >
+              {current + 1} / {total}
             </div>
           )}
-        </div>
-
-        <div className="p-3 text-right" dir="rtl">
-          <p className="font-bold text-sm text-gray-800 leading-snug mb-1">
-            {p.title}
-          </p>
-          <PropertyPricing property={p} />
-
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600 mb-2">
-            {p.location && <span>📍 {p.location}</span>}
-            {p.measure && <span>📐 {p.measure} متر</span>}
-            {p.rooms && <span>🛏 {p.rooms} خواب</span>}
-            {p.floor && <span>🏢 طبقه {p.floor}</span>}
-          </div>
-
-          {p.facilities && (
-            <p className="text-xs text-gray-500 mb-2">
-              امکانات: {p.facilities}
-            </p>
-          )}
-
-          {p.agent && (
-            <p className="text-xs text-gray-500">
-              {p.agent}
-              {p.agent_phonenumber && ` · ${p.agent_phonenumber}`}
-            </p>
-          )}
-        </div>
-
-        {total > 1 && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full z-10">
-            {total} / {current + 1}
-          </div>
-        )}
-      </CardWrapper>
+        </CardWrapper>
+      </div>
 
       {total > 1 && (
-        <>
-          <button
-            type="button"
-            onClick={next}
-            className="absolute -right-[30px] top-1/2 -translate-y-1/2 transition-transform duration-200 hover:scale-125"
-          >
-            <ChevronRight />
-          </button>
-          <button
-            type="button"
-            onClick={prev}
-            className="absolute -left-[30px] top-1/2 -translate-y-1/2 transition-transform duration-200 hover:scale-125"
-          >
-            <ChevronLeft />
-          </button>
-        </>
+        <button
+          type="button"
+          onClick={next}
+          aria-label="ملک بعدی"
+          className="shrink-0 transition-transform duration-200 hover:scale-125"
+        >
+          <ChevronRight />
+        </button>
       )}
     </div>
   );
@@ -445,7 +469,7 @@ const AiWidget: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex flex-1 flex-col gap-3 overflow-y-auto bg-gray-50 p-4">
+          <div className="flex flex-1 flex-col gap-3 overflow-x-hidden overflow-y-auto bg-gray-50 p-4">
             {messages.map((msg, index) => (
               <div
                 key={index}
@@ -455,7 +479,13 @@ const AiWidget: React.FC = () => {
                     : "justify-end"
                 }`}
               >
-                <div className="max-w-[88%] flex flex-col gap-1">
+                <div
+                  className={`flex min-w-0 flex-col gap-1 ${
+                    msg.role === "ai" && msg.properties
+                      ? "w-full max-w-full"
+                      : "max-w-[88%]"
+                  }`}
+                >
                   <div
                     className={`break-words rounded-2xl px-4 py-2 text-sm leading-relaxed ${
                       msg.role === "user"
@@ -467,10 +497,8 @@ const AiWidget: React.FC = () => {
                   </div>
 
                   {msg.role === "ai" && msg.properties && (
-                    <div className="px-6">
-                      <PropertySwiper
-                        properties={msg.properties}
-                      />
+                    <div className="min-w-0 w-full max-w-full">
+                      <PropertySwiper properties={msg.properties} />
                     </div>
                   )}
                 </div>
