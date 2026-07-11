@@ -210,13 +210,13 @@ const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
       <div className="relative min-w-0 flex-1">
         <CardWrapper
           {...cardLinkProps}
-          className={`relative flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm ${
+          className={`relative flex h-[420px] w-full min-w-0 flex-col overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm ${
             p.property_url
               ? "cursor-pointer transition-shadow hover:shadow-md"
               : ""
           }`}
         >
-          <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-gray-100">
+          <div className="relative h-[200px] w-full shrink-0 overflow-hidden bg-gray-100">
             {p.image_url ? (
               <Image
                 src={p.image_url}
@@ -233,7 +233,7 @@ const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
           </div>
 
           <div
-            className={`min-w-0 overflow-x-hidden p-3 text-right ${
+            className={`min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-3 text-right ${
               total > 1 ? "pb-9" : "pb-3"
             }`}
             dir="rtl"
