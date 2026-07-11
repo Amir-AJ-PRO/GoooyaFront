@@ -17,6 +17,8 @@ interface Property {
   image_url?: string;
   title: string;
   price?: string | number;
+  mortgage?: string | number;
+  rent?: string | number;
   location?: string;
   measure?: string | number;
   rooms?: string | number;
@@ -122,6 +124,43 @@ const formatPrice = (price?: string | number): string => {
   return `${num.toLocaleString("fa-IR")} تومان`;
 };
 
+const hasValue = (value?: string | number): boolean =>
+  value !== undefined && value !== null && String(value).trim() !== "";
+
+const PropertyPricing: React.FC<{ property: Property }> = ({ property }) => {
+  const showMortgage = hasValue(property.mortgage);
+  const showRent = hasValue(property.rent);
+
+  if (showMortgage || showRent) {
+    return (
+      <div className="mb-2 space-y-1.5">
+        {showMortgage && (
+          <div>
+            <p className="text-xs text-gray-500">رهن</p>
+            <p className="text-xs text-blue-700 font-semibold">
+              {formatPrice(property.mortgage)}
+            </p>
+          </div>
+        )}
+        {showRent && (
+          <div>
+            <p className="text-xs text-gray-500">اجاره (ماهانه)</p>
+            <p className="text-xs text-blue-700 font-semibold">
+              {formatPrice(property.rent)}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <p className="text-xs text-blue-700 font-semibold mb-2">
+      {formatPrice(property.price)}
+    </p>
+  );
+};
+
 // ─── PROPERTY SWIPER ──────────────────────────────────────────────────────────
 
 interface PropertySwiperProps {
@@ -176,9 +215,7 @@ const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
           <p className="font-bold text-sm text-gray-800 leading-snug mb-1">
             {p.title}
           </p>
-          <p className="text-xs text-blue-700 font-semibold mb-2">
-            {formatPrice(p.price)}
-          </p>
+          <PropertyPricing property={p} />
 
           <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600 mb-2">
             {p.location && <span>📍 {p.location}</span>}
