@@ -10,6 +10,7 @@ const ContentSecurityPolicy = `
   connect-src 'self'
     https://api.goooya.ir
     https://shahrgpt.goooya.ir
+    https://shahrgpt.com
     http://localhost:8000
     https://localhost:7255
     http://127.0.0.1:7070

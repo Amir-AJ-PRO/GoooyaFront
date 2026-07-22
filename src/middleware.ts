@@ -35,12 +35,13 @@ export async function middleware(request: NextRequest) {
 
   const agentOrigin =
     tryGetOrigin(process.env.NEXT_PUBLIC_AGENT_API_URL) ||
-    'https://shahrgpt.goooya.ir';
+    'https://shahrgpt.com';
 
   const connectSources = [
     "'self'",
     'https://api.goooya.ir',
     'https://shahrgpt.goooya.ir',
+    'https://shahrgpt.com',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'http://localhost:8020',
