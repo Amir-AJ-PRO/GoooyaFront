@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 
 // const API_BASE_URL = "http://127.0.0.1:8020";
-const API_BASE_URL = "https://shahrgpt.goooya.ir";
+const API_BASE_URL = "https://shahrgpt.com";
 
 const CHAT_STORAGE_KEY = "ai-widget-messages";
 const MAX_HISTORY_ENTRIES = 5; // 5 user + 5 AI messages
@@ -218,7 +218,7 @@ const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
       <div className="relative min-w-0 flex-1">
         <CardWrapper
           {...cardLinkProps}
-          className={`relative flex h-[clamp(300px,52svh,420px)] w-full min-w-0 flex-col overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm ${
+          className={`relative flex h-[clamp(320px,58svh,460px)] w-full min-w-0 flex-col overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm ${
             p.property_url
               ? "cursor-pointer transition-shadow hover:shadow-md"
               : ""
