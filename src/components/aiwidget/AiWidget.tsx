@@ -8,7 +8,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 
 // const API_BASE_URL = "http://127.0.0.1:8020";
-const API_BASE_URL = "https://shahrgpt.com";
+// Nginx proxies /api/* → Django (strips the /api prefix). Do not omit /api.
+const API_BASE_URL = "https://shahrgpt.com/api";
 
 const CHAT_STORAGE_KEY = "ai-widget-messages";
 const MAX_HISTORY_ENTRIES = 5; // 5 user + 5 AI messages
