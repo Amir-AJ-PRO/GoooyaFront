@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import AgentsPageClient from './AgentsPageClient';
 import { buildPageMetadata } from '@/lib/seo';
@@ -10,7 +11,11 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default function AgentsPage() {
-  return <AgentsPageClient />;
+  return (
+    <Suspense fallback={<div className="container mx-auto px-4 py-16 min-h-[40vh]" />}>
+      <AgentsPageClient />
+    </Suspense>
+  );
 }
 
 

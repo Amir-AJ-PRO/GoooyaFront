@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import AgentPublicProfileClient from './AgentPublicProfileClient';
@@ -90,7 +91,9 @@ export default async function AgentPublicProfilePage({ params }: Props) {
           ]}
         />
       )}
-      <AgentPublicProfileClient agentId={agentId} />
+      <Suspense fallback={<div className="container mx-auto px-4 py-16 min-h-[40vh]" />}>
+        <AgentPublicProfileClient agentId={agentId} />
+      </Suspense>
     </>
   );
 }

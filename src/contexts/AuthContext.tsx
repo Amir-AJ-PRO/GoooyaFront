@@ -89,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const record = asRecord(data);
     const name = pickDisplayName(record);
     return {
-      ...(record as BackendUserData),
+      ...(record as unknown as BackendUserData),
       id: String(record.id ?? record.phone ?? ''),
       email: typeof record.email === 'string' ? record.email : '',
       phone: typeof record.phone === 'string' ? record.phone : '',

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import PropertiesPageClient from './PropertiesPageClient';
 import JsonLd from '@/components/seo/JsonLd';
@@ -114,7 +115,9 @@ export default async function PropertiesPage({ searchParams }: Props) {
           ]),
         ]}
       />
-      <PropertiesPageClient />
+      <Suspense fallback={<div className="container mx-auto px-4 py-16 min-h-[40vh]" />}>
+        <PropertiesPageClient />
+      </Suspense>
     </>
   );
 }
