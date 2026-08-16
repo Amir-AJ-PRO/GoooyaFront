@@ -1,52 +1,58 @@
-import type { Metadata } from "next";
-import { Card } from "@/components/ui/card";
-import { MapPin, Building2, Target, Heart, Lightbulb, Mountain, Trees, Home as HomeIcon } from "lucide-react";
-import Image from "next/image";
+import type { Metadata } from 'next';
+import { Card } from '@/components/ui/card';
+import { MapPin, Building2, Target, Heart, Lightbulb, Mountain, Trees, Home as HomeIcon } from 'lucide-react';
+import Image from 'next/image';
+import JsonLd from '@/components/seo/JsonLd';
+import { breadcrumbJsonLd, buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: "درباره گویا - متخصص املاک شرق تهران",
-  description: "گویا، پلتفرم تخصصی املاک و مستغلات در شرق استان تهران، دماوند و پردیس. خرید، فروش و اجاره ملک با مشاوران محلی و متخصص.",
-  keywords: ["املاک شرق تهران", "املاک دماوند", "املاک پردیس", "مشاور املاک دماوند", "خرید خانه شرق تهران"],
-  openGraph: {
-    title: "درباره گویا - متخصص املاک شرق تهران",
-    description: "پلتفرم تخصصی املاک در دماوند، پردیس و شرق استان تهران",
-    images: [
-      {
-        url: "/assets/about_us_header.png",
-        width: 1200,
-        height: 630,
-        alt: "درباره گویا - املاک شرق تهران",
-      },
-    ],
-  },
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: 'درباره گویا؛ متخصص املاک شرق تهران',
+  description:
+    'گویا پلتفرم تخصصی املاک در دماوند، پردیس و شرق استان تهران است. خرید، فروش و اجاره ملک با مشاوران محلی و شناخت بازار منطقه.',
+  path: '/about',
+  image: '/assets/about_us_header.png',
+  imageAlt: 'درباره گویا - املاک شرق تهران',
+  keywords: [
+    'درباره گویا',
+    'املاک شرق تهران',
+    'املاک دماوند',
+    'املاک پردیس',
+    'مشاور املاک دماوند',
+  ],
+});
 
 export default function About() {
   const coverageAreas = [
-    { 
-      icon: Mountain, 
-      name: "دماوند",
-      description: "متخصص در املاک مسکونی، ویلایی و باغ‌ویلا در منطقه دماوند"
+    {
+      icon: Mountain,
+      name: 'دماوند',
+      description: 'متخصص در املاک مسکونی، ویلایی و باغ‌ویلا در منطقه دماوند',
     },
-    { 
-      icon: Building2, 
-      name: "پردیس",
-      description: "خدمات املاک آپارتمانی و مجتمع‌های مسکونی پردیس"
+    {
+      icon: Building2,
+      name: 'پردیس',
+      description: 'خدمات املاک آپارتمانی و مجتمع‌های مسکونی پردیس',
     },
-    { 
-      icon: Trees, 
-      name: "شرق تهران",
-      description: "پوشش کامل مناطق شرقی استان تهران و حومه"
+    {
+      icon: Trees,
+      name: 'شرق تهران',
+      description: 'پوشش کامل مناطق شرقی استان تهران و حومه',
     },
   ];
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: 'خانه', path: '/' },
+          { name: 'درباره ما', path: '/about' },
+        ])}
+      />
       {/* Hero Section with Image */}
       <section className="relative h-[450px] md:h-[550px] overflow-hidden">
         <Image
           src="/assets/about_us_header.png"
-          alt="گویا - املاک شرق تهران"
+          alt="گویا - املاک شرق تهران، دماوند و پردیس"
           fill
           className="object-cover"
           priority
@@ -75,7 +81,7 @@ export default function About() {
             <div className="order-2 lg:order-1">
               <Image
                 src="/assets/team-photo-1.jpg"
-                alt="تیم گویا - مشاوران و متخصصان املاک"
+                alt="تیم گویا - مشاوران و متخصصان املاک شرق تهران"
                 width={600}
                 height={400}
                 className="rounded-2xl shadow-large w-full object-cover"
@@ -90,15 +96,15 @@ export default function About() {
                 شریک مطمئن شما در شرق تهران
               </h2>
               <p className="text-foreground text-lg leading-relaxed mb-4">
-                <span className="font-bold text-primary">گویا</span> با درک عمیق از بازار املاک <span className="font-semibold">دماوند، پردیس و شرق استان تهران</span>، 
+                <span className="font-bold text-primary">گویا</span> با درک عمیق از بازار املاک <span className="font-semibold">دماوند، پردیس و شرق استان تهران</span>،
                 پلتفرمی است که به‌طور تخصصی روی این مناطق زیبا و پرپتانسیل تمرکز دارد.
               </p>
               <p className="text-muted-foreground text-lg leading-relaxed mb-4">
-                ما می‌دانیم که خرید خانه در کنار طبیعت دلبر دماوند یا زندگی در شهرهای نوساز مثل پردیس، 
+                ما می‌دانیم که خرید خانه در کنار طبیعت دلبر دماوند یا زندگی در شهرهای نوساز مثل پردیس،
                 نیازمند مشاوران محلی با تجربه است که بازار منطقه را به خوبی بشناسند.
               </p>
               <p className="text-muted-foreground text-lg leading-relaxed mb-4">
-                <span className="font-semibold text-foreground">هدف ما</span> این است که با ارائه پلتفرمی مدرن و کاربرپسند، 
+                <span className="font-semibold text-foreground">هدف ما</span> این است که با ارائه پلتفرمی مدرن و کاربرپسند،
                 فرآیند خرید، فروش و اجاره املاک در شرق تهران را آسان، سریع و شفاف کنیم.
               </p>
               <div className="bg-secondary/30 rounded-xl p-4 border-r-4 border-primary">
@@ -157,9 +163,9 @@ export default function About() {
                 <div className="flex-1">
                   <h4 className="font-bold text-xl mb-3">چرا تمرکز بر شرق تهران؟</h4>
                   <p className="text-muted-foreground text-base leading-relaxed">
-                    شرق استان تهران با طبیعت بکر دماوند، رشد سریع پردیس و توسعه زیرساخت‌ها، 
-                    یکی از پرطرفدارترین مناطق برای خرید ملک و سرمایه‌گذاری است. 
-                    ما با شناخت کامل از ویژگی‌های منحصربه‌فرد هر منطقه، 
+                    شرق استان تهران با طبیعت بکر دماوند، رشد سریع پردیس و توسعه زیرساخت‌ها،
+                    یکی از پرطرفدارترین مناطق برای خرید ملک و سرمایه‌گذاری است.
+                    ما با شناخت کامل از ویژگی‌های منحصربه‌فرد هر منطقه،
                     می‌توانیم بهترین گزینه‌ها را برای شما پیدا کنیم.
                   </p>
                 </div>
@@ -187,7 +193,7 @@ export default function About() {
               </div>
               <h3 className="text-2xl font-bold mb-4 text-center">شفافیت</h3>
               <p className="text-muted-foreground text-center leading-relaxed">
-                ارائه اطلاعات دقیق و کامل از هر ملک، بدون پنهان‌کاری. 
+                ارائه اطلاعات دقیق و کامل از هر ملک، بدون پنهان‌کاری.
                 قیمت‌ها، مشخصات و شرایط به‌صورت واضح در اختیار شماست.
               </p>
             </Card>
@@ -199,7 +205,7 @@ export default function About() {
               </div>
               <h3 className="text-2xl font-bold mb-4 text-center">اعتماد</h3>
               <p className="text-muted-foreground text-center leading-relaxed">
-                ایجاد رابطه‌ای بلندمدت و مبتنی بر اعتماد با مشتریان، 
+                ایجاد رابطه‌ای بلندمدت و مبتنی بر اعتماد با مشتریان،
                 مشاوران و همکاران ما اولویت اصلی ماست.
               </p>
             </Card>
@@ -211,7 +217,7 @@ export default function About() {
               </div>
               <h3 className="text-2xl font-bold mb-4 text-center">تخصص محلی</h3>
               <p className="text-muted-foreground text-center leading-relaxed">
-                شناخت عمیق از بازار محلی و ویژگی‌های هر منطقه، 
+                شناخت عمیق از بازار محلی و ویژگی‌های هر منطقه،
                 ما را قادر می‌سازد بهترین مشاوره را به شما ارائه دهیم.
               </p>
             </Card>
@@ -226,7 +232,7 @@ export default function About() {
             <div>
               <h2 className="text-3xl md:text-4xl font-bold mb-6">چرا گویا را انتخاب کنیم؟</h2>
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-                ترکیبی از تکنولوژی مدرن و تخصص محلی، 
+                ترکیبی از تکنولوژی مدرن و تخصص محلی،
                 گویا را به بهترین انتخاب برای املاک در شرق تهران تبدیل کرده است.
               </p>
               <div className="space-y-4">
@@ -276,19 +282,18 @@ export default function About() {
                 </div>
               </div>
             </div>
-             <div className="order-first lg:order-last">
-               <Image
-                 src="/assets/team-photo-2.jpg"
-                 alt="جلسه تیم گویا - برنامه‌ریزی و مشاوره"
-                 width={600}
-                 height={500}
-                 className="rounded-2xl shadow-large w-full object-cover"
-               />
-             </div>
+            <div className="order-first lg:order-last">
+              <Image
+                src="/assets/team-photo-2.jpg"
+                alt="جلسه تیم گویا - برنامه‌ریزی و مشاوره املاک"
+                width={600}
+                height={500}
+                className="rounded-2xl shadow-large w-full object-cover"
+              />
+            </div>
           </div>
         </div>
       </section>
     </>
   );
 }
-

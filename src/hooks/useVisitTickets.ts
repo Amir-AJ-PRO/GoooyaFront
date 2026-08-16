@@ -1,12 +1,22 @@
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthenticatedFetch } from '@/hooks/useAuthenticatedFetch';
-import { API_BASE_URL } from '@/lib/constants';
 import { 
   CreateVisitTicketPayload, 
   CreateVisitTicketResponse, 
   DuplicateVisitTicketError 
 } from '@/types/property';
+
+function normalizeVisitTicketResponse(data: Record<string, unknown>): CreateVisitTicketResponse {
+  const payload = (data.data ?? data) as Record<string, unknown>;
+  return {
+    ...payload,
+    message:
+      (typeof data.message === 'string' ? data.message : undefined) ??
+      (typeof payload.message === 'string' ? payload.message : undefined) ??
+      'درخواست بازدید با موفقیت ثبت شد',
+  };
+}
 
 /**
  * Hook برای مدیریت تیکت‌های بازدید ملک - نسخه امن
@@ -28,7 +38,7 @@ export const useVisitTickets = () => {
         throw new Error('نیاز به ورود به حساب کاربری دارید');
       }
 
-      const response = await authenticatedFetch(`${API_BASE_URL}/api/properties/visit-tickets/create/`, {
+      const response = await authenticatedFetch('/api/properties/visit-tickets/create/', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
@@ -65,7 +75,7 @@ export const useVisitTickets = () => {
         throw new Error(errorMessage);
       }
 
-      return data;
+      return normalizeVisitTicketResponse(data);
     },
   });
 
@@ -85,7 +95,7 @@ export const useVisitTickets = () => {
       // Encode Persian characters for URL
       const encodedSlug = encodeURIComponent(propertySlug);
 
-      const response = await authenticatedFetch(`${API_BASE_URL}/api/properties/${encodedSlug}/visit/`, {
+      const response = await authenticatedFetch(`/api/properties/${encodedSlug}/visit/`, {
         method: 'POST',
       });
 
@@ -121,7 +131,7 @@ export const useVisitTickets = () => {
         throw new Error(errorMessage);
       }
 
-      return data;
+      return normalizeVisitTicketResponse(data);
     },
   });
 

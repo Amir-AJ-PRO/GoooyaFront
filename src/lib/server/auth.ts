@@ -53,11 +53,7 @@ export async function setSession(
   cookieStore.set('session_token', accessToken, COOKIE_OPTIONS);
   cookieStore.set('refresh_token', refreshToken, COOKIE_OPTIONS);
   
-  // ذخیره اطلاعات session (غیرحساس)
-  cookieStore.set('session_data', JSON.stringify(sessionData), {
-    ...COOKIE_OPTIONS,
-    httpOnly: false, // قابل خواندن برای client
-  });
+  cookieStore.set('session_data', JSON.stringify(sessionData), COOKIE_OPTIONS);
   
   // تولید CSRF token
   const csrfToken = generateCsrfToken();

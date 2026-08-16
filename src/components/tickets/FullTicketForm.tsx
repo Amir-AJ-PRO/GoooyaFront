@@ -12,9 +12,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Send, CheckCircle, X, ImageIcon } from 'lucide-react';
-import Image from 'next/image';
-import { FullTicketPayload } from '@/services/ticketService';
+import { Loader2, Send, CheckCircle } from 'lucide-react';
+import ImageUploader from '@/components/forms/ImageUploader';
+import {
+  FullTicketPayload,
+  normalizeMeasureValue,
+  parseOptionalIntField,
+} from '@/services/ticketService';
+import { toast } from 'sonner';
 
 interface FullTicketFormProps {
   onSuccess?: () => void;
@@ -48,55 +53,46 @@ export default function FullTicketForm({ onSuccess }: FullTicketFormProps) {
     formData.city || undefined
   );
 
-  const handleChange = (field: keyof FullTicketPayload, value: any) => {
+  const handleChange = (field: keyof FullTicketPayload, value: unknown) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleImageAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length + images.length > 10) {
-      alert('حداکثر 10 تصویر می‌توانید آپلود کنید');
-      return;
-    }
-    setImages(prev => [...prev, ...files]);
-  };
-
-  const handleImageRemove = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-    if (mainImageIndex >= index && mainImageIndex > 0) {
-      setMainImageIndex(prev => prev - 1);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // بررسی اینکه حداقل یک تصویر آپلود شده باشد
     if (images.length === 0) {
-      alert('لطفاً حداقل یک تصویر برای ملک آپلود کنید');
+      toast.error('لطفاً حداقل یک تصویر برای ملک آپلود کنید');
+      return;
+    }
+
+    if (!formData.title?.trim() || !formData.property_type || !formData.city) {
+      toast.error('عنوان، نوع ملک و شهر الزامی هستند');
+      return;
+    }
+
+    const measureResult = normalizeMeasureValue(formData.measure);
+    if (!measureResult.ok) {
+      toast.error(measureResult.error);
       return;
     }
     
+    // مطابق مستندات API: title, property_type, city, measure, transaction_type الزامی‌اند
     const payload: FullTicketPayload = {
-      title: formData.title!,
-      property_type: formData.property_type!,
-      city: formData.city!,
-      measure: formData.measure!,
-      transaction_type: formData.transaction_type!,
+      title: formData.title.trim(),
+      property_type: formData.property_type,
+      city: formData.city,
+      measure: measureResult.value,
+      transaction_type: formData.transaction_type || 'sale',
       location: formData.location,
       address: formData.address,
-      rooms: formData.rooms || 0,
-      price: formData.price,
-      mortgage: formData.mortgage,
-      rent: formData.rent,
+      rooms: parseOptionalIntField(formData.rooms) ?? 0,
+      price: parseOptionalIntField(formData.price),
+      mortgage: parseOptionalIntField(formData.mortgage),
+      rent: parseOptionalIntField(formData.rent),
       description: formData.description,
-      // اطلاعات تماس
-      full_name: formData.full_name,
-      phone: formData.phone,
-      // Features
       has_parking: formData.has_parking,
       has_storage: formData.has_storage,
       has_elevator: formData.has_elevator,
@@ -105,12 +101,9 @@ export default function FullTicketForm({ onSuccess }: FullTicketFormProps) {
       has_security: formData.has_security,
       has_gas: formData.has_gas,
       has_electricity: formData.has_electricity,
+      uploaded_images: images,
+      main_image_index: mainImageIndex,
     };
-
-    if (images.length > 0) {
-      payload.uploaded_images = images;
-      payload.main_image_index = mainImageIndex;
-    }
 
     try {
       await submitMutation.mutateAsync(payload);
@@ -314,16 +307,27 @@ export default function FullTicketForm({ onSuccess }: FullTicketFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="measure">متراژ *</Label>
+              <Label htmlFor="measure">متراژ (متر) *</Label>
               <Input
                 id="measure"
-                type="number"
-                step="0.01"
-                value={formData.measure || ''}
-                onChange={(e) => handleChange('measure', parseFloat(e.target.value))}
-                placeholder="120.5"
+                type="text"
+                inputMode="decimal"
+                value={
+                  formData.measure === undefined || formData.measure === null
+                    ? ''
+                    : String(formData.measure)
+                }
+                onChange={(e) => {
+                  const next = e.target.value.replace(/[^\d.]/g, '');
+                  const dotCount = (next.match(/\./g) || []).length;
+                  handleChange('measure', dotCount > 1 ? formData.measure ?? '' : next);
+                }}
+                placeholder="120"
                 required
               />
+              <p className="text-xs text-muted-foreground">
+                متراژ ملک به متر (حداکثر ۸ رقم، مثلاً 120 یا 85.5)
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -332,8 +336,11 @@ export default function FullTicketForm({ onSuccess }: FullTicketFormProps) {
                 id="rooms"
                 type="number"
                 min="0"
-                value={formData.rooms || 0}
-                onChange={(e) => handleChange('rooms', parseInt(e.target.value))}
+                value={formData.rooms ?? ''}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  handleChange('rooms', raw === '' ? undefined : parseInt(raw, 10));
+                }}
               />
             </div>
           </div>
@@ -369,8 +376,11 @@ export default function FullTicketForm({ onSuccess }: FullTicketFormProps) {
               <Input
                 id="price"
                 type="number"
-                value={formData.price || ''}
-                onChange={(e) => handleChange('price', parseInt(e.target.value))}
+                value={formData.price ?? ''}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  handleChange('price', raw === '' ? undefined : parseInt(raw, 10));
+                }}
                 placeholder="5000000000"
               />
             </div>
@@ -381,8 +391,11 @@ export default function FullTicketForm({ onSuccess }: FullTicketFormProps) {
                 <Input
                   id="mortgage"
                   type="number"
-                  value={formData.mortgage || ''}
-                  onChange={(e) => handleChange('mortgage', parseInt(e.target.value))}
+                  value={formData.mortgage ?? ''}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    handleChange('mortgage', raw === '' ? undefined : parseInt(raw, 10));
+                  }}
                   placeholder="500000000"
                 />
               </div>
@@ -391,8 +404,11 @@ export default function FullTicketForm({ onSuccess }: FullTicketFormProps) {
                 <Input
                   id="rent"
                   type="number"
-                  value={formData.rent || ''}
-                  onChange={(e) => handleChange('rent', parseInt(e.target.value))}
+                  value={formData.rent ?? ''}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    handleChange('rent', raw === '' ? undefined : parseInt(raw, 10));
+                  }}
                   placeholder="10000000"
                 />
               </div>
@@ -448,7 +464,7 @@ export default function FullTicketForm({ onSuccess }: FullTicketFormProps) {
         </CardContent>
       </Card>
 
-      {/* تصاویر */}
+      {/* تصاویر — پیش‌نمایش با data URL (سازگار با CSP، بدون blob:) */}
       <Card dir="rtl">
         <CardHeader>
           <CardTitle>تصاویر *</CardTitle>
@@ -457,55 +473,16 @@ export default function FullTicketForm({ onSuccess }: FullTicketFormProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 text-right">
-          {images.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {images.map((file, index) => (
-                <div key={index} className="relative group">
-                  <div 
-                    className={`rounded-lg overflow-hidden border-2 cursor-pointer ${
-                      mainImageIndex === index ? 'border-blue-500' : 'border-transparent'
-                    }`}
-                    onClick={() => setMainImageIndex(index)}
-                  >
-                    <Image
-                      src={URL.createObjectURL(file)}
-                      alt={`تصویر ${index + 1}`}
-                      width={200}
-                      height={150}
-                      className="object-cover w-full h-32"
-                    />
-                  </div>
-                  {mainImageIndex === index && (
-                    <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                      اصلی
-                    </div>
-                  )}
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="absolute top-2 left-2"
-                    onClick={() => handleImageRemove(index)}
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div>
-            <Input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageAdd}
-              className="cursor-pointer"
-            />
-            <p className="text-sm text-muted-foreground mt-2 text-right">
-              می‌توانید تا 10 تصویر انتخاب کنید
-            </p>
-          </div>
+          <ImageUploader
+            images={images}
+            mainImageIndex={mainImageIndex}
+            onChange={(nextImages, nextMain) => {
+              setImages(nextImages);
+              setMainImageIndex(nextMain);
+            }}
+            maxImages={10}
+            required
+          />
         </CardContent>
       </Card>
 

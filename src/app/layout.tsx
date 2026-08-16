@@ -1,57 +1,68 @@
-import type { Metadata } from "next";
-import { Providers } from "@/components/Providers";
-import DevLoginHelper from "@/components/DevLoginHelper";
-import "./globals.css";
+import type { Metadata, Viewport } from 'next';
+import { Providers } from '@/components/Providers';
+import DevLoginHelper from '@/components/DevLoginHelper';
+import JsonLd from '@/components/seo/JsonLd';
+import './globals.css';
 import localFont from 'next/font/local';
-
-  
-
-
+import {
+  DEFAULT_DESCRIPTION,
+  DEFAULT_KEYWORDS,
+  DEFAULT_OG_ALT,
+  DEFAULT_OG_IMAGE,
+  DEFAULT_TITLE,
+  SITE_NAME,
+  absoluteUrl,
+  getSiteUrl,
+  organizationJsonLd,
+  websiteJsonLd,
+} from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: "گویا - پلتفرم املاک فارسی",
-  description: "بهترین پلتفرم برای خرید، فروش و اجاره املاک در ایران. جستجو و مشاهده هزاران آگهی املاک با امکانات پیشرفته.",
-  keywords: ["املاک", "خرید خانه", "فروش ملک", "اجاره آپارتمان", "مشاور املاک", "پلتفرم املاک"],
-  authors: [{ name: "گویا" }],
+  metadataBase: new URL(getSiteUrl()),
+  title: {
+    default: DEFAULT_TITLE,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: DEFAULT_DESCRIPTION,
+  keywords: DEFAULT_KEYWORDS,
+  authors: [{ name: SITE_NAME, url: getSiteUrl() }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  applicationName: SITE_NAME,
+  category: 'real estate',
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: [
-      { url: "/logo.png" },
-      { url: "/logo.png", sizes: "32x32", type: "image/png" },
-      { url: "/logo.png", sizes: "16x16", type: "image/png" },
+      { url: '/logo.png' },
+      { url: '/logo.png', sizes: '32x32', type: 'image/png' },
+      { url: '/logo.png', sizes: '16x16', type: 'image/png' },
     ],
-    apple: [
-      { url: "/logo.png" },
-      { url: "/logo.png", sizes: "180x180", type: "image/png" },
-    ],
-    shortcut: ["/logo.png"],
+    apple: [{ url: '/logo.png', sizes: '180x180', type: 'image/png' }],
+    shortcut: ['/logo.png'],
   },
   openGraph: {
-    type: "website",
-    locale: "fa_IR",
-    url: "https://gooya.ir",
-    siteName: "گویا",
-    title: "گویا - پلتفرم املاک فارسی",
-    description: "بهترین پلتفرم برای خرید، فروش و اجاره املاک در ایران",
+    type: 'website',
+    locale: 'fa_IR',
+    url: getSiteUrl(),
+    siteName: SITE_NAME,
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
     images: [
       {
-        url: "/logo.png",
-        width: 512,
-        height: 512,
-        alt: "لوگوی گویا",
-      },
-      {
-        url: "/assets/hero-home.jpg",
+        url: DEFAULT_OG_IMAGE,
         width: 1200,
         height: 630,
-        alt: "گویا - پلتفرم املاک فارسی",
+        alt: DEFAULT_OG_ALT,
       },
     ],
   },
   twitter: {
-    card: "summary_large_image",
-    title: "گویا - پلتفرم املاک فارسی",
-    description: "بهترین پلتفرم برای خرید، فروش و اجاره املاک در ایران",
-    images: ["/logo.png"],
+    card: 'summary_large_image',
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: [absoluteUrl(DEFAULT_OG_IMAGE)],
   },
   robots: {
     index: true,
@@ -59,30 +70,41 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
     },
   },
-  verification: {
-    google: "google-site-verification-code",
-  },
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? {
+        verification: {
+          google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+        },
+      }
+    : {}),
 };
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#4ECDC4',
+};
+
 const iranSans = localFont({
   src: [
     {
-      path: "../../public/Iransans/IRANSansX-Regular.ttf",
-      weight: "400",
-      style: "normal",
+      path: '../../public/Iransans/IRANSansX-Regular.ttf',
+      weight: '400',
+      style: 'normal',
     },
     {
-      path: "../../public/Iransans/IRANSansX-Bold.ttf",
-      weight: "700",
-      style: "normal",
+      path: '../../public/Iransans/IRANSansX-Bold.ttf',
+      weight: '700',
+      style: 'normal',
     },
   ],
-  variable: "--font-iransans",
-  display: "swap",
+  variable: '--font-iransans',
+  display: 'swap',
 });
 
 export default function RootLayout({
@@ -92,15 +114,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl" className={`${iranSans.variable} ${iranSans.className}`}>
-      <head>
-   
-      </head>
-      <body className="antialiased   ">
+      <body className="antialiased">
+        <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
         <Providers>
           <DevLoginHelper />
-          <div className="min-h-screen flex flex-col   ">
-            {children}
-          </div>
+          <div className="min-h-screen flex flex-col">{children}</div>
         </Providers>
       </body>
     </html>

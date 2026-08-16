@@ -194,7 +194,13 @@ const Header = memo(() => {
                         ) : (
                           <UserCircle className="ml-2 h-4 w-4" />
                         )}
-                        <span>پنل کاربری</span>
+                        <span>
+                          {user.type === 'admin'
+                            ? 'پنل مدیریت'
+                            : user.type === 'agent'
+                              ? 'پنل مشاور'
+                              : 'پنل کاربری'}
+                        </span>
                       </Link>
                     </DropdownMenuItem>
                     {user.type !== 'admin' && (
@@ -227,7 +233,10 @@ const Header = memo(() => {
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem asChild>
-                      <Link href="/user" className="cursor-pointer">
+                      <Link
+                        href={user.type === 'agent' ? '/agent/settings' : user.type === 'admin' ? '/admin' : '/user/settings'}
+                        className="cursor-pointer"
+                      >
                         <Settings className="ml-2 h-4 w-4" />
                         <span>تنظیمات</span>
                       </Link>
@@ -321,7 +330,11 @@ const Header = memo(() => {
                     ) : (
                       <User className="h-4 w-4" />
                     )}
-                    پنل کاربری
+                    {user.type === 'admin'
+                      ? 'پنل مدیریت'
+                      : user.type === 'agent'
+                        ? 'پنل مشاور'
+                        : 'پنل کاربری'}
                   </Button>
                 </Link>
                 <Button

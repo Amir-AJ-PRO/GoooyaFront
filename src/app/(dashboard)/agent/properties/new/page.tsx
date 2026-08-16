@@ -191,10 +191,12 @@ export default function NewPropertyPage() {
     // اضافه کردن قیمت بر اساس نوع معامله
     if (step1Data.transaction_type === 'sale') {
       if (step1Data.is_negotiable) {
-        // قیمت توافقی - price رو null میفرستیم
+        // قیمت توافقی — مطابق فیلد agreed_price در API
         payload.price = null;
+        payload.agreed_price = true;
       } else if (step1Data.price) {
         payload.price = parseInt(step1Data.price);
+        payload.agreed_price = false;
       }
     } else if (step1Data.transaction_type === 'rent') {
       if (step1Data.mortgage) payload.mortgage = parseInt(step1Data.mortgage);
@@ -780,9 +782,9 @@ export default function NewPropertyPage() {
         </p>
       </div>
       
-      {/* Form Content */}
-      {currentStep === 1 && renderStep1()}
-      {currentStep === 2 && renderStep2()}
+      {/* Form Content — هر دو مرحله در DOM می‌مانند تا با برگشت داده پاک نشود */}
+      <div className={currentStep === 1 ? 'block' : 'hidden'}>{renderStep1()}</div>
+      <div className={currentStep === 2 ? 'block' : 'hidden'}>{renderStep2()}</div>
       
       {/* Navigation Buttons */}
       <Card className="border-2 shadow-xl">

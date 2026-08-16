@@ -412,9 +412,8 @@ export default function EditPropertyPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* مرحله 1: اطلاعات اصلی */}
-          {currentStep === 1 && (
-            <div className="space-y-6 animate-in fade-in duration-500">
+          {/* مرحله 1: اطلاعات اصلی — در DOM می‌ماند تا با برگشت داده پاک نشود */}
+          <div className={`space-y-6 animate-in fade-in duration-500 ${currentStep === 1 ? 'block' : 'hidden'}`}>
               {/* اطلاعات پایه */}
               <Card className="border-2 border-blue-100 shadow-lg">
                 <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b-2 border-blue-100">
@@ -676,12 +675,10 @@ export default function EditPropertyPage() {
                   <ArrowRight className="w-5 h-5 mr-2" />
                 </Button>
               </div>
-            </div>
-          )}
+          </div>
 
-          {/* مرحله 2: جزئیات و امکانات */}
-          {currentStep === 2 && (
-            <div className="space-y-6 animate-in fade-in duration-500">
+          {/* مرحله 2: جزئیات و امکانات — در DOM می‌ماند تا با برگشت داده پاک نشود */}
+          <div className={`space-y-6 animate-in fade-in duration-500 ${currentStep === 2 ? 'block' : 'hidden'}`}>
               {/* جزئیات بیشتر */}
               <Card className="border-2 border-indigo-100 shadow-lg">
                 <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b-2 border-indigo-100">
@@ -856,11 +853,10 @@ export default function EditPropertyPage() {
                               }`}
                               onClick={() => setMainImageIndex(index)}
                             >
-                              <Image
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
                                 src={URL.createObjectURL(file)}
                                 alt="تصویر جدید"
-                                width={200}
-                                height={150}
                                 className="object-cover w-full h-32"
                               />
                             </div>
@@ -959,8 +955,7 @@ export default function EditPropertyPage() {
                   </Button>
                 </div>
               </div>
-            </div>
-          )}
+          </div>
         </form>
       </div>
     </div>

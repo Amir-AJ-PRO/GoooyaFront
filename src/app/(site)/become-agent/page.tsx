@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
 import BecomeAgentClient from "./BecomeAgentClient";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "درخواست تبدیل به مشاور املاک - گویا",
-  description: "درخواست تبدیل به مشاور املاک در پلتفرم گویا. با پر کردن فرم زیر، درخواست خود را برای تبدیل به agent ثبت کنید.",
-  keywords: ["مشاور املاک", "درخواست agent", "ثبت‌نام مشاور", "کار در املاک"],
-  openGraph: {
-    title: "درخواست تبدیل به مشاور املاک - گویا",
-    description: "با پر کردن فرم زیر، درخواست خود را برای تبدیل به agent ثبت کنید",
-  },
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: "همکاری به عنوان مشاور املاک",
+  description: "به شبکه مشاوران گویا بپیوندید و آگهی‌های ملک خود را در شرق تهران، دماوند و پردیس منتشر کنید.",
+  path: "/become-agent",
+  keywords: ["استخدام مشاور املاک", "ثبت‌نام مشاور املاک", "همکاری با گویا"],
+});
 
 export default function BecomeAgentPage() {
   return <BecomeAgentClient />;

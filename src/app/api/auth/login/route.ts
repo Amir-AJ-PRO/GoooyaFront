@@ -5,19 +5,19 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { cookies } from 'next/headers';
+import {
+  ACCESS_TOKEN_KEY,
+  ACCESS_TOKEN_MAX_AGE,
+  REFRESH_TOKEN_KEY,
+  REFRESH_TOKEN_MAX_AGE,
+  getAuthCookieOptions,
+  setUserDataCookie,
+} from '@/lib/server/cookies';
 
 const loginSchema = z.object({
   phone: z.string().min(10),
   code: z.string().min(4),
 });
-
-const ACCESS_TOKEN_KEY = 'access_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
-
-// زمان انقضای توکن‌ها (بر اساس تنظیمات Backend)
-const ACCESS_TOKEN_MAX_AGE = 15 * 60; // 15 دقیقه
-const REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60; // 30 روز
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,35 +51,17 @@ export async function POST(request: NextRequest) {
       created: data.created,
     });
     
-    // Set کردن Cookie ها مستقیماً در Response با maxAge مناسب
-    const baseCookieOptions = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax' as const,
-      path: '/',
-    };
-    
-    // Access Token با عمر 15 دقیقه
-    jsonResponse.cookies.set(ACCESS_TOKEN_KEY, data.access, {
-      ...baseCookieOptions,
-      maxAge: ACCESS_TOKEN_MAX_AGE,
-    });
-    
-    // Refresh Token با عمر 30 روز
-    jsonResponse.cookies.set(REFRESH_TOKEN_KEY, data.refresh, {
-      ...baseCookieOptions,
-      maxAge: REFRESH_TOKEN_MAX_AGE,
-    });
-    
-    // ذخیره User Data در cookie (غیر HttpOnly تا JavaScript بتونه بخونه)
-    // این کار کمک می‌کنه که بعد از refresh صفحه، user data رو داشته باشیم
-    jsonResponse.cookies.set('user_data', JSON.stringify(data.user), {
-      httpOnly: false, // قابل خواندن برای JavaScript
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: REFRESH_TOKEN_MAX_AGE, // 30 روز (مثل refresh token)
-    });
+    jsonResponse.cookies.set(
+      ACCESS_TOKEN_KEY,
+      data.access,
+      getAuthCookieOptions(ACCESS_TOKEN_MAX_AGE)
+    );
+    jsonResponse.cookies.set(
+      REFRESH_TOKEN_KEY,
+      data.refresh,
+      getAuthCookieOptions(REFRESH_TOKEN_MAX_AGE)
+    );
+    setUserDataCookie(jsonResponse, data.user);
     
     console.log('✅ Tokens set in response cookies');
     console.log('Access token length:', data.access?.length);

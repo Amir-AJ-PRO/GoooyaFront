@@ -58,6 +58,11 @@ import { API_BASE_URL, GOOOYA_CONTACT_PHONE_DISPLAY, GOOOYA_CONTACT_PHONE_TEL } 
 import Link from 'next/link';
 import { getMediaUrl } from '@/lib/utils';
 import MyModal from "react-modal"
+import dynamic from 'next/dynamic';
+
+const PropertyMapSection = dynamic(() => import('@/components/maps/PropertyMapSection'), {
+  ssr: false,
+});
 
 
 
@@ -125,8 +130,6 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
 
 
   // هندل کردن درخواست بازدید (روش اول: با slug در body)
-
-  console.log()
   const handleVisitRequest = async () => {
     if (!isAuthenticated) {
       router.push(`/login?from=${encodeURIComponent(`/properties/${slug}`)}`);
@@ -287,6 +290,9 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
     : (anyProperty.location && anyProperty.location.name
       ? anyProperty.location.name
       : '');
+  const locationId = typeof anyProperty.location === 'object' && anyProperty.location?.id != null
+    ? Number(anyProperty.location.id)
+    : (typeof anyProperty.location === 'number' ? anyProperty.location : null);
   const propertyTypeName = typeof anyProperty.property_type === 'string'
     ? anyProperty.property_type
     : (anyProperty.property_type && anyProperty.property_type.title
@@ -352,7 +358,7 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                     <FavoriteButtonSmall
                       propertyId={property.id}
                       isFavorite={Boolean(property.is_favorite)}
-                      className="bg-white/90 backdrop-blur-sm"
+                      className="relative top-auto left-auto z-auto bg-white/90 backdrop-blur-sm"
                     />
                   )}
                   <Button
@@ -535,6 +541,15 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
               )}
             </CardContent>
           </Card>
+
+          <PropertyMapSection
+            locationIframe={property.location_iframe}
+            locationId={Number.isFinite(locationId) ? locationId : null}
+            locationName={locationName}
+            cityName={cityName}
+            title={property.title}
+            address={property.address}
+          />
 
           {/* مشخصات کلی */}
           <Card>

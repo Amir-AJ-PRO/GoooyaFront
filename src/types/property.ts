@@ -163,6 +163,10 @@ export interface CreatePropertyPayload {
   year_built?: number;
   floor?: string;
   document_type?: string;
+  agreed_price?: boolean;
+  exchange?: boolean;
+  urgent?: boolean;
+  under_price?: boolean;
   has_parking?: boolean;
   has_storage?: boolean;
   has_elevator?: boolean;

@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Heart, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useToggleFavorite } from '@/hooks/useFavorites';
+import { FAVORITES_QUERY_KEYS, useToggleFavorite } from '@/hooks/useFavorites';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 
 interface FavoriteButtonProps {
@@ -29,15 +30,28 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
   showText = false,
   disabled = false,
 }) => {
+  const queryClient = useQueryClient();
   const toggleFavoriteMutation = useToggleFavorite();
+  const [favorited, setFavorited] = useState(isFavorite);
+
+  useEffect(() => {
+    const cached = queryClient.getQueryData<{ is_favorite: boolean }>(
+      FAVORITES_QUERY_KEYS.status(propertyId)
+    );
+    setFavorited(cached?.is_favorite ?? isFavorite);
+  }, [isFavorite, propertyId, queryClient]);
 
   const handleToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (disabled) return;
-    
-    toggleFavoriteMutation.mutate(propertyId);
+    if (disabled || toggleFavoriteMutation.isPending) return;
+
+    const next = !favorited;
+    setFavorited(next);
+    toggleFavoriteMutation.mutate(propertyId, {
+      onError: () => setFavorited(!next),
+    });
   };
 
   const isLoading = toggleFavoriteMutation.isPending;
@@ -56,18 +70,25 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
 
   return (
     <Button
+      type="button"
       variant={variant}
-      size="icon"
+      size={showText ? 'default' : 'icon'}
       className={cn(
-        sizeClasses[size],
+        !showText && sizeClasses[size],
         'relative transition-all duration-200 hover:scale-105',
-        isFavorite && variant === 'ghost' && 'text-red-500 hover:text-red-600',
-        !isFavorite && variant === 'ghost' && 'text-gray-400 hover:text-red-500',
+        favorited && variant === 'ghost' && 'text-red-500 hover:text-red-600',
+        !favorited && variant === 'ghost' && 'text-gray-400 hover:text-red-500',
+        favorited &&
+          variant === 'outline' &&
+          'border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-600',
+        !favorited &&
+          variant === 'outline' &&
+          'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-600',
         className
       )}
       onClick={handleToggle}
       disabled={disabled || isLoading}
-      title={isFavorite ? 'حذف از علاقه‌مندی‌ها' : 'اضافه به علاقه‌مندی‌ها'}
+      title={favorited ? 'حذف از علاقه‌مندی‌ها' : 'اضافه به علاقه‌مندی‌ها'}
     >
       {isLoading ? (
         <Loader2 
@@ -79,14 +100,14 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
           size={iconSizes[size]}
           className={cn(
             'transition-all duration-200',
-            isFavorite ? 'fill-current text-red-500' : 'text-gray-400'
+            favorited ? 'fill-current text-red-500' : 'text-gray-400'
           )}
         />
       )}
       
       {showText && (
         <span className="mr-2 text-sm">
-          {isFavorite ? 'علاقه‌مند' : 'علاقه‌مندی'}
+          {favorited ? 'علاقه‌مند' : 'علاقه‌مندی'}
         </span>
       )}
     </Button>
@@ -108,7 +129,7 @@ export const FavoriteButtonSmall: React.FC<{
       size="sm"
       variant="ghost"
       className={cn(
-        'absolute top-2 left-2 z-10 bg-white/80 backdrop-blur-sm hover:bg-white/90',
+        'absolute z-10 bg-white/80 backdrop-blur-sm hover:bg-white/90',
         'shadow-sm border border-gray-200/50',
         className
       )}
@@ -131,13 +152,7 @@ export const FavoriteButtonLarge: React.FC<{
       size="lg"
       variant="outline"
       showText={true}
-      className={cn(
-        'px-6 py-3 h-auto w-auto',
-        isFavorite 
-          ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-600' 
-          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-600',
-        className
-      )}
+      className={cn('px-6 py-3 h-auto w-auto', className)}
     />
   );
 };

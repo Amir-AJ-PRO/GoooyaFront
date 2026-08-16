@@ -1,22 +1,41 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Building2, MessageSquare, TrendingUp, FileText, ArrowLeft, Clock, CheckCircle, Sparkles } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  FileText,
+  ArrowLeft,
+  Clock,
+  Shield,
+  UserRound,
+  Users,
+  Building2,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { useAdviserTicketsCount } from '@/hooks/useTicketAdviser';
+import { useAdviserTickets, useAdviserTicketsCount } from '@/hooks/useTicketAdviser';
 import Link from 'next/link';
+import { cn, formatDate, formatPrice } from '@/lib/utils';
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'صبح بخیر';
+  if (hour < 18) return 'ظهر بخیر';
+  return 'عصر بخیر';
+}
 
 export default function AdminPage() {
   const { user, backendUser } = useAuth();
   const router = useRouter();
-  
-  // دریافت تعداد تیکت‌های در انتظار (فقط برای مشاور گویا)
+
   const isGooyaAdviser = backendUser?.agent_profile?.is_goooya_adviser === true;
-  const { data: ticketsCount } = useAdviserTicketsCount(isGooyaAdviser);
+  const { data: ticketsCount, isLoading: countLoading } = useAdviserTicketsCount(isGooyaAdviser);
+  const { data: tickets, isLoading: ticketsLoading } = useAdviserTickets(
+    'assigned',
+    isGooyaAdviser
+  );
 
   useEffect(() => {
     if (user && user.type !== 'admin') {
@@ -24,189 +43,289 @@ export default function AdminPage() {
     }
   }, [user, router]);
 
-  const stats = [
-    {
-      title: "کاربران",
-      value: "۱,۲۳۴",
-      icon: Users,
-      change: "+۱۲%",
-      gradient: "from-purple-500 to-pink-500",
-      bgGradient: "from-purple-50 to-pink-50",
-      iconBg: "bg-gradient-to-br from-purple-500 to-pink-500",
-    },
-    {
-      title: "املاک",
-      value: "۴۵۶",
-      icon: Building2,
-      change: "+۸%",
-      gradient: "from-blue-500 to-cyan-500",
-      bgGradient: "from-blue-50 to-cyan-50",
-      iconBg: "bg-gradient-to-br from-blue-500 to-cyan-500",
-    },
-    {
-      title: "پیام‌ها",
-      value: "۸۹",
-      icon: MessageSquare,
-      change: "+۲۳%",
-      gradient: "from-green-500 to-emerald-500",
-      bgGradient: "from-green-50 to-emerald-50",
-      iconBg: "bg-gradient-to-br from-green-500 to-emerald-500",
-    },
-    {
-      title: "فروش",
-      value: "۳۲",
-      icon: TrendingUp,
-      change: "+۱۵%",
-      gradient: "from-orange-500 to-red-500",
-      bgGradient: "from-orange-50 to-red-50",
-      iconBg: "bg-gradient-to-br from-orange-500 to-red-500",
-    },
-  ];
-
   if (!user || user.type !== 'admin') {
     return null;
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
-      {/* Header با گرادیانت زیبا */}
-      <div className="mb-8" dir="rtl">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-3 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl shadow-lg">
-            <Sparkles className="h-8 w-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              داشبورد مدیریت
-            </h1>
-            <p className="text-gray-600 mt-1">خوش آمدید! آمار و مدیریت سیستم</p>
-          </div>
-        </div>
-      </div>
+  const displayName =
+    user.name?.trim() ||
+    backendUser?.full_name?.trim() ||
+    backendUser?.name?.trim() ||
+    'مدیر گرامی';
+  const initials = displayName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('');
 
-      {/* کارت تیکت‌ها - بزرگ و برجسته برای مشاور گویا */}
-      {isGooyaAdviser && (
-        <Card className="mb-8 border-0 shadow-xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-white overflow-hidden relative group hover:shadow-2xl transition-all duration-300" dir="rtl">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <CardContent className="pt-8 pb-8 relative z-10">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div className="flex-1">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="p-4 bg-white/20 backdrop-blur-sm rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <FileText className="h-8 w-8 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-3xl font-bold mb-1 flex items-center gap-2">
-                      تیکت‌های ثبت ملک
-                      {ticketsCount !== undefined && ticketsCount > 0 && (
-                        <Badge className="bg-white text-primary text-lg px-4 py-1 shadow-lg">
-                          {ticketsCount} جدید
-                        </Badge>
-                      )}
-                    </h2>
-                    <p className="text-white/80">مدیریت و بررسی درخواست‌های ثبت ملک کاربران</p>
-                  </div>
-                </div>
-                {ticketsCount !== undefined && ticketsCount > 0 && (
-                  <div className="flex items-center gap-2 text-white/80">
-                    <Clock className="h-4 w-4" />
-                    <span className="text-sm">در انتظار بررسی شما</span>
-                  </div>
-                )}
+  const recentTickets = Array.isArray(tickets) ? tickets.slice(0, 4) : [];
+  const waitingCount = ticketsCount ?? 0;
+
+  const stats = [
+    {
+      title: 'تیکت‌های در انتظار',
+      value: waitingCount,
+      hint: isGooyaAdviser ? 'درخواست ثبت ملک کاربران' : 'فقط برای مشاور گویا فعال است',
+      icon: FileText,
+      href: isGooyaAdviser ? '/admin/tickets' : undefined,
+      tone: 'bg-amber-500/10 text-amber-700',
+      enabled: isGooyaAdviser,
+    },
+    {
+      title: 'کاربران',
+      value: null as number | null,
+      hint: 'فهرست زنده هنوز متصل نیست',
+      icon: Users,
+      href: '/admin/users',
+      tone: 'bg-primary/10 text-primary',
+      enabled: false,
+    },
+    {
+      title: 'املاک',
+      value: null as number | null,
+      hint: 'بررسی آگهی‌ها از مسیر تیکت‌ها',
+      icon: Building2,
+      href: isGooyaAdviser ? '/admin/tickets' : '/admin/properties',
+      tone: 'bg-emerald-500/10 text-emerald-600',
+      enabled: false,
+    },
+  ];
+
+  const quickActions = [
+    ...(isGooyaAdviser
+      ? [
+          {
+            title: 'تیکت‌های ثبت ملک',
+            description:
+              waitingCount > 0
+                ? `${formatPrice(waitingCount)} درخواست در انتظار بررسی`
+                : 'بررسی درخواست‌های کاربران',
+            href: '/admin/tickets',
+            icon: FileText,
+          },
+        ]
+      : []),
+    {
+      title: 'مدیریت کاربران',
+      description: 'این بخش هنوز به داده واقعی وصل نیست',
+      href: '/admin/users',
+      icon: Users,
+    },
+    {
+      title: 'مدیریت املاک',
+      description: isGooyaAdviser
+        ? 'تأیید آگهی از طریق تیکت‌ها انجام می‌شود'
+        : 'این بخش هنوز به داده واقعی وصل نیست',
+      href: isGooyaAdviser ? '/admin/tickets' : '/admin/properties',
+      icon: Building2,
+    },
+  ];
+
+  return (
+    <div className="space-y-6 sm:space-y-8">
+      <section className="relative overflow-hidden rounded-2xl border border-primary/10 bg-gradient-to-bl from-primary via-primary to-accent text-primary-foreground shadow-medium">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-30"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35), transparent 45%), radial-gradient(circle at 85% 10%, rgba(255,255,255,0.2), transparent 35%)',
+          }}
+        />
+        <div className="relative flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/30 bg-white/15 text-lg font-semibold shadow-soft backdrop-blur-sm sm:h-16 sm:w-16">
+              {initials || <UserRound className="h-6 w-6" />}
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-sm text-white/80">{getGreeting()}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                  {displayName}
+                </h1>
+                <Badge className="gap-1 bg-white/20 text-white hover:bg-white/20">
+                  <Shield className="h-3.5 w-3.5" />
+                  مدیر
+                </Badge>
               </div>
+              <p className="max-w-xl text-sm text-white/75 sm:text-base">
+                {isGooyaAdviser
+                  ? 'درخواست‌های ثبت ملک را بررسی و منتشر کنید.'
+                  : 'از اینجا بخش‌های مدیریتی سیستم را دنبال کنید.'}
+              </p>
+            </div>
+          </div>
+
+          {isGooyaAdviser && (
+            <div className="flex flex-col gap-2 sm:items-end">
               <Link href="/admin/tickets">
-                <Button 
-                  size="lg" 
-                  className="bg-white text-primary hover:bg-gray-50 shadow-xl gap-2 px-8 py-6 text-lg font-bold group-hover:scale-105 transition-transform duration-300"
+                <Button
+                  variant="secondary"
+                  className="w-full bg-white text-primary hover:bg-white/90 sm:w-auto"
                 >
-                  <FileText className="h-5 w-5" />
+                  <FileText className="ml-2 h-4 w-4" />
                   مشاهده تیکت‌ها
-                  <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </div>
+      </section>
 
-      {/* کارت‌های آمار با طراحی مدرن */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => {
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {stats.map((stat) => {
           const Icon = stat.icon;
-          return (
-            <Card 
-              key={index} 
-              className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden relative cursor-pointer"
-              dir="rtl"
+          const content = (
+            <div
+              className={cn(
+                'group h-full rounded-2xl border border-border/70 bg-card p-5 shadow-soft transition-smooth',
+                stat.href && 'hover:-translate-y-0.5 hover:shadow-medium'
+              )}
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-              <CardContent className="pt-6 relative z-10">
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`p-3 rounded-xl shadow-lg ${stat.iconBg} group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="h-6 w-6 text-white" />
-                  </div>
-                  <span className={`text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r ${stat.gradient} text-white shadow-md`}>
-                    {stat.change}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
-                  <p className={`text-3xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}>
-                    {stat.value}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">از ماه گذشته</p>
-                </div>
-              </CardContent>
-            </Card>
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                <span
+                  className={cn(
+                    'inline-flex h-10 w-10 items-center justify-center rounded-xl',
+                    stat.tone
+                  )}
+                >
+                  <Icon className="h-5 w-5" />
+                </span>
+              </div>
+              {stat.enabled && countLoading ? (
+                <Skeleton className="mb-2 h-8 w-16" />
+              ) : stat.value === null ? (
+                <p className="text-lg font-semibold text-muted-foreground">—</p>
+              ) : (
+                <p className="text-3xl font-bold tracking-tight">
+                  {formatPrice(stat.value)}
+                </p>
+              )}
+              <p className="mt-1 text-xs text-muted-foreground">{stat.hint}</p>
+            </div>
+          );
+
+          return stat.href ? (
+            <Link key={stat.title} href={stat.href} className="block">
+              {content}
+            </Link>
+          ) : (
+            <div key={stat.title}>{content}</div>
           );
         })}
-      </div>
+      </section>
 
-      {/* کارت‌های پایین */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* فعالیت‌های اخیر */}
-        <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300" dir="rtl">
-          <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-white" />
-              </div>
-              <CardTitle className="text-xl">آخرین فعالیت‌ها</CardTitle>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-soft sm:p-6 lg:col-span-3">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold">تیکت‌های اخیر</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                درخواست‌های ثبت ملک در انتظار بررسی
+              </p>
             </div>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="h-8 w-8 text-green-600" />
-              </div>
-              <p className="text-gray-600 font-medium">فعالیت‌های اخیر</p>
-              <p className="text-sm text-gray-400 mt-1">به زودی نمایش داده می‌شود</p>
-            </div>
-          </CardContent>
-        </Card>
+            {isGooyaAdviser && (
+              <Link href="/admin/tickets">
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  همه
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
+          </div>
 
-        {/* املاک در انتظار تایید */}
-        <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300" dir="rtl">
-          <CardHeader className="bg-gradient-to-r from-orange-50 to-red-50 border-b">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg">
-                <Clock className="h-5 w-5 text-white" />
+          {!isGooyaAdviser ? (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/40 px-4 py-12 text-center">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                <Shield className="h-7 w-7 text-primary" />
               </div>
-              <CardTitle className="text-xl">املاک در انتظار تایید</CardTitle>
+              <h3 className="mb-1 font-semibold">دسترسی مشاور گویا لازم است</h3>
+              <p className="max-w-sm text-sm text-muted-foreground">
+                بررسی تیکت‌های ثبت ملک فقط برای مشاوران گویا فعال است.
+              </p>
             </div>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center">
-                <Building2 className="h-8 w-8 text-orange-600" />
+          ) : ticketsLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((item) => (
+                <div key={item} className="space-y-2 rounded-xl border p-3">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : recentTickets.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/40 px-4 py-12 text-center">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10">
+                <FileText className="h-7 w-7 text-emerald-600" />
               </div>
-              <p className="text-gray-600 font-medium">املاک منتظر بررسی</p>
-              <p className="text-sm text-gray-400 mt-1">به زودی نمایش داده می‌شود</p>
+              <h3 className="mb-1 font-semibold">تیکت در انتظاری نیست</h3>
+              <p className="max-w-sm text-sm text-muted-foreground">
+                درخواست جدیدی برای بررسی وجود ندارد.
+              </p>
             </div>
-          </CardContent>
-        </Card>
+          ) : (
+            <div className="space-y-3">
+              {recentTickets.map((ticket) => (
+                <Link
+                  key={ticket.id}
+                  href={`/admin/tickets/${ticket.id}`}
+                  className="group block rounded-xl border border-border/60 p-3 transition-smooth hover:border-primary/30 hover:bg-secondary/60"
+                >
+                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                    <Badge className="bg-amber-500/15 text-amber-800 hover:bg-amber-500/15">
+                      <Clock className="ml-1 h-3 w-3" />
+                      در انتظار
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(ticket.created_at)}
+                    </span>
+                  </div>
+                  <h3 className="mb-1 line-clamp-1 font-semibold transition-colors group-hover:text-primary">
+                    {ticket.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {[ticket.city_name, ticket.property_type_title]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <aside className="space-y-6 lg:col-span-2">
+          <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-soft sm:p-6">
+            <h2 className="mb-1 text-lg font-bold">دسترسی سریع</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              میانبرهای پنل مدیریت
+            </p>
+            <div className="grid grid-cols-1 gap-3">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <Link
+                    key={action.href + action.title}
+                    href={action.href}
+                    className="flex items-center gap-3 rounded-xl border border-border/60 p-3 transition-smooth hover:border-primary/30 hover:bg-secondary/60"
+                  >
+                    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-medium">{action.title}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {action.description}
+                      </span>
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        </aside>
       </div>
     </div>
   );
 }
-

@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAgentRequest } from '@/hooks/useAgentRequest';
+import { hasPendingAgentRequest } from '@/services/agentRequestApi';
 import { useCities, useLocations } from '@/hooks/usePropertyMutations';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,7 +30,8 @@ import {
   Award, 
   FileText,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Clock3,
 } from 'lucide-react';
 
 /**
@@ -37,7 +40,8 @@ import {
 export default function BecomeAgentClient() {
   const router = useRouter();
   const { isAuthenticated, user, backendUser } = useAuth();
-  const { mutate: submitRequest, isPending } = useAgentRequest();
+  const { mutate: submitRequest, isPending, isSuccess } = useAgentRequest();
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
   
   // دریافت لیست شهرها و مناطق
   const { data: cities = [] } = useCities();
@@ -78,10 +82,17 @@ export default function BecomeAgentClient() {
     }
   }, [isAuthenticated, user]);
 
+  // اگر قبلاً درخواست ثبت شده، فرم را نشان نده
+  useEffect(() => {
+    if (user?.phone && hasPendingAgentRequest(user.phone)) {
+      setHasPendingRequest(true);
+    }
+  }, [user?.phone]);
+
   // بررسی اینکه آیا کاربر قبلاً agent است
   useEffect(() => {
     if (backendUser?.agent_profile) {
-      router.push('/dashboard/agent');
+      router.push('/agent');
     }
   }, [backendUser, router]);
 
@@ -152,7 +163,11 @@ export default function BecomeAgentClient() {
       bio: formData.bio.trim() || undefined,
     };
 
-    submitRequest(payload);
+    submitRequest(payload, {
+      onSuccess: () => {
+        setHasPendingRequest(true);
+      },
+    });
   };
 
   // Reset region وقتی city تغییر می‌کند
@@ -163,6 +178,35 @@ export default function BecomeAgentClient() {
 
   if (!isAuthenticated) {
     return null; // در حال redirect است
+  }
+
+  if (hasPendingRequest || isSuccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-primary/5 py-12">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <Card className="p-8 md:p-10 text-center shadow-lg">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+              <Clock3 className="h-8 w-8 text-primary" />
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold mb-3">
+              درخواست شما ثبت شد
+            </h1>
+            <p className="text-muted-foreground mb-8 leading-relaxed">
+              درخواست تبدیل به مشاور با موفقیت ثبت شده و در وضعیت «در انتظار بررسی» است.
+              پس از بررسی تیم گویا، نتیجه از طریق حساب کاربری شما اطلاع‌رسانی می‌شود.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button asChild size="lg">
+                <Link href="/user">بازگشت به داشبورد</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link href="/properties">مشاهده املاک</Link>
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -11,7 +11,7 @@ export const APP_DESCRIPTION = "پلتفرم املاک فارسی";
  */
 export function getApiBaseUrl(): string {
   // در server-side و client-side هر دو از NEXT_PUBLIC_API_URL استفاده می‌کنیم
-  return process.env.NEXT_PUBLIC_API_URL || "https://goooya.api.ir";
+  return process.env.NEXT_PUBLIC_API_URL || "https://api.goooya.ir";
 }
 
 /**
@@ -28,8 +28,8 @@ export const OTP_EXPIRY_TIME = 120; // seconds
  * اطلاعات تماس عمومی گویا (برای نمایش و tel:)
  * نکته: مقدار tel باید با اعداد انگلیسی باشد.
  */
-export const GOOOYA_CONTACT_PHONE_DISPLAY = "۰۲۱-۱۲۳۴۵۶۷۸";
-export const GOOOYA_CONTACT_PHONE_TEL = "02112345678";
+export const GOOOYA_CONTACT_PHONE_DISPLAY = "۰۹۲۰۹۲۲۹۲۰۵";
+export const GOOOYA_CONTACT_PHONE_TEL = "09209229205";
 export const GOOOYA_CONTACT_EMAIL = "info@gooya.ir";
 
 export const PROPERTY_TYPES = {

@@ -11,8 +11,8 @@ export interface LocationDetail {
   city_province: string | null;
 
   description: string | null;
-  latitude: number | null;
-  longitude: number | null;
+  latitude: number | string | null;
+  longitude: number | string | null;
 
   land_use: string | null;
   average_price: number | null;

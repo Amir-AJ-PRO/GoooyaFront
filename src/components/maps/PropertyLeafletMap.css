@@ -1,0 +1,32 @@
+.property-leaflet-map .leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  z-index: 0 !important;
+}
+
+.property-leaflet-map .leaflet-popup-content {
+  direction: rtl;
+  text-align: right;
+  margin: 8px 12px;
+}
+
+.property-leaflet-map .leaflet-popup-content h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.property-leaflet-map .leaflet-popup-content p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.property-map-marker {
+  background: transparent;
+  border: none;
+}
+
+.property-leaflet-map .property-map-area {
+  cursor: pointer;
+}

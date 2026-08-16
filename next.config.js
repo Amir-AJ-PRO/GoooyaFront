@@ -6,7 +6,7 @@ const ContentSecurityPolicy = `
   default-src 'self';
   script-src 'self' 'unsafe-inline' 'unsafe-eval';
   style-src 'self' 'unsafe-inline';
-  img-src 'self' data: blob: https://api.goooya.ir https://c748821.parspack.net;
+  img-src 'self' data: blob: https://api.goooya.ir https://c748821.parspack.net https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://unpkg.com;
   connect-src 'self'
     https://api.goooya.ir
     https://shahrgpt.goooya.ir
@@ -17,6 +17,7 @@ const ContentSecurityPolicy = `
     ws:
     wss:;
   font-src 'self' data:;
+  frame-src 'self' https:;
   frame-ancestors 'self';
 `;
 
@@ -37,6 +38,24 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value: ContentSecurityPolicy.replace(/\n/g, ''),
+          },
+        ],
+      },
+      {
+        source: '/sitemap.xml',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, s-maxage=300, must-revalidate',
+          },
+        ],
+      },
+      {
+        source: '/robots.txt',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, s-maxage=300, must-revalidate',
           },
         ],
       },
@@ -109,6 +128,8 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+
+  transpilePackages: ['leaflet', 'react-leaflet'],
 
   reactStrictMode: true,
   poweredByHeader: false,

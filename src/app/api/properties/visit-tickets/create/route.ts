@@ -36,13 +36,17 @@ export const POST = withApiHandler<any>(
     
     if (!response.ok) {
       return NextResponse.json(
-        { error: data.detail || data.error || 'خطا در ثبت تیکت' },
+        {
+          error: data.detail || data.error || 'خطا در ثبت تیکت',
+          ...(data.existing_ticket && { existing_ticket: data.existing_ticket }),
+        },
         { status: response.status }
       );
     }
     
     return NextResponse.json({
       success: true,
+      message: data.message || 'درخواست بازدید با موفقیت ثبت شد',
       data,
     });
   },

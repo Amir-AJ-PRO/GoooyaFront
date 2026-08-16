@@ -8,79 +8,110 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { User, Mail, Phone, Save, Loader2 } from 'lucide-react';
 import { useUpdateProfile } from '@/hooks/useProfileMutations';
-import { UserData } from '@/services/authApi';
+import { useAuth } from '@/contexts/AuthContext';
+
+type ProfileFields = {
+  phone: string;
+  full_name: string;
+  email: string;
+  is_agent: boolean;
+  is_active: boolean;
+  date_joined?: string;
+};
+
+function resolveProfile(
+  backendUser: ReturnType<typeof useAuth>['backendUser'],
+  user: ReturnType<typeof useAuth>['user']
+): ProfileFields | null {
+  if (!backendUser && !user) return null;
+
+  const backend = backendUser as (Record<string, unknown> & typeof backendUser) | null;
+
+  return {
+    phone: backendUser?.phone || user?.phone || '',
+    full_name:
+      (typeof backend?.full_name === 'string' ? backend.full_name : '') ||
+      backendUser?.name ||
+      user?.name ||
+      '',
+    email: backendUser?.email || user?.email || '',
+    is_agent: Boolean(backendUser?.is_agent ?? user?.type === 'agent'),
+    is_active: typeof backend?.is_active === 'boolean' ? backend.is_active : true,
+    date_joined:
+      typeof backend?.date_joined === 'string' ? backend.date_joined : undefined,
+  };
+}
 
 export default function UserSettingsPage() {
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const { user, backendUser, isLoading: authLoading, refreshUser } = useAuth();
+  const [profile, setProfile] = useState<ProfileFields | null>(null);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
-  
+
   const updateProfileMutation = useUpdateProfile();
 
-  // بارگذاری اطلاعات کاربر از localStorage
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('user_data');
-      if (storedUser) {
-        const user: UserData = JSON.parse(storedUser);
-        setUserData(user);
-        setFullName(user.full_name || '');
-        setEmail(user.email || '');
-      }
-    } catch (error) {
-      console.error('خطا در بارگذاری اطلاعات کاربر:', error);
-    }
-  }, []);
+    if (authLoading) return;
 
-  // Validation ایمیل
-  const validateEmail = (email: string): boolean => {
-    if (!email) return true; // ایمیل اختیاری است
-    
+    const nextProfile = resolveProfile(backendUser, user);
+    if (!nextProfile) return;
+
+    setProfile(nextProfile);
+    setFullName(nextProfile.full_name);
+    setEmail(nextProfile.email);
+  }, [authLoading, backendUser, user]);
+
+  const validateEmail = (value: string): boolean => {
+    if (!value) return true;
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(value)) {
       setEmailError('فرمت ایمیل نامعتبر است');
       return false;
     }
-    
+
     setEmailError('');
     return true;
   };
 
-  // ذخیره تغییرات
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!profile || !validateEmail(email)) return;
 
-    // Validation
-    if (!validateEmail(email)) {
-      return;
-    }
-
-    // فقط فیلدهای تغییر یافته را ارسال کن
     const payload: { full_name?: string; email?: string } = {};
-    
-    if (fullName.trim() && fullName !== userData?.full_name) {
+
+    if (fullName.trim() && fullName.trim() !== profile.full_name) {
       payload.full_name = fullName.trim();
     }
-    
-    if (email.trim() && email !== userData?.email) {
+
+    if (email.trim() && email.trim() !== profile.email) {
       payload.email = email.trim();
     }
 
-    // اگر هیچ تغییری نداشت
-    if (Object.keys(payload).length === 0) {
-      return;
-    }
+    if (Object.keys(payload).length === 0) return;
 
     updateProfileMutation.mutate(payload, {
-      onSuccess: (data) => {
-        setUserData(data.user);
-      }
+      onSuccess: async (data) => {
+        const updated = data.user;
+        const nextProfile: ProfileFields = {
+          phone: updated.phone || profile.phone,
+          full_name: updated.full_name || fullName.trim(),
+          email: updated.email || email.trim(),
+          is_agent: updated.is_agent ?? profile.is_agent,
+          is_active: updated.is_active ?? profile.is_active,
+          date_joined: updated.date_joined || profile.date_joined,
+        };
+
+        setProfile(nextProfile);
+        setFullName(nextProfile.full_name);
+        setEmail(nextProfile.email || '');
+        await refreshUser();
+      },
     });
   };
 
-  if (!userData) {
+  if (authLoading || !profile) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -108,7 +139,6 @@ export default function UserSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* شماره تلفن (فقط نمایش) */}
             <div className="space-y-2">
               <Label htmlFor="phone" className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
@@ -117,7 +147,7 @@ export default function UserSettingsPage() {
               <Input
                 id="phone"
                 type="tel"
-                value={userData.phone}
+                value={profile.phone}
                 disabled
                 className="bg-muted"
                 dir="ltr"
@@ -127,7 +157,6 @@ export default function UserSettingsPage() {
               </p>
             </div>
 
-            {/* نام و نام خانوادگی */}
             <div className="space-y-2">
               <Label htmlFor="fullName" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
@@ -146,7 +175,6 @@ export default function UserSettingsPage() {
               </p>
             </div>
 
-            {/* ایمیل */}
             <div className="space-y-2">
               <Label htmlFor="email" className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
@@ -173,35 +201,39 @@ export default function UserSettingsPage() {
               </p>
             </div>
 
-            {/* اطلاعات حساب */}
             <div className="pt-4 border-t">
               <h3 className="text-sm font-medium mb-3">اطلاعات حساب</h3>
               <div className="grid gap-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">نوع کاربر:</span>
                   <span className="font-medium">
-                    {userData.is_agent ? 'مشاور املاک' : 'کاربر عادی'}
+                    {profile.is_agent ? 'مشاور املاک' : 'کاربر عادی'}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">تاریخ عضویت:</span>
-                  <span className="font-medium" dir="ltr">
-                    {new Date(userData.date_joined).toLocaleDateString('fa-IR')}
-                  </span>
-                </div>
+                {profile.date_joined && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">تاریخ عضویت:</span>
+                    <span className="font-medium" dir="ltr">
+                      {new Date(profile.date_joined).toLocaleDateString('fa-IR')}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">وضعیت حساب:</span>
-                  <span className={`font-medium ${userData.is_active ? 'text-green-600' : 'text-red-600'}`}>
-                    {userData.is_active ? 'فعال' : 'غیرفعال'}
+                  <span
+                    className={`font-medium ${
+                      profile.is_active ? 'text-green-600' : 'text-red-600'
+                    }`}
+                  >
+                    {profile.is_active ? 'فعال' : 'غیرفعال'}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* دکمه ذخیره */}
             <div className="flex gap-3 pt-4">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={updateProfileMutation.isPending || !!emailError}
                 className="gap-2"
               >
@@ -217,12 +249,12 @@ export default function UserSettingsPage() {
                   </>
                 )}
               </Button>
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 variant="outline"
                 onClick={() => {
-                  setFullName(userData?.full_name || '');
-                  setEmail(userData?.email || '');
+                  setFullName(profile.full_name || '');
+                  setEmail(profile.email || '');
                   setEmailError('');
                 }}
                 disabled={updateProfileMutation.isPending}
@@ -236,4 +268,3 @@ export default function UserSettingsPage() {
     </div>
   );
 }
-

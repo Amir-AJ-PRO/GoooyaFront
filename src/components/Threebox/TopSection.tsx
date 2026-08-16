@@ -13,13 +13,14 @@ const TopSection = () => {
 
   return (
     <div>
-      <section className="relative min-h-[180px] lg:min-h-[500px] overflow-visible lg:mb-5">
+      <section className="relative z-10 min-h-[180px] lg:min-h-[500px] overflow-visible lg:mb-5">
         <div
           className="absolute w-11/12 left-1/2 -translate-x-1/2 
              inset-y-0
              top-3
              lg:top-0
-             lg:-translate-x-0
+             lg:left-0
+             lg:translate-x-0
              justify-center rounded-sm lg:inset-0 overflow-hidden lg:w-full"
         >
           <BgImage imageNum={Photo} />

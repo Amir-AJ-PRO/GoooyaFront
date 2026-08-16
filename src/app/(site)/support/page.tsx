@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import { Card, CardContent } from '@/components/ui/card';
 import { Phone, Mail, Clock } from 'lucide-react';
 import SupportChatClient from '@/components/support/SupportChatClient';
+import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: "پشتیبانی - گویا",
-  description: "چت پشتیبانی گویا. سوالات و مشکلات خود را مطرح کنید تا در اسرع وقت پاسخ داده شود.",
-  keywords: ["پشتیبانی", "چت", "تماس با ما", "خدمات مشتریان"],
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: "پشتیبانی گویا",
+  description: "پشتیبانی آنلاین گویا برای سوالات خرید، فروش، اجاره و آگهی‌های ملک.",
+  path: "/support",
+  keywords: ["پشتیبانی گویا", "چت پشتیبانی املاک", "خدمات مشتریان"],
+});
 
 /**
  * Support Page - Server Component

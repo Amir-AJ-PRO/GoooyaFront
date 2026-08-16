@@ -2,7 +2,7 @@
  * React Query hooks برای مدیریت علاقه‌مندی‌ها
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, QueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -26,6 +26,97 @@ export const FAVORITES_QUERY_KEYS = {
   stats: () => [...FAVORITES_QUERY_KEYS.all, 'stats'] as const,
   status: (propertyId: number) => [...FAVORITES_QUERY_KEYS.all, 'status', propertyId] as const,
 };
+
+type PropertyWithFavorite = { id?: number; is_favorite?: boolean };
+
+function patchPropertyFavoriteInList<T extends PropertyWithFavorite>(
+  items: T[] | undefined,
+  propertyId: number,
+  isFavorite: boolean
+): T[] | undefined {
+  if (!items) return items;
+  return items.map((item) =>
+    item.id === propertyId ? { ...item, is_favorite: isFavorite } : item
+  );
+}
+
+function getCurrentFavoriteStatus(
+  queryClient: QueryClient,
+  propertyId: number,
+  fallback = false
+): boolean {
+  const status = queryClient.getQueryData<{ is_favorite: boolean }>(
+    FAVORITES_QUERY_KEYS.status(propertyId)
+  );
+  if (status !== undefined) return status.is_favorite;
+
+  const propertyEntry = queryClient
+    .getQueriesData<PropertyWithFavorite>({ queryKey: ['property'] })
+    .find(([, data]) => data?.id === propertyId);
+  if (propertyEntry?.[1]?.is_favorite !== undefined) {
+    return Boolean(propertyEntry[1].is_favorite);
+  }
+
+  for (const [, data] of queryClient.getQueriesData<{ results?: PropertyWithFavorite[] }>({
+    queryKey: ['properties'],
+  })) {
+    const match = data?.results?.find((item) => item.id === propertyId);
+    if (match?.is_favorite !== undefined) return Boolean(match.is_favorite);
+  }
+
+  for (const [, data] of queryClient.getQueriesData<{ results?: PropertyWithFavorite[] }>({
+    queryKey: ['searchProperties'],
+  })) {
+    const match = data?.results?.find((item) => item.id === propertyId);
+    if (match?.is_favorite !== undefined) return Boolean(match.is_favorite);
+  }
+
+  const homepage = queryClient.getQueryData<PropertyWithFavorite[]>(['homepage-properties']);
+  const homepageMatch = homepage?.find((item) => item.id === propertyId);
+  if (homepageMatch?.is_favorite !== undefined) return Boolean(homepageMatch.is_favorite);
+
+  return fallback;
+}
+
+export function updatePropertyFavoriteInCaches(
+  queryClient: QueryClient,
+  propertyId: number,
+  isFavorite: boolean
+) {
+  queryClient.setQueryData(FAVORITES_QUERY_KEYS.status(propertyId), { is_favorite: isFavorite });
+
+  queryClient.setQueriesData<PropertyWithFavorite>(
+    { queryKey: ['property'] },
+    (old) => (old?.id === propertyId ? { ...old, is_favorite: isFavorite } : old)
+  );
+
+  queryClient.setQueriesData<{ results?: PropertyWithFavorite[] }>(
+    { queryKey: ['properties'] },
+    (old) => {
+      if (!old?.results) return old;
+      return {
+        ...old,
+        results: patchPropertyFavoriteInList(old.results, propertyId, isFavorite)!,
+      };
+    }
+  );
+
+  queryClient.setQueriesData<{ results?: PropertyWithFavorite[] }>(
+    { queryKey: ['searchProperties'] },
+    (old) => {
+      if (!old?.results) return old;
+      return {
+        ...old,
+        results: patchPropertyFavoriteInList(old.results, propertyId, isFavorite)!,
+      };
+    }
+  );
+
+  queryClient.setQueryData<PropertyWithFavorite[]>(
+    ['homepage-properties'],
+    (old) => patchPropertyFavoriteInList(old, propertyId, isFavorite)
+  );
+}
 
 /**
  * Hook برای دریافت لیست علاقه‌مندی‌ها
@@ -141,19 +232,23 @@ export const useToggleFavorite = () => {
 
   return useMutation({
     mutationFn: toggleFavorite,
+    onMutate: async (propertyId: number) => {
+      await queryClient.cancelQueries({ queryKey: ['property'] });
+      await queryClient.cancelQueries({ queryKey: ['properties'] });
+      await queryClient.cancelQueries({ queryKey: ['searchProperties'] });
+
+      const previousFavoriteStatus = getCurrentFavoriteStatus(queryClient, propertyId, false);
+      const nextFavoriteStatus = !previousFavoriteStatus;
+
+      updatePropertyFavoriteInCaches(queryClient, propertyId, nextFavoriteStatus);
+
+      return { propertyId, previousFavoriteStatus };
+    },
     onSuccess: (data: ToggleFavoriteResponse, propertyId: number) => {
-      // Invalidate و refetch کردن لیست علاقه‌مندی‌ها
       queryClient.invalidateQueries({ queryKey: FAVORITES_QUERY_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: FAVORITES_QUERY_KEYS.stats() });
-      
-      // بروزرسانی وضعیت علاقه‌مندی ملک
-      queryClient.setQueryData(
-        FAVORITES_QUERY_KEYS.status(propertyId),
-        { is_favorite: data.is_favorite }
-      );
 
-      // بروزرسانی فیلد is_favorite در لیست املاک اگر موجود باشد
-      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      updatePropertyFavoriteInCaches(queryClient, propertyId, data.is_favorite);
 
       toast({
         title: data.action === 'added' ? "اضافه شد" : "حذف شد",
@@ -161,7 +256,17 @@ export const useToggleFavorite = () => {
         variant: "default",
       });
     },
-    onError: (error) => {
+    onError: (error, propertyId, context) => {
+      if (context) {
+        updatePropertyFavoriteInCaches(
+          queryClient,
+          context.propertyId,
+          context.previousFavoriteStatus
+        );
+      } else if (propertyId) {
+        updatePropertyFavoriteInCaches(queryClient, propertyId, false);
+      }
+
       toast({
         title: "خطا",
         description: error.message || "خطا در تغییر وضعیت علاقه‌مندی",

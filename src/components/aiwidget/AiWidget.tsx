@@ -1,43 +1,35 @@
 "use client";
 
-import React, { useState, useRef, useEffect, FormEvent } from "react";
+import React, { useState, useRef, useEffect, FormEvent, useCallback } from "react";
 import Image from "next/image";
 import { ThreeDots } from "react-loader-spinner";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
+import LoginModal from "@/components/LoginModal";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  askShahrGPT,
+  fetchWidgetQuota,
+  getWidgetErrorMessage,
+  MAX_HISTORY_TURNS,
+  MAX_USER_INPUT_LENGTH,
+  type WidgetHistoryEntry,
+  type WidgetProperty,
+  type WidgetQuota,
+} from "@/services/shahrGptWidgetApi";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 
-// const API_BASE_URL = "http://127.0.0.1:8020";
-// Nginx proxies /api/* → Django (strips the /api prefix). Do not omit /api.
-const API_BASE_URL = "https://shahrgpt.com/api";
-
 const CHAT_STORAGE_KEY = "ai-widget-messages";
-const MAX_HISTORY_ENTRIES = 5; // 5 user + 5 AI messages
 
-interface Property {
-  image_url?: string;
-  title: string;
-  price?: string | number;
-  mortgage?: string | number;
-  rent?: string | number;
-  location?: string;
-  measure?: string | number;
-  rooms?: string | number;
-  facilities?: string;
-  agent?: string;
-  agent_phonenumber?: string;
-  property_url?: string;
-}
+type Property = WidgetProperty;
 
 interface Message {
   role: "user" | "ai";
   text: string;
   properties: Property[] | null;
-}
-
-interface HistoryEntry {
-  user_input: string;
-  agent_response: string;
+  /** پیام‌های خطا وارد history ارسالی به API نمی‌شوند */
+  isError?: boolean;
 }
 
 const WELCOME_MESSAGE: Message = {
@@ -96,14 +88,19 @@ const saveMessages = (msgs: Message[]) => {
   }
 };
 
-const buildHistory = (msgs: Message[]): HistoryEntry[] => {
-  const history: HistoryEntry[] = [];
-  let startIndex = msgs[0]?.role === "ai" ? 1 : 0;
+const buildHistory = (msgs: Message[]): WidgetHistoryEntry[] => {
+  const history: WidgetHistoryEntry[] = [];
+  const startIndex = msgs[0]?.role === "ai" ? 1 : 0;
 
   for (let i = startIndex; i < msgs.length; i += 2) {
     const userMsg = msgs[i];
     const aiMsg = msgs[i + 1];
-    if (userMsg?.role === "user" && aiMsg?.role === "ai") {
+    if (
+      userMsg?.role === "user" &&
+      aiMsg?.role === "ai" &&
+      !userMsg.isError &&
+      !aiMsg.isError
+    ) {
       history.push({
         user_input: userMsg.text,
         agent_response: aiMsg.text,
@@ -111,7 +108,7 @@ const buildHistory = (msgs: Message[]): HistoryEntry[] => {
     }
   }
 
-  return history.slice(-MAX_HISTORY_ENTRIES);
+  return history.slice(-MAX_HISTORY_TURNS);
 };
 
 const formatPrice = (price?: string | number): string => {
@@ -257,6 +254,7 @@ const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
                 )}
                 {p.measure && <span>📐 {p.measure} متر</span>}
                 {p.rooms && <span>🛏 {p.rooms} خواب</span>}
+                {p.floor && <span>🏢 {p.floor}</span>}
               </div>
 
               {p.facilities && (
@@ -307,16 +305,32 @@ const ATTENTION_INITIAL_DELAY_MS = 10_000;
 const ATTENTION_ANIMATION_MS = 900;
 
 const AiWidget: React.FC = () => {
+  const { isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isAttention, setIsAttention] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
   const [isStorageReady, setIsStorageReady] = useState(false);
   const [inputText, setInputText] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [quota, setQuota] = useState<WidgetQuota | null>(null);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [requireLogin, setRequireLogin] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const attentionDelayRef = useRef<number>(ATTENTION_INITIAL_DELAY_MS);
   const attentionTimeoutRef = useRef<number | null>(null);
+
+  const quotaExhausted = quota !== null && quota.remaining_messages <= 0;
+
+  const refreshQuota = useCallback(async () => {
+    const nextQuota = await fetchWidgetQuota();
+    if (nextQuota) {
+      setQuota(nextQuota);
+      setRequireLogin(
+        !nextQuota.is_authenticated && nextQuota.remaining_messages <= 0
+      );
+    }
+  }, []);
 
   useEffect(() => {
     setMessages(loadMessages());
@@ -327,6 +341,11 @@ const AiWidget: React.FC = () => {
     if (!isStorageReady) return;
     saveMessages(messages);
   }, [messages, isStorageReady]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    void refreshQuota();
+  }, [isOpen, isAuthenticated, refreshQuota]);
 
   useEffect(() => {
     if (isOpen) {
@@ -383,11 +402,24 @@ const AiWidget: React.FC = () => {
   const sendMessage = async (userText: string) => {
     if (!userText.trim() || isLoading) return;
 
+    if (quotaExhausted) {
+      if (requireLogin || (quota && !quota.is_authenticated)) {
+        const detail =
+          "سقف پیام‌های مهمان تمام شده است. لطفاً وارد حساب کاربری شوید.";
+        toast.warning(detail);
+        setLoginModalOpen(true);
+      } else {
+        toast.warning("حداکثر استفاده مجاز را انجام داده‌اید.");
+      }
+      return;
+    }
+
     const history = buildHistory(messages);
+    const trimmed = userText.trim().slice(0, MAX_USER_INPUT_LENGTH);
 
     setMessages((prev) => [
       ...prev,
-      { role: "user", text: userText, properties: null },
+      { role: "user", text: trimmed, properties: null },
     ]);
 
     setInputText("");
@@ -395,24 +427,56 @@ const AiWidget: React.FC = () => {
     setTimeout(scrollToBottom, 50);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/agent/response/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_input: userText,
-          history,
-        }),
-      });
+      const result = await askShahrGPT(trimmed, history);
 
-      if (!response.ok)
-        throw new Error(`HTTP error ${response.status}`);
+      if (!result.ok) {
+        if (result.data.quota) {
+          setQuota(result.data.quota);
+        }
 
-      const data: {
-        explanation?: string;
-        properties?: Property[];
-      } = await response.json();
+        if (result.status === 429) {
+          const needsLogin = Boolean(result.data.require_login);
+          setRequireLogin(needsLogin);
+
+          const detail = getWidgetErrorMessage(429, result.data);
+
+          toast.warning(detail);
+          setMessages((prev) => [
+            ...prev,
+            { role: "ai", text: detail, properties: null, isError: true },
+          ]);
+
+          if (needsLogin) {
+            setLoginModalOpen(true);
+          }
+          return;
+        }
+
+        const errorMessage = getWidgetErrorMessage(
+          result.status,
+          result.data
+        );
+
+        toast.error(errorMessage);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "ai",
+            text: errorMessage,
+            properties: null,
+            isError: true,
+          },
+        ]);
+        return;
+      }
+
+      const { data } = result;
+      if (data.quota) {
+        setQuota(data.quota);
+        setRequireLogin(
+          !data.quota.is_authenticated && data.quota.remaining_messages <= 0
+        );
+      }
 
       const properties =
         data.properties && data.properties.length > 0
@@ -431,12 +495,15 @@ const AiWidget: React.FC = () => {
       ]);
     } catch (error) {
       console.error("Error fetching AI response:", error);
+      const message = "خطا در پاسخ ایجنت";
+      toast.error(message);
       setMessages((prev) => [
         ...prev,
         {
           role: "ai",
-          text: "متاسفانه خطایی رخ داده است.",
+          text: message,
           properties: null,
+          isError: true,
         },
       ]);
     } finally {
@@ -456,196 +523,239 @@ const AiWidget: React.FC = () => {
   };
 
   const showRecommendationPrompts =
-    isInitialChat(messages) && !isLoading;
+    isInitialChat(messages) && !isLoading && !quotaExhausted;
 
-  return ( 
-    <div className="absolute bottom-4 right-2 z-[9999] flex flex-col items-end font-sans sm:bottom-5 sm:right-5">
-      {isOpen && (
-        <div
-          dir="rtl"
-          className="fixed inset-0 flex flex-col overflow-hidden bg-white shadow-2xl
-          sm:absolute sm:inset-auto sm:bottom-0 sm:right-0
-          sm:w-[480px] sm:h-[680px] sm:max-h-[90vh] sm:rounded-2xl"
-        >
-          <div className="flex items-center justify-between border-b border-gray-200 bg-white p-4 flex-shrink-0">
-            <span className="text-base font-bold text-gray-800">
-             شهر GPT - دستیار هوشمند املاک
-            </span>
-            <button
-              onClick={toggleChat}
-              className="text-xl text-gray-500 hover:text-gray-800"
-            >
-              ✕
-            </button>
-          </div>
+  const inputDisabled = isLoading || quotaExhausted;
 
-          <div className="flex flex-1 flex-col gap-3 overflow-x-hidden overflow-y-auto bg-gray-50 p-4">
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex w-full ${
-                  msg.role === "user"
-                    ? "justify-start"
-                    : "justify-end"
-                }`}
+  return (
+    <>
+      <div className="absolute bottom-4 right-2 z-[9999] flex flex-col items-end font-sans sm:bottom-5 sm:right-5">
+        {isOpen && (
+          <div
+            dir="rtl"
+            className="fixed inset-0 flex flex-col overflow-hidden bg-white shadow-2xl
+            sm:absolute sm:inset-auto sm:bottom-0 sm:right-0
+            sm:w-[480px] sm:h-[680px] sm:max-h-[90vh] sm:rounded-2xl"
+          >
+            <div className="flex items-center justify-between border-b border-gray-200 bg-white p-4 flex-shrink-0">
+              <div className="min-w-0 flex flex-col gap-0.5">
+                <span className="text-base font-bold text-gray-800">
+                  شهر GPT - دستیار هوشمند املاک
+                </span>
+                {quota && (
+                  <span className="text-xs text-gray-500">
+                    {quota.remaining_messages > 0
+                      ? `${quota.remaining_messages.toLocaleString("fa-IR")} پیام باقی‌مانده`
+                      : "سهمیه پیام تمام شده"}
+                    {!quota.is_authenticated &&
+                      quota.remaining_messages > 0 &&
+                      " · مهمان"}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={toggleChat}
+                className="text-xl text-gray-500 hover:text-gray-800"
+                aria-label="بستن"
               >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex flex-1 flex-col gap-3 overflow-x-hidden overflow-y-auto bg-gray-50 p-4">
+              {messages.map((msg, index) => (
                 <div
-                  className={`flex min-w-0 flex-col gap-1 ${
-                    msg.role === "ai" && msg.properties
-                      ? "w-full max-w-full"
-                      : "max-w-[88%]"
+                  key={index}
+                  className={`flex w-full ${
+                    msg.role === "user" ? "justify-start" : "justify-end"
                   }`}
                 >
                   <div
-                    className={`break-words rounded-2xl px-4 py-2 text-sm leading-relaxed ${
-                      msg.role === "user"
-                        ? "rounded-tr-none bg-[#2a1b8d] text-white"
-                        : "rounded-tl-none bg-[#e0f2fe] text-black"
+                    className={`flex min-w-0 flex-col gap-1 ${
+                      msg.role === "ai" && msg.properties
+                        ? "w-full max-w-full"
+                        : "max-w-[88%]"
                     }`}
                   >
-                    {msg.text}
-                  </div>
-
-                  {msg.role === "ai" && msg.properties && (
-                    <div className="min-w-0 w-full max-w-full">
-                      <PropertySwiper properties={msg.properties} />
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {showRecommendationPrompts && (
-              <div className="mt-1 flex w-full flex-col gap-3 px-1">
-                <p className="text-center text-xs text-gray-500">
-                  پیشنهادات:
-                </p>
-                <div className="flex flex-col gap-2">
-                  {RECOMMENDATION_PROMPTS.map((prompt) => (
-                    <button
-                      key={prompt.category}
-                      type="button"
-                      onClick={() => handlePromptClick(prompt.text)}
-                      className={`group flex w-full cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-right text-sm shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${
-                        prompt.category === "property_search"
-                          ? "border-[#2a1b8d]/25 bg-[#2a1b8d]/5 hover:border-[#2a1b8d]/45 hover:bg-[#2a1b8d]/10 focus-visible:ring-[#2a1b8d]/40"
-                          : "border-sky-200 bg-sky-50 hover:border-sky-300 hover:bg-sky-100 focus-visible:ring-sky-300"
+                    <div
+                      className={`break-words rounded-2xl px-4 py-2 text-sm leading-relaxed ${
+                        msg.role === "user"
+                          ? "rounded-tr-none bg-[#2a1b8d] text-white"
+                          : "rounded-tl-none bg-[#e0f2fe] text-black"
                       }`}
                     >
-                      <div className="min-w-0 flex-1">
-                        <span
-                          className={`mb-1 block text-xs font-semibold ${
+                      {msg.text}
+                    </div>
+
+                    {msg.role === "ai" && msg.properties && (
+                      <div className="min-w-0 w-full max-w-full">
+                        <PropertySwiper properties={msg.properties} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {showRecommendationPrompts && (
+                <div className="mt-1 flex w-full flex-col gap-3 px-1">
+                  <p className="text-center text-xs text-gray-500">
+                    پیشنهادات:
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {RECOMMENDATION_PROMPTS.map((prompt) => (
+                      <button
+                        key={prompt.category}
+                        type="button"
+                        onClick={() => handlePromptClick(prompt.text)}
+                        className={`group flex w-full cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-right text-sm shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${
+                          prompt.category === "property_search"
+                            ? "border-[#2a1b8d]/25 bg-[#2a1b8d]/5 hover:border-[#2a1b8d]/45 hover:bg-[#2a1b8d]/10 focus-visible:ring-[#2a1b8d]/40"
+                            : "border-sky-200 bg-sky-50 hover:border-sky-300 hover:bg-sky-100 focus-visible:ring-sky-300"
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <span
+                            className={`mb-1 block text-xs font-semibold ${
+                              prompt.category === "property_search"
+                                ? "text-[#2a1b8d]"
+                                : "text-sky-700"
+                            }`}
+                          >
+                            {prompt.label}
+                          </span>
+                          <span className="block leading-relaxed text-gray-700">
+                            {prompt.text}
+                          </span>
+                        </div>
+                        <ChevronLeft
+                          className={`size-4 shrink-0 opacity-35 transition-all duration-200 group-hover:opacity-70 group-hover:-translate-x-0.5 ${
                             prompt.category === "property_search"
                               ? "text-[#2a1b8d]"
-                              : "text-sky-700"
+                              : "text-sky-600"
                           }`}
-                        >
-                          {prompt.label}
-                        </span>
-                        <span className="block leading-relaxed text-gray-700">
-                          {prompt.text}
-                        </span>
-                      </div>
-                      <ChevronLeft
-                        className={`size-4 shrink-0 opacity-35 transition-all duration-200 group-hover:opacity-70 group-hover:-translate-x-0.5 ${
-                          prompt.category === "property_search"
-                            ? "text-[#2a1b8d]"
-                            : "text-sky-600"
-                        }`}
-                        aria-hidden
-                      />
-                    </button>
-                  ))}
+                          aria-hidden
+                        />
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {isLoading && (
-              <div className="flex w-full justify-end">
-                <div className="max-w-[88%] rounded-2xl rounded-tl-none bg-[#e0f2fe] px-4 py-2 text-sm text-black">
-                  <ThreeDots
-                    height="40"
-                    width="40"
-                    color="#4fa94d"
-                    visible={true}
-                  />
+              {quotaExhausted && (
+                <div className="mx-1 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+                  {requireLogin || (quota && !quota.is_authenticated) ? (
+                    <div className="flex flex-col gap-2">
+                      <p>
+                        سقف پیام‌های مهمان تمام شده است. برای ادامه وارد حساب
+                        کاربری شوید.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setLoginModalOpen(true)}
+                        className="self-start rounded-lg bg-[#2a1b8d] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#1f3c88]"
+                      >
+                        ورود به حساب کاربری
+                      </button>
+                    </div>
+                  ) : (
+                    <p>حداکثر استفاده مجاز را انجام داده‌اید.</p>
+                  )}
                 </div>
-              </div>
-            )}
+              )}
 
-            <div ref={messagesEndRef} />
+              {isLoading && (
+                <div className="flex w-full justify-end">
+                  <div className="max-w-[88%] rounded-2xl rounded-tl-none bg-[#e0f2fe] px-4 py-2 text-sm text-black">
+                    <ThreeDots
+                      height="40"
+                      width="40"
+                      color="#4fa94d"
+                      visible={true}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+
+            <form
+              onSubmit={handleSendMessage}
+              className="flex items-center gap-2 border-t border-gray-200 bg-white p-3"
+            >
+              <input
+                type="text"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder={
+                  quotaExhausted
+                    ? "سهمیه پیام تمام شده است"
+                    : "اینجا تایپ کنید ..."
+                }
+                disabled={inputDisabled}
+                maxLength={MAX_USER_INPUT_LENGTH}
+                className="flex-1 bg-transparent p-2 text-sm text-gray-800 outline-none disabled:cursor-not-allowed disabled:opacity-60"
+              />
+
+              <button
+                type="submit"
+                disabled={inputDisabled || !inputText.trim()}
+                className="rotate-180 text-xl text-gray-500 hover:text-[#2a1b8d] disabled:opacity-50"
+              >
+                ➤
+              </button>
+            </form>
           </div>
+        )}
 
-          <form
-            onSubmit={handleSendMessage}
-            className="flex items-center gap-2 border-t border-gray-200 bg-white p-3"
-          >
-            <input
-              type="text"
-              value={inputText}
-              onChange={(e) =>
-                setInputText(e.target.value)
-              }
-              placeholder="اینجا تایپ کنید ..."
-              className="flex-1 bg-transparent p-2 text-sm text-gray-800 outline-none"
-            />
+        {!isOpen && (
+          <div className="group relative flex items-center">
+            <div
+              dir="rtl"
+              className={`pointer-events-none absolute right-full top-1/2 z-10 mr-4 -translate-y-1/2 transition-all duration-300 ease-out ${
+                isAttention
+                  ? "translate-x-0 opacity-100"
+                  : "translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100"
+              }`}
+            >
+              <div className="relative whitespace-nowrap rounded-2xl bg-gradient-to-l from-[#2a1b8d] to-[#4338ca] px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_24px_rgba(42,27,141,0.35)]">
+                دستیار هوشمند گویا
+                <span
+                  className="absolute -right-2 top-1/2 size-0 -translate-y-1/2 border-y-[7px] border-l-[8px] border-y-transparent border-l-[#4338ca]"
+                  aria-hidden
+                />
+              </div>
+            </div>
 
             <button
-              type="submit"
-              disabled={isLoading || !inputText.trim()}
-              className="rotate-180 text-xl text-gray-500 hover:text-[#2a1b8d] disabled:opacity-50"
+              type="button"
+              onClick={toggleChat}
+              aria-label="دستیار هوشمند گویا"
+              className="relative block size-[85px] rounded-full transition-transform duration-300 hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2a1b8d]"
             >
-              ➤
-            </button>
-          </form>
-        </div>
-      )}
-
-      {!isOpen && (
-        <div className="group relative flex items-center">
-          <div
-            dir="rtl"
-            className={`pointer-events-none absolute right-full top-1/2 z-10 mr-4 -translate-y-1/2 transition-all duration-300 ease-out ${
-              isAttention
-                ? "translate-x-0 opacity-100"
-                : "translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100"
-            }`}
-          >
-            <div className="relative whitespace-nowrap rounded-2xl bg-gradient-to-l from-[#2a1b8d] to-[#4338ca] px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_24px_rgba(42,27,141,0.35)]">
-              دستیار هوشمند گویا
-              <span
-                className="absolute -right-2 top-1/2 size-0 -translate-y-1/2 border-y-[7px] border-l-[8px] border-y-transparent border-l-[#4338ca]"
-                aria-hidden
+              {isAttention && (
+                <>
+                  <span className="pointer-events-none absolute inset-0 rounded-full border-2 border-[#4338ca] animate-ai-widget-pulse-ring" />
+                  <span
+                    className="pointer-events-none absolute inset-0 rounded-full border-2 border-[#2a1b8d] animate-ai-widget-pulse-ring"
+                    style={{ animationDelay: "150ms" }}
+                  />
+                </>
+              )}
+              <Image
+                src="/ai/aiIcon.png"
+                alt="دستیار هوشمند گویا"
+                className="drop-shadow-[0_4px_14px_rgba(42,27,141,0.25)]"
+                fill
+                priority
               />
-            </div>
+            </button>
           </div>
+        )}
+      </div>
 
-          <button
-            type="button"
-            onClick={toggleChat}
-            aria-label="دستیار هوشمند گویا"
-            className="relative block size-[85px] rounded-full transition-transform duration-300 hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2a1b8d]"
-          >
-            {isAttention && (
-              <>
-                <span className="pointer-events-none absolute inset-0 rounded-full border-2 border-[#4338ca] animate-ai-widget-pulse-ring" />
-                <span
-                  className="pointer-events-none absolute inset-0 rounded-full border-2 border-[#2a1b8d] animate-ai-widget-pulse-ring"
-                  style={{ animationDelay: "150ms" }}
-                />
-              </>
-            )}
-            <Image
-              src="/ai/aiIcon.png"
-              alt="دستیار هوشمند گویا"
-              className="drop-shadow-[0_4px_14px_rgba(42,27,141,0.25)]"
-              fill
-              priority
-            />
-          </button>
-        </div>
-      )}
-    </div>
+      <LoginModal open={loginModalOpen} onOpenChange={setLoginModalOpen} />
+    </>
   );
 };
 

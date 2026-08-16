@@ -146,26 +146,25 @@ export const refreshToken = async (payload: RefreshTokenPayload): Promise<Refres
 };
 
 /**
- * به‌روزرسانی پروفایل کاربر - با HttpOnly Cookies
+ * به‌روزرسانی پروفایل کاربر از طریق proxy (توکن از HttpOnly cookie)
  */
 export const updateProfile = async (
   payload: UpdateProfilePayload
 ): Promise<UpdateProfileResponse> => {
-  const response = await fetch(`${API_BASE}/api/auth/update-profile/`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include', // برای ارسال cookies
-    body: JSON.stringify(payload),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.detail || 'خطا در به‌روزرسانی پروفایل');
+  try {
+    const response = await apiClient.patch<UpdateProfileResponse>(
+      '/api/auth/update-profile/',
+      payload
+    );
+    return response.data;
+  } catch (error: unknown) {
+    const err = error as {
+      response?: { data?: { detail?: string } };
+      message?: string;
+    };
+    throw new Error(
+      err.response?.data?.detail || err.message || 'خطا در به‌روزرسانی پروفایل'
+    );
   }
-
-  return data;
 };
 

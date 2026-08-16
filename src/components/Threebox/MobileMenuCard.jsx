@@ -5,6 +5,7 @@ import { Home, KeyIcon, DraftingCompassIcon } from 'lucide-react'
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Search } from "lucide-react";
 import { useState, memo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -204,64 +205,53 @@ export default function MobileMenuCard({ setphoto }) {
 
               <div className='flex justify-around items-center my-2 gap-2  '>
                 {/* شهر */}
-                <div className=' w-36  h-7'>
-                  <Select
+                <div className='min-w-0 flex-1'>
+                  <SearchableSelect
                     value={city}
                     onValueChange={(value) => {
                       setCity(value);
-                      setLocation(undefined); // تغییر شهر => ریست منطقه
+                      setLocation(undefined);
                     }}
-                  >
-                    <SelectTrigger dir="rtl" className="border-2 border-black bg-white shadow-none">
-                      <SelectValue placeholder=" شهر" />
-                    </SelectTrigger>
-                    <SelectContent className=' w-48 h-44'>
-                      {citiesLoading ? (
-                        <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
-                      ) : (
-                        cities.map((city) => (
-                          <SelectItem key={city.id} value={city.id.toString()}>
-                            {city.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                    options={cities.map((c) => ({
+                      value: c.id.toString(),
+                      label: c.name,
+                    }))}
+                    placeholder="شهر"
+                    searchPlaceholder="جستجوی شهر..."
+                    loading={citiesLoading}
+                    triggerClassName="h-10 border-2 border-black bg-white shadow-none focus:ring-0 focus:ring-offset-0"
+                    contentClassName="w-48"
+                  />
                 </div>
                 {/* منطقه */}
-                <div className='w-36 h-7'>
-                  <Select
+                <div className='min-w-0 flex-1'>
+                  <SearchableSelect
                     value={location}
                     onValueChange={setLocation}
                     disabled={!selectedCityId}
-                  >
-                    <SelectTrigger dir="rtl" className="border-2 border-black bg-white shadow-none">
-                      <SelectValue placeholder={selectedCityId ? "منطقه" : "منطقه"} />
-                    </SelectTrigger>
-                    <SelectContent className=' w-48 h-44'>
-                      {!selectedCityId ? (
-                        <SelectItem value="disabled" disabled>ابتدا شهر را انتخاب کنید</SelectItem>
-                      ) : locationsLoading ? (
-                        <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
-                      ) : locations.length === 0 ? (
-                        <SelectItem value="empty" disabled>منطقه‌ای یافت نشد</SelectItem>
-                      ) : (
-                        locations.map((loc) => (
-                          <SelectItem key={loc.id} value={loc.id.toString()}>
-                            {loc.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                    options={locations.map((loc) => ({
+                      value: loc.id.toString(),
+                      label: loc.name,
+                    }))}
+                    placeholder={selectedCityId ? "منطقه" : "ابتدا شهر را انتخاب کنید"}
+                    searchPlaceholder="جستجوی منطقه..."
+                    emptyText="منطقه‌ای یافت نشد"
+                    loading={locationsLoading}
+                    triggerClassName="h-10 border-2 border-black bg-white shadow-none focus:ring-0 focus:ring-offset-0"
+                    contentClassName="w-48"
+                  />
                 </div>
                 {/* نوع ملک */}
-                <div className='w-36  h-7'>
+                <div className='min-w-0 flex-1'>
                   <Select value={type} onValueChange={setType}>
-                    <SelectTrigger dir="rtl" className="border-2 border-black bg-white shadow-none">
+                    <SelectTrigger dir="rtl" className="h-10 border-2 border-black bg-white shadow-none">
                       <SelectValue placeholder="نوع ملک" />
                     </SelectTrigger>
-                    <SelectContent className=' w-48 h-44'>
+                    <SelectContent
+                      side="bottom"
+                      collisionPadding={{ top: 80, bottom: 16, left: 8, right: 8 }}
+                      className="w-48"
+                    >
                       {propertyTypesLoading ? (
                         <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
                       ) : (
@@ -291,64 +281,53 @@ export default function MobileMenuCard({ setphoto }) {
 
               <div className='flex justify-around items-center my-2 gap-2  '>
                 {/* شهر */}
-                <div className=' w-36  h-7'>
-                  <Select
+                <div className='min-w-0 flex-1'>
+                  <SearchableSelect
                     value={city}
                     onValueChange={(value) => {
                       setCity(value);
-                      setLocation(undefined); // تغییر شهر => ریست منطقه
+                      setLocation(undefined);
                     }}
-                  >
-                    <SelectTrigger dir="rtl" className="border-2 border-black bg-white shadow-none">
-                      <SelectValue placeholder=" شهر" />
-                    </SelectTrigger>
-                    <SelectContent className=' w-48 h-44'>
-                      {citiesLoading ? (
-                        <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
-                      ) : (
-                        cities.map((city) => (
-                          <SelectItem key={city.id} value={city.id.toString()}>
-                            {city.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                    options={cities.map((c) => ({
+                      value: c.id.toString(),
+                      label: c.name,
+                    }))}
+                    placeholder="شهر"
+                    searchPlaceholder="جستجوی شهر..."
+                    loading={citiesLoading}
+                    triggerClassName="h-10 border-2 border-black bg-white shadow-none focus:ring-0 focus:ring-offset-0"
+                    contentClassName="w-48"
+                  />
                 </div>
                 {/* منطقه */}
-                <div className='w-36 h-7'>
-                  <Select
+                <div className='min-w-0 flex-1'>
+                  <SearchableSelect
                     value={location}
                     onValueChange={setLocation}
                     disabled={!selectedCityId}
-                  >
-                    <SelectTrigger dir="rtl" className="border-2 border-black bg-white shadow-none">
-                      <SelectValue placeholder={selectedCityId ? "منطقه" : "منطقه"} />
-                    </SelectTrigger>
-                    <SelectContent className=' w-48 h-44'>
-                      {!selectedCityId ? (
-                        <SelectItem value="disabled" disabled>ابتدا شهر را انتخاب کنید</SelectItem>
-                      ) : locationsLoading ? (
-                        <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
-                      ) : locations.length === 0 ? (
-                        <SelectItem value="empty" disabled>منطقه‌ای یافت نشد</SelectItem>
-                      ) : (
-                        locations.map((loc) => (
-                          <SelectItem key={loc.id} value={loc.id.toString()}>
-                            {loc.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                    options={locations.map((loc) => ({
+                      value: loc.id.toString(),
+                      label: loc.name,
+                    }))}
+                    placeholder={selectedCityId ? "منطقه" : "ابتدا شهر را انتخاب کنید"}
+                    searchPlaceholder="جستجوی منطقه..."
+                    emptyText="منطقه‌ای یافت نشد"
+                    loading={locationsLoading}
+                    triggerClassName="h-10 border-2 border-black bg-white shadow-none focus:ring-0 focus:ring-offset-0"
+                    contentClassName="w-48"
+                  />
                 </div>
                 {/* نوع ملک */}
-                <div className='w-36  h-7'>
+                <div className='min-w-0 flex-1'>
                   <Select value={type} onValueChange={setType}>
-                    <SelectTrigger dir="rtl" className="border-2 border-black bg-white shadow-none">
+                    <SelectTrigger dir="rtl" className="h-10 border-2 border-black bg-white shadow-none">
                       <SelectValue placeholder="نوع ملک" />
                     </SelectTrigger>
-                    <SelectContent className=' w-48 h-44'>
+                    <SelectContent
+                      side="bottom"
+                      collisionPadding={{ top: 80, bottom: 16, left: 8, right: 8 }}
+                      className="w-48"
+                    >
                       {propertyTypesLoading ? (
                         <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
                       ) : (

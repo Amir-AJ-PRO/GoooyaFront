@@ -1,115 +1,48 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PageHeader } from '@/components/common/PageHeader';
-import { use } from 'react';
+import { User, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
-export default function EditUser({ params }: Props) {
+export default function EditUser(_props: Props) {
   const { user } = useAuth();
-  const resolvedParams = use(params);
-  const userId = resolvedParams.id;
-
-  // Mock data
-  const userData = {
-    id: userId,
-    name: 'محمد رضایی',
-    phone: '09123456789',
-    email: 'mohammad@example.com',
-    type: 'agent',
-    status: 'active',
-  };
 
   if (!user || user.type !== 'admin') {
     return null;
   }
 
   return (
-    <div>
-      <PageHeader
-        title="ویرایش کاربر"
-        description={`ویرایش اطلاعات کاربر ${userData.name}`}
-      />
+    <div className="space-y-6">
+      <div>
+        <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">
+          <User className="h-7 w-7 text-primary" />
+          ویرایش کاربر
+        </h1>
+        <p className="mt-2 text-muted-foreground">
+          این صفحه هنوز به داده واقعی کاربر متصل نیست
+        </p>
+      </div>
 
-      <Card className="mt-6 max-w-2xl">
-        <CardHeader>
-          <CardTitle>اطلاعات کاربر</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4">
-            <div>
-              <Label htmlFor="name">نام و نام خانوادگی</Label>
-              <Input 
-                id="name" 
-                defaultValue={userData.name}
-                className="mt-2"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="phone">شماره تماس</Label>
-              <Input 
-                id="phone" 
-                type="tel"
-                defaultValue={userData.phone}
-                className="mt-2"
-                disabled
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="email">ایمیل</Label>
-              <Input 
-                id="email" 
-                type="email"
-                defaultValue={userData.email}
-                className="mt-2"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="type">نوع کاربر</Label>
-              <Select defaultValue={userData.type}>
-                <SelectTrigger className="mt-2">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">کاربر عادی</SelectItem>
-                  <SelectItem value="agent">مشاور املاک</SelectItem>
-                  <SelectItem value="admin">مدیر</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="status">وضعیت</Label>
-              <Select defaultValue={userData.status}>
-                <SelectTrigger className="mt-2">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">فعال</SelectItem>
-                  <SelectItem value="suspended">معلق</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <Button type="submit">ذخیره تغییرات</Button>
-              <Button type="button" variant="outline">انصراف</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/40 px-4 py-16 text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+          <User className="h-7 w-7 text-primary" />
+        </div>
+        <h3 className="mb-1 font-semibold">ویرایش در دسترس نیست</h3>
+        <p className="mb-5 max-w-sm text-sm text-muted-foreground">
+          اطلاعات نمونه حذف شد تا داده ساختگی با حساب واقعی اشتباه گرفته نشود.
+        </p>
+        <Link href="/admin">
+          <Button variant="outline" className="gap-2">
+            <ArrowRight className="h-4 w-4" />
+            بازگشت به داشبورد
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }
-

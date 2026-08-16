@@ -4,7 +4,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { clearTokens } from '@/lib/server/cookies';
+import { clearAuthCookies, clearTokens } from '@/lib/server/cookies';
 
 export async function POST() {
   try {
@@ -15,8 +15,7 @@ export async function POST() {
       message: 'خروج موفقیت‌آمیز',
     });
     
-    // پاک کردن user data cookie
-    response.cookies.delete('user_data');
+    clearAuthCookies(response);
     
     return response;
   } catch (error) {

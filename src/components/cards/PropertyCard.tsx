@@ -80,34 +80,36 @@ export default function PropertyCard({ property, showFavoriteButton = true }: Pr
     return false;
   })();
   
+  const propertyHref = `/properties/${property.slug}`;
+
   return (
-    <Link href={`/properties/${property.slug}`} prefetch={true}>
-      <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer group border-2 hover:border-primary/50 h-full flex flex-col">
-        {/* تصویر */}
-        <div className="relative h-64 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+    <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer group border-2 hover:border-primary/50 h-full flex flex-col">
+      {/* تصویر */}
+      <div className="relative h-64 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+        <Link href={propertyHref} prefetch={true} className="absolute inset-0 z-0 block">
           <Image
             src={imageUrl}
-            alt={property.title}
+            alt={`${property.title}${typeof property.city === 'string' ? ` در ${property.city}` : property.city?.name ? ` در ${property.city.name}` : ''}`}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-500"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-          
-          {/* Overlay gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          
-          {/* دکمه علاقه‌مندی - سمت چپ بالا - فقط برای کاربران لاگین شده */}
-          {showFavoriteButton && isAuthenticated && (
-            <div className="absolute top-3 left-3 z-10">
-              <FavoriteButtonSmall
-                propertyId={property.id}
-                isFavorite={Boolean((property as any).is_favorite)}
-              />
-            </div>
-          )}
-          
-          {/* بج‌ها - سمت راست بالا */}
-          <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-2">
+
+          {/* Overlay gradient — decorative only, must not block clicks on desktop hover */}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        </Link>
+
+        {/* دکمه علاقه‌مندی — outside Link so clicks work on laptop/desktop */}
+        {showFavoriteButton && isAuthenticated && (
+          <FavoriteButtonSmall
+            propertyId={property.id}
+            isFavorite={Boolean((property as any).is_favorite)}
+            className="top-3 left-3 z-20"
+          />
+        )}
+
+        {/* بج‌ها - سمت راست بالا */}
+        <div className="pointer-events-none absolute top-3 right-3 z-10 flex flex-col items-end gap-2">
             <Badge 
               className={`px-3 py-1.5 text-xs font-bold shadow-lg ${
                 property.transaction_type === 'sale' 
@@ -124,15 +126,16 @@ export default function PropertyCard({ property, showFavoriteButton = true }: Pr
             )}
           </div>
           
-          {/* تعداد تصاویر */}
-          {property.images && property.images.length > 1 && (
-            <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-full">
-              {property.images.length} تصویر
-            </div>
-          )}
-        </div>
-        
-        {/* محتوا */}
+        {/* تعداد تصاویر */}
+        {property.images && property.images.length > 1 && (
+          <div className="pointer-events-none absolute bottom-3 right-3 z-10 px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-xs rounded-full">
+            {property.images.length} تصویر
+          </div>
+        )}
+      </div>
+
+      {/* محتوا */}
+      <Link href={propertyHref} prefetch={true} className="flex flex-1 flex-col">
         <div className="p-5 flex-1 flex flex-col">
           {/* عنوان */}
           <h3 className="font-bold text-lg mb-3 line-clamp-2 min-h-[3.5rem] group-hover:text-primary transition-colors">
@@ -187,8 +190,8 @@ export default function PropertyCard({ property, showFavoriteButton = true }: Pr
             </div>
           </div>
         </div>
-      </Card>
-    </Link>
+      </Link>
+    </Card>
   );
 }
 

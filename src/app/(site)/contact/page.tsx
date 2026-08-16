@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "تماس با ما - گویا",
-  description: "با تیم گویا در ارتباط باشید. برای مشاوره املاک، پشتیبانی و سوالات خود با ما تماس بگیرید.",
-  keywords: ["تماس با گویا", "پشتیبانی املاک", "مشاوره املاک", "شماره تماس"],
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: "تماس با گویا",
+  description: "برای مشاوره خرید، فروش و اجاره ملک در دماوند، پردیس و شرق تهران با تیم گویا در ارتباط باشید.",
+  path: "/contact",
+  keywords: ["تماس با گویا", "مشاوره املاک دماوند", "پشتیبانی املاک", "شماره تماس گویا"],
+});
 
 export default function Contact() {
   const contactInfo = [

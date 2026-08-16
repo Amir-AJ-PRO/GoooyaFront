@@ -7,6 +7,29 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Next.js can pass dynamic route params still percent-encoded
+ * (common with Persian property slugs). Decode until stable so
+ * API calls are not double-encoded into a 404.
+ */
+export function decodePathSlug(slug: string): string {
+  let current = slug;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const decoded = decodeURIComponent(current);
+      if (decoded === current) break;
+      current = decoded;
+    } catch {
+      break;
+    }
+  }
+  return current;
+}
+
+export function encodePathSlug(slug: string): string {
+  return encodeURIComponent(decodePathSlug(slug));
+}
+
+/**
  * تبدیل مسیر نسبی به URL کامل
  * برای استفاده با تصاویر و فایل‌های backend
  * همیشه یک رشته معتبر برمی‌گرداند (در صورت نبود تصویر، placeholder)

@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import Pagination from '@/components/common/Pagination';
 import PublicAgentCard from '@/components/agent/PublicAgentCard';
@@ -228,56 +229,41 @@ export default function AgentsPageClient() {
             </div>
 
             {/* City */}
-            <Select
+            <SearchableSelect
               value={cityFilter}
               onValueChange={(value) => {
                 setCityFilter(value);
                 setRegionFilter('all');
               }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="شهر" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">همه شهرها</SelectItem>
-                {citiesLoading ? (
-                  <SelectItem value="loading" disabled>
-                    در حال بارگذاری...
-                  </SelectItem>
-                ) : (
-                  cities.map((c) => (
-                    <SelectItem key={c.id} value={c.id.toString()}>
-                      {c.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+              options={[
+                { value: 'all', label: 'همه شهرها' },
+                ...cities.map((c) => ({
+                  value: c.id.toString(),
+                  label: c.name,
+                })),
+              ]}
+              placeholder="شهر"
+              searchPlaceholder="جستجوی شهر..."
+              loading={citiesLoading}
+            />
 
             {/* Region */}
-            <Select
+            <SearchableSelect
               value={regionFilter}
               onValueChange={setRegionFilter}
               disabled={cityFilter === 'all' || locationsLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={cityFilter === 'all' ? 'ابتدا شهر را انتخاب کنید' : 'منطقه'} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">همه مناطق</SelectItem>
-                {locationsLoading ? (
-                  <SelectItem value="loading" disabled>
-                    در حال بارگذاری...
-                  </SelectItem>
-                ) : (
-                  locations.map((loc) => (
-                    <SelectItem key={loc.id} value={loc.id.toString()}>
-                      {loc.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+              options={[
+                { value: 'all', label: 'همه مناطق' },
+                ...locations.map((loc) => ({
+                  value: loc.id.toString(),
+                  label: loc.name,
+                })),
+              ]}
+              placeholder={cityFilter === 'all' ? 'ابتدا شهر را انتخاب کنید' : 'منطقه'}
+              searchPlaceholder="جستجوی منطقه..."
+              emptyText="منطقه‌ای یافت نشد"
+              loading={locationsLoading}
+            />
 
             {/* Page size */}
             <Select

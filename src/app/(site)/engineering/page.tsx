@@ -5,12 +5,14 @@ import Image from "next/image";
 import engineeringImage from "@/assets/about-consultation.jpg";
 import EngineeringServiceSelector from "@/components/EngineeringServiceSelector";
 import EngineeringContactForm from "@/components/EngineeringContactForm";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "خدمات مهندسی ساختمان - گویا",
-  description: "خدمات کامل مهندسی ساختمان شامل طراحی نقشه، نقشه برداری، کارهای ثبتی، بازسازی، اجرا و ساخت، عدم خلافی، پایان کار و دریافت جواز ساختمان",
-  keywords: ["خدمات مهندسی", "طراحی نقشه", "نقشه برداری", "پایان کار ساختمان", "جواز ساختمان", "بازسازی"],
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: "خدمات مهندسی ساختمان",
+  description: "طراحی نقشه، نقشه‌برداری، بازسازی، پایان کار و جواز ساختمان در شرق تهران با متخصصان گویا.",
+  path: "/engineering",
+  keywords: ["خدمات مهندسی ساختمان", "پایان کار", "جواز ساختمان", "نقشه برداری دماوند", "بازسازی"],
+});
 
 /**
  * Engineering Services Page - Server Component

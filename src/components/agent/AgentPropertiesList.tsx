@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { useFilteredAgentProperties, useDeleteProperty } from '@/hooks/useAgentProfile';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +25,6 @@ import {
   BedDouble,
   Calendar,
   Eye,
-  Clock,
   XCircle,
   Pencil,
   Trash2,
@@ -68,19 +67,12 @@ export default function AgentPropertiesList() {
 
   return (
     <div className="space-y-3 sm:space-y-4">
-      <Card>
-        <CardHeader className="p-3 sm:p-6">
-          <CardTitle className="text-base sm:text-lg md:text-xl">املاک من</CardTitle>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-6 pt-0">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-            <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
-              <TabsTrigger value="all" className="text-xs sm:text-sm">همه املاک</TabsTrigger>
-              <TabsTrigger value="ok" className="text-xs sm:text-sm">فعال</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </CardContent>
-      </Card>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | 'ok')}>
+        <TabsList className="grid h-10 w-full grid-cols-2 sm:w-auto">
+          <TabsTrigger value="all">همه املاک</TabsTrigger>
+          <TabsTrigger value="ok">فعال</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {propertiesArray.length === 0 ? (
         <Card>

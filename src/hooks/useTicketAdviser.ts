@@ -11,11 +11,12 @@ import { toast } from 'sonner';
 /**
  * دریافت لیست تیکت‌های مشاور
  */
-export const useAdviserTickets = (status?: string) => {
+export const useAdviserTickets = (status?: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: ['adviserTickets', status],
     queryFn: () => getAdviserTickets(status),
     staleTime: 1000 * 60 * 2, // 2 دقیقه
+    enabled,
   });
 };
 

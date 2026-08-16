@@ -40,12 +40,12 @@ export const useCreateProperty = () => {
       });
     },
     onError: (error) => {
-      // نمایش خطای serialize شده از سرور
       const errorMessage = error.message || 'خطای ناشناخته در ثبت ملک';
-      
+      console.error('❌ [useCreateProperty] error:', errorMessage, error);
+
       toast.error('خطا در ثبت ملک', {
         description: errorMessage,
-        duration: 6000, // 6 ثانیه برای خواندن خطاهای طولانی
+        duration: 10000,
       });
     }
   });

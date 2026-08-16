@@ -3,7 +3,11 @@
  */
 
 import { API_BASE_URL } from '@/lib/constants';
+import { encodePathSlug } from '@/lib/utils';
 import { apiClient } from '@/lib/api';
+import {
+  formatApiValidationErrorInline,
+} from '@/lib/apiErrors';
 import { 
   Property, 
   PropertyListItem,
@@ -41,7 +45,21 @@ export const createPropertyFormData = (payload: CreatePropertyPayload): FormData
   
   // قیمت - اگر null باشه (قیمت توافقی)، اصلا نمیفرستیم
   if (payload.price !== undefined && payload.price !== null) {
-    formData.append('price', payload.price.toString());} else {}
+    formData.append('price', payload.price.toString());
+  }
+
+  if (payload.agreed_price !== undefined) {
+    formData.append('agreed_price', payload.agreed_price ? 'true' : 'false');
+  }
+  if (payload.exchange !== undefined) {
+    formData.append('exchange', payload.exchange ? 'true' : 'false');
+  }
+  if (payload.urgent !== undefined) {
+    formData.append('urgent', payload.urgent ? 'true' : 'false');
+  }
+  if (payload.under_price !== undefined) {
+    formData.append('under_price', payload.under_price ? 'true' : 'false');
+  }
   
   if (payload.mortgage) formData.append('mortgage', payload.mortgage.toString());
   if (payload.rent) formData.append('rent', payload.rent.toString());
@@ -82,68 +100,38 @@ export const createProperty = async (
     body: formData,
   });
   
-  const data = await response.json();
-  
-  if (!response.ok) {
-    // Handle different serialized error formats from backend
-    let errorMessage = 'خطا در ثبت ملک';
-    
-    // 1. اگر data رشته باشد
-    if (typeof data === 'string') {
-      errorMessage = data;
-    } 
-    // 2. اگر data.detail موجود باشد
-    else if (data.detail) {
-      if (typeof data.detail === 'string') {
-        errorMessage = data.detail;
-      } 
-      // اگر detail یک آرایه باشد (validation errors)
-      else if (Array.isArray(data.detail)) {
-        const errors = data.detail.map((err: any) => {
-          if (typeof err === 'string') return err;
-          if (err.msg) return err.msg;
-          if (err.message) return err.message;
-          return JSON.stringify(err);
-        });
-        errorMessage = errors.join(' | ');
-      }
-      // اگر detail یک آبجکت باشد
-      else if (typeof data.detail === 'object') {
-        const errors = Object.entries(data.detail).map(([field, msg]) => {
-          return `${field}: ${msg}`;
-        });
-        errorMessage = errors.join(' | ');
-      }
-    }
-    // 3. اگر data.error موجود باشد
-    else if (data.error) {
-      errorMessage = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
-    }
-    // 4. اگر data.message موجود باشد
-    else if (data.message) {
-      errorMessage = data.message;
-    }
-    // 5. Handle validation errors: { field: ["error1", "error2"] }
-    else if (typeof data === 'object' && Object.keys(data).length > 0) {
-      const errors = [];
-      for (const [field, messages] of Object.entries(data)) {
-        if (Array.isArray(messages)) {
-          errors.push(`${field}: ${messages.join(', ')}`);
-        } else if (typeof messages === 'string') {
-          errors.push(`${field}: ${messages}`);
-        } else if (messages && typeof messages === 'object') {
-          errors.push(`${field}: ${JSON.stringify(messages)}`);
-        }
-      }
-      if (errors.length > 0) {
-        errorMessage = errors.join(' | ');
-      }
-    }
-    
-    throw new Error(errorMessage);
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    console.error('❌ [createProperty] non-JSON response', {
+      status: response.status,
+    });
+    throw new Error(
+      response.status === 400
+        ? 'داده‌های وارد شده نامعتبر است. لطفاً فیلدها را بررسی کنید.'
+        : `خطای سرور (${response.status})`
+    );
   }
-  
-  return data;
+
+  if (!response.ok) {
+    const message = formatApiValidationErrorInline(
+      data,
+      response.status === 400
+        ? 'داده‌های وارد شده نامعتبر است. لطفاً فیلدها را بررسی کنید.'
+        : 'خطا در ثبت ملک'
+    );
+
+    console.error('❌ [createProperty] API error', {
+      status: response.status,
+      responseBody: data,
+      message,
+    });
+
+    throw new Error(message);
+  }
+
+  return data as Property;
 };
 
 /**
@@ -319,7 +307,7 @@ export const getProperties = async (
  */
 export const getPropertyBySlug = async (slugOrId: string | number): Promise<Property> => {
   try {// تبدیل به string برای استفاده در URL
-    const identifier = String(slugOrId);
+    const identifier = encodePathSlug(String(slugOrId));
     
     // بررسی اینکه آیا identifier یک عدد است (ID) یا slug
     const isNumericId = !isNaN(Number(identifier)) && identifier.trim() !== '';

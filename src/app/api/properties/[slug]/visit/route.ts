@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiHandler, backendFetch } from '@/lib/server/api-handler';
+import { decodePathSlug } from '@/lib/utils';
 import { z } from 'zod';
 
 interface RouteContext {
@@ -21,8 +22,7 @@ export const POST = withApiHandler<any>(
       );
     }
 
-    // Decode Persian characters
-    const decodedSlug = decodeURIComponent(slug);
+    const decodedSlug = decodePathSlug(slug);
 
     // ارسال به backend
     const response = await backendFetch('/v1/properties/visit-tickets/create/', {
@@ -43,13 +43,17 @@ export const POST = withApiHandler<any>(
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: data.detail || data.error || 'خطا در ثبت تیکت' },
+        {
+          error: data.detail || data.error || 'خطا در ثبت تیکت',
+          ...(data.existing_ticket && { existing_ticket: data.existing_ticket }),
+        },
         { status: response.status }
       );
     }
 
     return NextResponse.json({
       success: true,
+      message: data.message || 'درخواست بازدید با موفقیت ثبت شد',
       data,
     });
   },

@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { setUserDataCookie } from '@/lib/server/cookies';
 
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -39,10 +40,25 @@ async function proxyRequest(
     console.log(`🔄 Proxying ${method} ${targetUrl}`);
     console.log(`📍 Path segments:`, pathSegments);
     
-    // ساخت headers
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+    // ساخت headers — Content-Type را فقط برای JSON ست می‌کنیم
+    // برای multipart نباید ست شود تا fetch خودش boundary بسازد
+    const headers: Record<string, string> = {};
+    const incomingContentType = request.headers.get('content-type') || '';
+    const isMultipart = incomingContentType.includes('multipart/form-data');
+
+    // فوروارد IP کلاینت برای سهمیه مهمان (مثلاً ویجت شهر GPT)
+    const forwardedFor =
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip') ||
+      undefined;
+    const clientIp =
+      forwardedFor?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      undefined;
+    if (clientIp) {
+      headers['X-Forwarded-For'] = clientIp;
+      headers['X-Real-IP'] = clientIp;
+    }
     
     // اگر access token نداریم ولی refresh token داریم، قبل از ارسال درخواست رفرش کنیم
     if (!accessToken && refreshToken) {
@@ -72,24 +88,45 @@ async function proxyRequest(
     }
     
     // دریافت body (اگر POST/PUT/PATCH)
-    let body: string | undefined;
+    // مهم: multipart را به‌صورت خام با همان Content-Type (شامل boundary) فوروارد کن
+    let body: BodyInit | undefined;
     if (['POST', 'PUT', 'PATCH'].includes(method)) {
-      try {
-        const jsonBody = await request.json();
-        body = JSON.stringify(jsonBody);
-        console.log('📦 Request body:', body);
-      } catch {
-        // body خالی
-        console.log('📦 No body');
+      if (isMultipart) {
+        body = await request.arrayBuffer();
+        headers['Content-Type'] = incomingContentType;
+        console.log('📦 Multipart raw body forwarded');
+      } else if (
+        incomingContentType.includes('application/json') ||
+        incomingContentType === ''
+      ) {
+        headers['Content-Type'] = 'application/json';
+        try {
+          const jsonBody = await request.json();
+          body = JSON.stringify(jsonBody);
+          console.log('📦 Request body:', body);
+        } catch {
+          console.log('📦 No body');
+        }
+      } else {
+        headers['Content-Type'] = incomingContentType;
+        body = await request.arrayBuffer();
+        console.log('📦 Raw body forwarded:', incomingContentType);
       }
     }
-    
-    // ارسال درخواست به Backend
-    let response = await fetch(targetUrl, {
+
+    // ویجت شهر GPT تا ۶۰ ثانیه تایم‌اوت دارد
+    const isShahrGptWidget = targetPath.includes('api/agent/widget');
+    const fetchInit: RequestInit = {
       method,
       headers,
       body,
-    });
+      ...(isShahrGptWidget
+        ? { signal: AbortSignal.timeout(65_000) }
+        : {}),
+    };
+    
+    // ارسال درخواست به Backend
+    let response = await fetch(targetUrl, fetchInit);
     
     console.log(`📬 Response status: ${response.status}`);
     
@@ -115,9 +152,8 @@ async function proxyRequest(
           // دوباره درخواست اصلی
           headers['Authorization'] = `Bearer ${accessToken}`;
           response = await fetch(targetUrl, {
-            method,
+            ...fetchInit,
             headers,
-            body,
           });
         }
       }
@@ -166,12 +202,37 @@ async function proxyRequest(
         maxAge: ACCESS_TOKEN_MAX_AGE, // 15 دقیقه
       });
     }
+
+    if (
+      response.ok &&
+      data &&
+      typeof data === 'object' &&
+      data.user &&
+      targetPath.includes('update-profile')
+    ) {
+      setUserDataCookie(jsonResponse, data.user);
+    }
     
     console.log('✅ Proxy completed');
     
     return jsonResponse;
   } catch (error) {
     console.error('❌ Proxy error:', error);
+
+    const isTimeout =
+      error instanceof Error &&
+      (error.name === 'TimeoutError' || error.name === 'AbortError');
+
+    if (isTimeout) {
+      return NextResponse.json(
+        {
+          error: 'timeout',
+          message:
+            'درخواست شما بیش از حد معمول طول کشید. لطفا چند لحظه دیگر تلاش کنید.',
+        },
+        { status: 504 }
+      );
+    }
     
     return NextResponse.json(
       { error: 'خطا در ارتباط با سرور' },

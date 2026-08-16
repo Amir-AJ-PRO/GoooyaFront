@@ -2,8 +2,7 @@
  * API Service برای درخواست تبدیل به agent
  */
 
-import { apiClient } from '@/lib/api';
-import { API_BASE_URL } from '@/lib/constants';
+import { apiClient, handleApiError } from '@/lib/api';
 
 /**
  * Interface برای درخواست agent
@@ -53,96 +52,116 @@ export interface AgentRequestResponse {
   };
 }
 
+const AGENT_REQUEST_PENDING_PREFIX = 'gooya_agent_request_pending_';
+
+function toOptionalInt(value?: string | number): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined;
+  const parsed = typeof value === 'string' ? parseInt(value, 10) : value;
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function buildAgentRequestBody(payload: AgentRequestPayload): Record<string, unknown> {
+  const requestData: Record<string, unknown> = {
+    full_name: payload.full_name.trim(),
+    phone: payload.phone.trim().replace(/\s/g, ''),
+  };
+
+  const optionalStrings: Array<keyof AgentRequestPayload> = [
+    'email',
+    'national_id',
+    'license_number',
+    'office_name',
+    'office_address',
+    'office_phone',
+    'specialties',
+    'bio',
+  ];
+
+  for (const field of optionalStrings) {
+    const value = payload[field];
+    if (typeof value === 'string' && value.trim()) {
+      requestData[field] = value.trim();
+    }
+  }
+
+  const city = toOptionalInt(payload.city);
+  const region = toOptionalInt(payload.region);
+  const years = toOptionalInt(payload.years_of_experience);
+
+  if (city !== undefined) requestData.city = city;
+  if (region !== undefined) requestData.region = region;
+  if (years !== undefined) requestData.years_of_experience = years;
+
+  return requestData;
+}
+
+function getAgentRequestErrorMessage(error: unknown): string {
+  const err = error as {
+    response?: { status?: number; data?: unknown };
+    message?: string;
+  };
+  const status = err.response?.status;
+  const data = err.response?.data;
+
+  if (status === 401) {
+    return 'لطفاً ابتدا وارد حساب کاربری خود شوید.';
+  }
+
+  if (status === 403) {
+    return 'شما نمی‌توانید درخواست مشاور بدهید. ممکن است قبلاً مشاور باشید یا دسترسی لازم را نداشته باشید.';
+  }
+
+  const parsed = handleApiError(error);
+
+  if (status === 500) {
+    const duplicateHint =
+      'اگر قبلاً درخواست ثبت کرده‌اید، منتظر بررسی تیم گویا بمانید و دوباره ارسال نکنید.';
+    if (parsed && parsed !== 'خطای نامشخص') {
+      return `${parsed} ${duplicateHint}`;
+    }
+    return `خطای سرور در ثبت درخواست. ${duplicateHint}`;
+  }
+
+  if (parsed && parsed !== 'خطای نامشخص') {
+    return parsed;
+  }
+
+  return err.message || 'خطا در ثبت درخواست. لطفاً دوباره تلاش کنید.';
+}
+
+export function getAgentRequestPendingKey(phone: string): string {
+  return `${AGENT_REQUEST_PENDING_PREFIX}${phone}`;
+}
+
+export function markAgentRequestPending(phone: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(getAgentRequestPendingKey(phone), new Date().toISOString());
+}
+
+export function hasPendingAgentRequest(phone: string): boolean {
+  if (typeof window === 'undefined') return false;
+  return Boolean(localStorage.getItem(getAgentRequestPendingKey(phone)));
+}
+
+export function clearPendingAgentRequest(phone: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(getAgentRequestPendingKey(phone));
+}
+
 /**
  * ارسال درخواست تبدیل به agent
- * 
- * @param payload - داده‌های درخواست
- * @returns پاسخ API شامل ticket ایجاد شده
- * @throws Error در صورت خطا
  */
 export const submitAgentRequest = async (
   payload: AgentRequestPayload
 ): Promise<AgentRequestResponse> => {
   try {
-    // تبدیل city و region به number اگر string هستند
-    const requestData: Record<string, unknown> = {
-      full_name: payload.full_name,
-      phone: payload.phone,
-    };
-
-    if (payload.email) requestData.email = payload.email;
-    if (payload.national_id) requestData.national_id = payload.national_id;
-    if (payload.license_number) requestData.license_number = payload.license_number;
-    if (payload.office_name) requestData.office_name = payload.office_name;
-    if (payload.office_address) requestData.office_address = payload.office_address;
-    if (payload.office_phone) requestData.office_phone = payload.office_phone;
-    
-    // تبدیل city به number
-    if (payload.city) {
-      requestData.city = typeof payload.city === 'string' 
-        ? parseInt(payload.city, 10) 
-        : payload.city;
-    }
-    
-    // تبدیل region به number
-    if (payload.region) {
-      requestData.region = typeof payload.region === 'string' 
-        ? parseInt(payload.region, 10) 
-        : payload.region;
-    }
-    
-    if (payload.years_of_experience !== undefined) {
-      requestData.years_of_experience = payload.years_of_experience;
-    }
-    if (payload.specialties) requestData.specialties = payload.specialties;
-    if (payload.bio) requestData.bio = payload.bio;
-
     const response = await apiClient.post<AgentRequestResponse>(
       '/api/tickets/agent-request/',
-      requestData
+      buildAgentRequestBody(payload)
     );
 
     return response.data;
   } catch (error) {
-    // مدیریت خطاهای validation
-    if (error && typeof error === 'object' && 'response' in error) {
-      const axiosError = error as { response?: { data?: unknown; status?: number } };
-      
-      if (axiosError.response?.status === 400) {
-        const errorData = axiosError.response.data;
-        if (typeof errorData === 'object' && errorData !== null) {
-          // استخراج پیام‌های خطا
-          const errorMessages: string[] = [];
-          
-          for (const [key, value] of Object.entries(errorData)) {
-            if (Array.isArray(value)) {
-              errorMessages.push(...value.map((msg) => `${key}: ${msg}`));
-            } else if (typeof value === 'string') {
-              errorMessages.push(value);
-            }
-          }
-          
-          if (errorMessages.length > 0) {
-            throw new Error(errorMessages.join('\n'));
-          }
-        }
-        throw new Error('اطلاعات وارد شده معتبر نیست. لطفاً دوباره تلاش کنید.');
-      }
-      
-      if (axiosError.response?.status === 401) {
-        throw new Error('لطفاً ابتدا وارد حساب کاربری خود شوید.');
-      }
-      
-      if (axiosError.response?.status === 403) {
-        throw new Error('شما نمی‌توانید درخواست agent بدهید. ممکن است قبلاً agent باشید یا دسترسی لازم را نداشته باشید.');
-      }
-    }
-    
-    throw error;
+    throw new Error(getAgentRequestErrorMessage(error));
   }
 };
-
-
-
-
-

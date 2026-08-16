@@ -15,6 +15,7 @@ const BgImage = ({ imageNum }: BgImageProps) => {
           alt="گویا - پلتفرم املاک فارسی"
           fill
           className="object-cover"
+          sizes="100vw"
           priority
         />
       )}
@@ -24,6 +25,7 @@ const BgImage = ({ imageNum }: BgImageProps) => {
           alt="گویا - پلتفرم املاک فارسی"
           fill
           className="object-cover"
+          sizes="100vw"
           priority
         />
       )}
@@ -33,6 +35,7 @@ const BgImage = ({ imageNum }: BgImageProps) => {
           alt="گویا - پلتفرم املاک فارسی"
           fill
           className="object-cover"
+          sizes="100vw"
           priority
         />
       )}

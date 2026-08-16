@@ -19,12 +19,33 @@ function tryGetOrigin(raw?: string): string | null {
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
+  const { pathname } = request.nextUrl;
 
   // Security Headers
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('X-XSS-Protection', '1; mode=block');
+
+  // HTML/SEO documents: browsers must revalidate so title/description/OG
+  // updates appear without a manual cache clear. Static assets stay cached.
+  const isApi = pathname.startsWith('/api/');
+  const isSeoFile =
+    pathname === '/sitemap.xml' ||
+    pathname === '/robots.txt' ||
+    pathname === '/manifest.webmanifest';
+
+  if (!isApi) {
+    if (isSeoFile) {
+      response.headers.set(
+        'Cache-Control',
+        'public, max-age=0, s-maxage=300, must-revalidate'
+      );
+    } else {
+      response.headers.set('Cache-Control', 'private, no-cache, must-revalidate');
+      response.headers.set('Pragma', 'no-cache');
+    }
+  }
 
   const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -60,7 +81,7 @@ export async function middleware(request: NextRequest) {
         "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
         "font-src 'self' data: https://cdn.jsdelivr.net",
-        "img-src 'self' data: https: http:",
+        "img-src 'self' data: blob: https: http:",
         `connect-src ${connectSources.join(' ')}`,
         "frame-src 'none'",
       ].join('; ')
@@ -73,7 +94,7 @@ export async function middleware(request: NextRequest) {
         "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
         "font-src 'self' data: https:",
-        "img-src 'self' data: https:",
+        "img-src 'self' data: blob: https:",
         `connect-src ${connectSources.join(' ')}`,
         "frame-src 'none'",
       ].join('; ')

@@ -1,14 +1,13 @@
 import type { Metadata } from 'next';
 import AgentsPageClient from './AgentsPageClient';
+import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'مشاورین - گویا',
-  description: 'مشاهده لیست مشاورین فعال در گویا به همراه فیلترها و جستجو',
-  openGraph: {
-    title: 'مشاورین - گویا',
-    description: 'مشاهده لیست مشاورین فعال در گویا به همراه فیلترها و جستجو',
-  },
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: 'مشاوران املاک شرق تهران',
+  description: 'لیست مشاوران املاک گویا در دماوند، پردیس و شرق تهران. انتخاب مشاور محلی برای خرید، فروش و اجاره ملک.',
+  path: '/agents',
+  keywords: ['مشاور املاک دماوند', 'مشاور املاک پردیس', 'لیست مشاورین املاک', 'مشاور محلی شرق تهران'],
+});
 
 export default function AgentsPage() {
   return <AgentsPageClient />;

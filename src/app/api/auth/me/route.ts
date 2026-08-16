@@ -5,15 +5,31 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import {
+  ACCESS_TOKEN_KEY,
+  ACCESS_TOKEN_MAX_AGE,
+  REFRESH_TOKEN_KEY,
+  USER_DATA_KEY,
+  clearAuthCookies,
+  getAuthCookieOptions,
+  parseUserDataCookie,
+  setUserDataCookie,
+} from '@/lib/server/cookies';
 
-const ACCESS_TOKEN_KEY = 'access_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
+function sessionFromUserCookie(cookieStore: Awaited<ReturnType<typeof cookies>>) {
+  const user = parseUserDataCookie(cookieStore.get(USER_DATA_KEY)?.value);
+  if (!user) return null;
 
-// زمان انقضای توکن‌ها (بر اساس تنظیمات Backend)
-const ACCESS_TOKEN_MAX_AGE = 15 * 60; // 15 دقیقه
-const REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60; // 30 روز
+  const response = NextResponse.json({
+    success: true,
+    user,
+    message: 'Keeping session alive',
+  });
+  setUserDataCookie(response, user);
+  return response;
+}
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
     let accessToken = cookieStore.get(ACCESS_TOKEN_KEY)?.value;
@@ -77,28 +93,27 @@ export async function GET(request: NextRequest) {
     }
     
     if (!response) {
-      // نباید کاربر رو logout کنیم فقط به خاطر اینکه endpoint نداریم
-      // بهتره یک response ساده برگردونیم
+      const cached = sessionFromUserCookie(cookieStore);
+      if (cached) return cached;
+
       return NextResponse.json(
         { 
           success: false,
           error: 'Backend endpoint not found',
           message: 'Keeping session alive'
         },
-        { status: 200 } // 200 برمیگردونیم تا کاربر logout نشه
+        { status: 200 }
       );
     }
 
     // اگر 401 بود، سعی در رفرش
     if (response.status === 401) {
       if (!refreshToken) {
-        // پاک کردن Cookie ها
         const jsonResponse = NextResponse.json(
           { success: false, user: null, message: 'Session expired' },
           { status: 200 }
         );
-        jsonResponse.cookies.delete(ACCESS_TOKEN_KEY);
-        jsonResponse.cookies.delete(REFRESH_TOKEN_KEY);
+        clearAuthCookies(jsonResponse);
         return jsonResponse;
       }
 
@@ -116,8 +131,7 @@ export async function GET(request: NextRequest) {
           { success: false, user: null, message: 'Session expired' },
           { status: 200 }
         );
-        jsonResponse.cookies.delete(ACCESS_TOKEN_KEY);
-        jsonResponse.cookies.delete(REFRESH_TOKEN_KEY);
+        clearAuthCookies(jsonResponse);
         return jsonResponse;
       }
 
@@ -135,40 +149,39 @@ export async function GET(request: NextRequest) {
     }
 
     if (!response.ok) {
-      // برای جلوگیری از لاگ 401 در کنسول مرورگر، 200 برگردون
-      const jsonResponse = NextResponse.json(
+      if (response.status === 401) {
+        const jsonResponse = NextResponse.json(
+          { success: false, user: null, message: 'Failed to fetch user' },
+          { status: 200 }
+        );
+        clearAuthCookies(jsonResponse);
+        return jsonResponse;
+      }
+
+      const cached = sessionFromUserCookie(cookieStore);
+      if (cached) return cached;
+
+      return NextResponse.json(
         { success: false, user: null, message: 'Failed to fetch user' },
         { status: 200 }
       );
-      
-      // فقط در صورت 401 کوکی‌ها رو پاک کن (احراز هویت نامعتبر)
-      // برای خطاهای دیگه (مثلاً 404, 500) کوکی‌ها رو نگه دار
-      if (response.status === 401) {
-        jsonResponse.cookies.delete(ACCESS_TOKEN_KEY);
-        jsonResponse.cookies.delete(REFRESH_TOKEN_KEY);
-      }
-      
-      return jsonResponse;
     }
 
     const userData = await response.json();
     
-    // بازگشت با Cookie به‌روز
     const jsonResponse = NextResponse.json({
       success: true,
       user: userData,
     });
-    
-    // اگر token رفرش شده بود، update کن با maxAge مناسب
+
     if (accessToken) {
-      jsonResponse.cookies.set(ACCESS_TOKEN_KEY, accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: ACCESS_TOKEN_MAX_AGE, // 15 دقیقه
-      });
+      jsonResponse.cookies.set(
+        ACCESS_TOKEN_KEY,
+        accessToken,
+        getAuthCookieOptions(ACCESS_TOKEN_MAX_AGE)
+      );
     }
+    setUserDataCookie(jsonResponse, userData);
     
     return jsonResponse;
   } catch (error) {

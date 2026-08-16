@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchProperties } from '@/hooks/useSearch';
 import type { CityDetail } from '@/types/city';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -71,10 +71,10 @@ export default function CityDetailClient({ city }: CityDetailClientProps) {
 
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle className="text-2xl md:text-3xl flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-semibold leading-none tracking-tight flex items-center gap-2">
             <MapPin className="h-6 w-6 text-primary" />
-            درباره {city.name}
-          </CardTitle>
+            املاک {city.name}
+          </h1>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">

@@ -1,12 +1,9 @@
-import { MetadataRoute } from 'next';
+import type { MetadataRoute } from 'next';
+import { getSiteUrl } from '@/lib/seo';
 
-/**
- * فایل robots.txt برای هدایت رباتهای موتورهای جستجو
- * این فایل به صورت داینامیک تولید می‌شود
- */
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gooya.ir';
-  
+  const baseUrl = getSiteUrl();
+
   return {
     rules: [
       {
@@ -14,18 +11,18 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: [
           '/admin/',
+          '/admin',
+          '/agent/',
+          '/agent',
+          '/user/',
+          '/user',
           '/api/',
-          '/_next/',
           '/login',
+          '/chat',
         ],
-      },
-      {
-        userAgent: 'Googlebot',
-        allow: '/',
-        disallow: ['/admin/', '/api/'],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
   };
 }
-

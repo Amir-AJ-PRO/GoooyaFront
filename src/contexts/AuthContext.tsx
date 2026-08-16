@@ -19,6 +19,7 @@ export interface BackendUserData {
   email: string;
   phone: string;
   name: string;
+  full_name?: string;
   type: UserType;
   is_agent?: boolean;
   is_admin?: boolean;
@@ -26,8 +27,29 @@ export interface BackendUserData {
     is_goooya_adviser?: boolean;
     office_name?: string;
     license_number?: string;
+    full_name?: string;
     [key: string]: any;
   };
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+}
+
+function firstNonEmpty(...values: unknown[]): string {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+  }
+  return '';
+}
+
+/** Backend stores the name as `full_name`; some payloads also send `name`. */
+export function pickDisplayName(data: unknown): string {
+  const record = asRecord(data);
+  const agent = asRecord(record.agent_profile);
+  return firstNonEmpty(record.full_name, record.name, agent.full_name);
 }
 
 interface AuthContextType {
@@ -54,7 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userType: UserType = data.is_agent ? 'agent' : data.is_admin ? 'admin' : 'user';
     return {
       id: data.phone,
-      name: data.name || '',
+      name: pickDisplayName(data),
       email: data.email || '',
       type: userType,
       phone: data.phone,
@@ -63,66 +85,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   };
 
-  /**
-   * خواندن user data از cookie
-   */
-  const getUserFromCookie = (): BackendUserData | null => {
-    if (typeof document === 'undefined') return null;
-    
-    try {
-      const cookies = document.cookie.split(';');
-      const userCookie = cookies.find(c => c.trim().startsWith('user_data='));
-      
-      if (userCookie) {
-        const userData = userCookie.split('=')[1];
-        return JSON.parse(decodeURIComponent(userData));
-      }
-    } catch (error) {
-    }
-    
-    return null;
+  const normalizeBackendUser = (data: unknown): BackendUserData => {
+    const record = asRecord(data);
+    const name = pickDisplayName(record);
+    return {
+      ...(record as BackendUserData),
+      id: String(record.id ?? record.phone ?? ''),
+      email: typeof record.email === 'string' ? record.email : '',
+      phone: typeof record.phone === 'string' ? record.phone : '',
+      name,
+      full_name: firstNonEmpty(record.full_name, name),
+    };
   };
 
   /**
    * دریافت اطلاعات کاربر از Server
+   * user_data HttpOnly است و از document.cookie قابل خواندن نیست
    */
   const refreshUser = async () => {
     try {
-      // اول سعی می‌کنیم از cookie بخونیم
-      const userDataFromCookie = getUserFromCookie();
-      
-      if (userDataFromCookie) {
-        const userData = transformUser(userDataFromCookie);
-        setUser(userData);
-        setBackendUser(userDataFromCookie);
-
-        // ولی هنوز هم session رو با سرور sync می‌کنیم تا اگر access token حذف/منقضی شده بود،
-        // با refresh token دوباره ساخته بشه (و همچنین اگر user data تغییر کرده بود آپدیت بشه).
-        try {
-          const response = await fetch('/api/auth/me', {
-            credentials: 'include',
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            if (data?.success && data?.user) {
-              const freshUser = transformUser(data.user);
-              setUser(freshUser);
-              setBackendUser(data.user);
-            }
-          } else if (response.status === 401) {
-            setUser(null);
-            setBackendUser(null);
-          }
-        } catch (syncError) {
-        }
-
-        return;
-      }
-      
-      // اگر در cookie نبود، از API بگیریم
       const response = await fetch('/api/auth/me', {
-        credentials: 'include', // ارسال cookies
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -139,9 +122,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await response.json();
       
       if (data.success && data.user) {
-        const userData = transformUser(data.user);
-        setUser(userData);
-        setBackendUser(data.user);
+        const normalized = normalizeBackendUser(data.user);
+        setUser(transformUser(normalized));
+        setBackendUser(normalized);
       } else if (data.success === false && data.message === 'Keeping session alive') {
         // Backend endpoint موجود نیست اما session معتبره
         // کاربر رو logout نکن
@@ -155,9 +138,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * ورود کاربر (بعد از موفقیت Login API)
    */
   const login = (userData: BackendUserData) => {
-    const user = transformUser(userData);
-    setUser(user);
-    setBackendUser(userData);
+    const normalized = normalizeBackendUser(userData);
+    setUser(transformUser(normalized));
+    setBackendUser(normalized);
   };
 
   /**

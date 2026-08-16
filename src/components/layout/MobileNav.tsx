@@ -3,16 +3,26 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Search, User, Heart, Users } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function MobileNav() {
   const pathname = usePathname();
+  const { user, backendUser } = useAuth();
+
+  const isVerifiedAgent = backendUser?.agent_profile?.is_verified === true;
+  const accountPath =
+    user?.type === 'admin'
+      ? '/admin'
+      : user?.type === 'agent' || isVerifiedAgent
+        ? '/agent'
+        : '/user';
 
   const navItems = [
     { name: "خانه", path: "/", icon: Home },
     { name: "املاک", path: "/properties", icon: Search },
     { name: "مشاورین", path: "/agents", icon: Users },
     { name: "علاقه‌مندی", path: "/user/favorites", icon: Heart },
-    { name: "حساب من", path: "/user", icon: User },
+    { name: "حساب من", path: accountPath, icon: User },
   ];
 
   return (
@@ -20,10 +30,19 @@ export default function MobileNav() {
       <nav className="flex justify-around items-center h-16">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.path;
+          const isFavorites = item.path === "/user/favorites";
+          const isAccount = item.name === "حساب من";
+          const isActive = isFavorites
+            ? pathname.startsWith("/user/favorites")
+            : isAccount
+              ? (pathname === item.path || pathname.startsWith(`${item.path}/`)) &&
+                !pathname.startsWith("/user/favorites")
+              : item.path === "/"
+                ? pathname === "/"
+                : pathname === item.path || pathname.startsWith(`${item.path}/`);
           return (
             <Link
-              key={item.path}
+              key={item.name}
               href={item.path}
               className={`flex flex-col items-center justify-center gap-1 px-3 py-2 transition-colors ${
                 isActive
@@ -40,4 +59,3 @@ export default function MobileNav() {
     </div>
   );
 }
-

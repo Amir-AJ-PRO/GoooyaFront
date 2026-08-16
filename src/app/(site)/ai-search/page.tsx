@@ -14,11 +14,14 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "جستجوی هوشمند با شهر GPT - گویا",
-  description: "گویا به موتور جستجوی هوش مصنوعی شهر GPT متصل است. پیشرفته‌ترین تکنولوژی جستجوی املاک در ایران",
-  keywords: ["شهر GPT", "هوش مصنوعی املاک", "جستجوی هوشمند", "AI املاک"],
-};
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "جستجوی هوشمند ملک با شهر GPT",
+  description: "جستجوی ملک با زبان طبیعی از طریق شهر GPT. پیدا کردن آپارتمان، ویلا و زمین در شرق تهران بدون فیلترهای پیچیده.",
+  path: "/ai-search",
+  keywords: ["شهر GPT", "جستجوی هوشمند املاک", "هوش مصنوعی املاک", "جستجوی ملک با AI"],
+});
 
 export default function AISearchPage() {
   const features = [

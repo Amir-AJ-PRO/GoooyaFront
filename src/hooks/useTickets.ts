@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { handleApiError } from '@/lib/api';
 import {
   submitSimpleTicket,
   submitFullTicket,
@@ -19,7 +20,11 @@ export const useSubmitSimpleTicket = () => {
       toast.success(data.detail || 'درخواست شما با موفقیت ثبت شد');
     },
     onError: (error) => {
-      toast.error(error.message || 'خطا در ثبت درخواست');
+      toast.error('خطا در ثبت درخواست', {
+        description:
+          error.message || handleApiError(error) || 'لطفاً اطلاعات را بررسی کنید',
+        duration: 8000,
+      });
     },
   });
 };
@@ -32,16 +37,23 @@ export const useSubmitFullTicket = () => {
     mutationFn: submitFullTicket,
     onSuccess: (data) => {
       toast.success(data.detail || 'درخواست شما با موفقیت ثبت شد');
-      
-      if (data.ticket.assigned_agent_name) {
+
+      if (data.ticket?.assigned_agent_name) {
         toast.info(`مشاور اختصاص یافته: ${data.ticket.assigned_agent_name}`, {
           duration: 5000,
         });
       }
     },
     onError: (error) => {
-      toast.error(error.message || 'خطا در ثبت درخواست');
+      console.error('❌ [useSubmitFullTicket] error:', error);
+      console.error('❌ [useSubmitFullTicket] message:', error.message);
+      toast.error('خطا در ثبت درخواست', {
+        description:
+          error.message ||
+          handleApiError(error) ||
+          'لطفاً اطلاعات وارد شده را بررسی کنید',
+        duration: 10000,
+      });
     },
   });
 };
-

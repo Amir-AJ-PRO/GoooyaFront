@@ -27,6 +27,13 @@ export const iranProvinces: Province[] = [
       { id: "robat-karim", name: "رباط کریم", coordinates: [35.4847, 51.0828] },
       { id: "baharestan", name: "بهارستان", coordinates: [35.5300, 51.1800] },
       { id: "pakdasht", name: "پاکدشت", coordinates: [35.4817, 51.6783] },
+      { id: "damavand", name: "دماوند", coordinates: [35.7177, 52.0695] },
+      { id: "roudehen", name: "رودهن", coordinates: [35.7340, 51.9060] },
+      { id: "pardis", name: "پردیس", coordinates: [35.7460, 51.8070] },
+      { id: "absard", name: "آبسرد", coordinates: [35.6200, 52.1530] },
+      { id: "abali", name: "آبعلی", coordinates: [35.7670, 51.9630] },
+      { id: "kilan", name: "کیلان", coordinates: [35.5530, 52.1680] },
+      { id: "gilavand", name: "گیلاوند", coordinates: [35.5890, 52.0460] },
     ]
   },
   {

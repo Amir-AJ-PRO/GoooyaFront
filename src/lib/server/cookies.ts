@@ -4,26 +4,28 @@
  */
 
 import { cookies } from 'next/headers';
+import type { NextResponse } from 'next/server';
 
-const ACCESS_TOKEN_KEY = 'access_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
+export const ACCESS_TOKEN_KEY = 'access_token';
+export const REFRESH_TOKEN_KEY = 'refresh_token';
+export const USER_DATA_KEY = 'user_data';
 
 // زمان انقضای توکن‌ها (بر اساس تنظیمات Backend)
-const ACCESS_TOKEN_MAX_AGE = 15 * 60; // 15 دقیقه
-const REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60; // 30 روز
+export const ACCESS_TOKEN_MAX_AGE = 15 * 60; // 15 دقیقه
+export const REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60; // 30 روز
 
 /**
- * تنظیمات امنیتی Cookie
+ * تنظیمات امنیتی Cookie — همیشه HttpOnly تا JavaScript به توکن/پروفایل دسترسی نداشته باشد
  */
-const getCookieOptions = (maxAge: number) => ({
+export const getAuthCookieOptions = (maxAge: number) => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'lax' as const,
   path: '/',
   maxAge,
-  // اطمینان از ارسال Cookie در همه درخواست‌ها
-  domain: undefined, // استفاده از domain فعلی
 });
+
+const getCookieOptions = getAuthCookieOptions;
 
 /**
  * ذخیره Access Token در HttpOnly Cookie
@@ -61,12 +63,38 @@ export async function getRefreshToken(): Promise<string | undefined> {
   return (await cookies()).get(REFRESH_TOKEN_KEY)?.value;
 }
 
+export function parseUserDataCookie(value?: string): unknown | null {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+export function setUserDataCookie(response: NextResponse, user: unknown) {
+  response.cookies.set(
+    USER_DATA_KEY,
+    JSON.stringify(user),
+    getAuthCookieOptions(REFRESH_TOKEN_MAX_AGE)
+  );
+}
+
+export function clearAuthCookies(response: NextResponse) {
+  const expired = getAuthCookieOptions(0);
+  response.cookies.set(ACCESS_TOKEN_KEY, '', expired);
+  response.cookies.set(REFRESH_TOKEN_KEY, '', expired);
+  response.cookies.set(USER_DATA_KEY, '', expired);
+}
+
 /**
  * پاک کردن تمام Token ها
  */
 export async function clearTokens() {
-  (await cookies()).delete(ACCESS_TOKEN_KEY);
-  (await cookies()).delete(REFRESH_TOKEN_KEY);
+  const cookieStore = await cookies();
+  cookieStore.delete(ACCESS_TOKEN_KEY);
+  cookieStore.delete(REFRESH_TOKEN_KEY);
+  cookieStore.delete(USER_DATA_KEY);
 }
 
 /**

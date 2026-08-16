@@ -15,11 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Loader2, Search, Building2, SlidersHorizontal, X, Sparkles } from 'lucide-react';
 import { PropertyListItem } from '@/types/property';
 import { SearchParams, SearchResult } from '@/types/search';
 import { PaginatedPropertiesResponse } from '@/services/propertyApi';
 import { cn } from '@/lib/utils';
+import { buildPropertiesSeo } from '@/lib/seo';
 
 // Type guard function برای بررسی اینکه data از نوع SearchResult است
 function isSearchResult(data: SearchResult | PaginatedPropertiesResponse | undefined): data is SearchResult {
@@ -317,6 +319,26 @@ export default function PropertiesPageClient() {
   };
 
   const selectTriggerClass = 'h-11 bg-white border-gray-200';
+  const selectedCityName =
+    cityFilter !== 'all'
+      ? cities.find((city) => String(city.id) === cityFilter)?.name
+      : undefined;
+  const selectedLocationName =
+    locationFilter !== 'all'
+      ? locations.find((location) => String(location.id) === locationFilter)?.name
+      : undefined;
+  const selectedPropertyTypeName =
+    propertyTypeFilter !== 'all'
+      ? propertyTypes.find((type) => String(type.id) === propertyTypeFilter)?.title
+      : undefined;
+  const listingSeo = buildPropertiesSeo({
+    transaction: transactionFilter,
+    cityName: selectedCityName,
+    locationName: selectedLocationName,
+    propertyTypeName: selectedPropertyTypeName,
+    query: searchTerm,
+    page,
+  });
   const transactionLabel = transactionFilter === 'rent' ? 'اجاره' : 'فروش';
 
   const fromHomeSearch = searchParams.get('from') === 'home';
@@ -331,7 +353,7 @@ export default function PropertiesPageClient() {
             <Building2 className="h-8 w-8 text-primary" />
           </div>
           <div>
-            <h1 className="text-4xl font-bold mb-1">املاک موجود</h1>
+            <h1 className="text-4xl font-bold mb-1">{listingSeo.h1}</h1>
             <p className="text-muted-foreground">
               {isLoading ? (
                 <span className="flex items-center gap-2">
@@ -407,55 +429,42 @@ export default function PropertiesPageClient() {
               showTransactionFilter ? 'xl:grid-cols-5' : 'xl:grid-cols-4'
             )}
           >
-            <Select
+            <SearchableSelect
               value={cityFilter}
               onValueChange={(value) => {
                 setCityFilter(value);
                 setLocationFilter('all');
               }}
-            >
-              <SelectTrigger className={selectTriggerClass}>
-                <SelectValue placeholder="شهر" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">همه شهرها</SelectItem>
-                {citiesLoading ? (
-                  <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
-                ) : (
-                  cities.map((city) => (
-                    <SelectItem key={city.id} value={city.id.toString()}>
-                      {city.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+              options={[
+                { value: 'all', label: 'همه شهرها' },
+                ...cities.map((city) => ({
+                  value: city.id.toString(),
+                  label: city.name,
+                })),
+              ]}
+              placeholder="شهر"
+              searchPlaceholder="جستجوی شهر..."
+              loading={citiesLoading}
+              triggerClassName={`${selectTriggerClass} focus:ring-0 focus:ring-offset-0`}
+            />
 
-            <Select
+            <SearchableSelect
               value={locationFilter}
               onValueChange={setLocationFilter}
               disabled={cityFilter === 'all'}
-            >
-              <SelectTrigger className={selectTriggerClass}>
-                <SelectValue placeholder={cityFilter === 'all' ? 'ابتدا شهر را انتخاب کنید' : 'منطقه'} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">همه مناطق</SelectItem>
-                {cityFilter === 'all' ? (
-                  <SelectItem value="disabled" disabled>ابتدا شهر را انتخاب کنید</SelectItem>
-                ) : locationsLoading ? (
-                  <SelectItem value="loading" disabled>در حال بارگذاری...</SelectItem>
-                ) : locations.length === 0 ? (
-                  <SelectItem value="empty" disabled>منطقه‌ای یافت نشد</SelectItem>
-                ) : (
-                  locations.map((loc) => (
-                    <SelectItem key={loc.id} value={loc.id.toString()}>
-                      {loc.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+              options={[
+                { value: 'all', label: 'همه مناطق' },
+                ...locations.map((loc) => ({
+                  value: loc.id.toString(),
+                  label: loc.name,
+                })),
+              ]}
+              placeholder={cityFilter === 'all' ? 'ابتدا شهر را انتخاب کنید' : 'منطقه'}
+              searchPlaceholder="جستجوی منطقه..."
+              emptyText="منطقه‌ای یافت نشد"
+              loading={locationsLoading}
+              triggerClassName={`${selectTriggerClass} focus:ring-0 focus:ring-offset-0`}
+            />
 
             {showTransactionFilter ? (
               <Select value={transactionFilter} onValueChange={setTransactionFilter}>

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Dialog,
@@ -22,13 +21,17 @@ interface SubmitPropertyModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+type FormType = 'simple' | 'full';
+
 /**
  * مودال ثبت درخواست ملک
+ * فرم‌ها بعد از اولین باز شدن unmount نمی‌شوند تا با بازگشت داده پاک نشود
  */
 export default function SubmitPropertyModal({ open, onOpenChange }: SubmitPropertyModalProps) {
-  const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const [selectedForm, setSelectedForm] = useState<'simple' | 'full' | null>(null);
+  const [selectedForm, setSelectedForm] = useState<FormType | null>(null);
+  const [mountedForms, setMountedForms] = useState<Partial<Record<FormType, boolean>>>({});
+  const [formKeys, setFormKeys] = useState({ simple: 0, full: 0 });
   const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   // اگر کاربر لاگین نبود و مودال باز شد، لاگین را نشان بده
@@ -38,6 +41,26 @@ export default function SubmitPropertyModal({ open, onOpenChange }: SubmitProper
       onOpenChange(false);
     }
   }, [open, isAuthenticated, onOpenChange]);
+
+  const selectForm = (form: FormType) => {
+    setSelectedForm(form);
+    setMountedForms((prev) => ({ ...prev, [form]: true }));
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    onOpenChange(nextOpen);
+    if (!nextOpen) {
+      // فقط هنگام بستن کامل مودال، state را ریست کن
+      setTimeout(() => {
+        setSelectedForm(null);
+        setMountedForms({});
+        setFormKeys((prev) => ({
+          simple: prev.simple + 1,
+          full: prev.full + 1,
+        }));
+      }, 200);
+    }
+  };
 
   // اگر کاربر لاگین نبود، مودال لاگین را نشان بده
   if (!isAuthenticated) {
@@ -74,9 +97,9 @@ export default function SubmitPropertyModal({ open, onOpenChange }: SubmitProper
         </Dialog>
         <LoginModal 
           open={loginModalOpen} 
-          onOpenChange={(open) => {
-            setLoginModalOpen(open);
-            if (!open && isAuthenticated) {
+          onOpenChange={(loginOpen) => {
+            setLoginModalOpen(loginOpen);
+            if (!loginOpen && isAuthenticated) {
               // بعد از لاگین موفق، مودال ثبت ملک را دوباره باز کن
               onOpenChange(true);
             }
@@ -88,13 +111,7 @@ export default function SubmitPropertyModal({ open, onOpenChange }: SubmitProper
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(open) => {
-        onOpenChange(open);
-        if (!open) {
-          // Reset form selection when modal closes
-          setTimeout(() => setSelectedForm(null), 200);
-        }
-      }}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-2xl">ثبت درخواست آگهی</DialogTitle>
@@ -104,14 +121,13 @@ export default function SubmitPropertyModal({ open, onOpenChange }: SubmitProper
           </DialogHeader>
 
         <div className="space-y-6">
-          {!selectedForm ? (
-            <>
+          <div className={selectedForm === null ? 'block' : 'hidden'}>
               {/* دکمه‌های انتخاب */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4" dir="rtl">
                 <Button
                   variant="outline"
                   className="h-auto p-6 flex flex-col items-end justify-start gap-3 hover:bg-blue-50 hover:border-blue-300 transition-all text-right"
-                  onClick={() => setSelectedForm('simple')}
+                  onClick={() => selectForm('simple')}
                 >
                   <div className="flex items-center gap-2 w-full justify-end flex-wrap">
                     <h4 className="font-semibold text-lg text-blue-900">درخواست سریع</h4>
@@ -126,7 +142,7 @@ export default function SubmitPropertyModal({ open, onOpenChange }: SubmitProper
                 <Button
                   variant="outline"
                   className="h-auto p-6 flex flex-col items-end justify-start gap-3 hover:bg-green-50 hover:border-green-300 transition-all text-right"
-                  onClick={() => setSelectedForm('full')}
+                  onClick={() => selectForm('full')}
                 >
                   <div className="flex items-center gap-2 w-full justify-end flex-wrap">
                     <h4 className="font-semibold text-lg text-green-900">درخواست کامل</h4>
@@ -140,16 +156,17 @@ export default function SubmitPropertyModal({ open, onOpenChange }: SubmitProper
               </div>
 
               {/* نکته مهم */}
-              <Card className="bg-blue-50 border-blue-200">
+              <Card className="bg-blue-50 border-blue-200 mt-6">
                 <CardContent className="pt-6">
                   <p className="text-sm text-blue-900 text-center">
                     💡 کارشناسان ما در اسرع وقت با شما تماس خواهند گرفت
                   </p>
                 </CardContent>
               </Card>
-            </>
-          ) : selectedForm === 'simple' ? (
-            <div className="space-y-4" dir="rtl">
+          </div>
+
+          {mountedForms.simple && (
+            <div className={selectedForm === 'simple' ? 'block space-y-4' : 'hidden'} dir="rtl">
               <Button
                 variant="ghost"
                 size="sm"
@@ -158,10 +175,15 @@ export default function SubmitPropertyModal({ open, onOpenChange }: SubmitProper
               >
                 بازگشت ←
               </Button>
-              <SimpleTicketForm onSuccess={() => onOpenChange(false)} />
+              <SimpleTicketForm
+                key={formKeys.simple}
+                onSuccess={() => handleOpenChange(false)}
+              />
             </div>
-          ) : (
-            <div className="space-y-4" dir="rtl">
+          )}
+
+          {mountedForms.full && (
+            <div className={selectedForm === 'full' ? 'block space-y-4' : 'hidden'} dir="rtl">
               <Button
                 variant="ghost"
                 size="sm"
@@ -170,7 +192,10 @@ export default function SubmitPropertyModal({ open, onOpenChange }: SubmitProper
               >
                 بازگشت ←
               </Button>
-              <FullTicketForm onSuccess={() => onOpenChange(false)} />
+              <FullTicketForm
+                key={formKeys.full}
+                onSuccess={() => handleOpenChange(false)}
+              />
             </div>
           )}
         </div>
@@ -179,4 +204,3 @@ export default function SubmitPropertyModal({ open, onOpenChange }: SubmitProper
     </>
   );
 }
-

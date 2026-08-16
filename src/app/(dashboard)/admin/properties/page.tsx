@@ -1,121 +1,55 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { PageHeader } from '@/components/common/PageHeader';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Check, X, Eye, Building2 } from 'lucide-react';
+import { Building2, ArrowRight, FileText } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AdminProperties() {
-  const { user } = useAuth();
-
-  // Mock data
-  const properties = [
-    {
-      id: '1',
-      title: 'آپارتمان مدرن در تهران',
-      agent: 'محمد رضایی',
-      location: 'تهران، فرشته',
-      price: '۸ میلیارد تومان',
-      status: 'pending',
-      createdAt: '۱۴۰۲/۰۸/۱۵',
-    },
-    {
-      id: '2',
-      title: 'ویلا لوکس با باغ',
-      agent: 'علی احمدی',
-      location: 'تهران، لواسان',
-      price: '۱۵ میلیارد تومان',
-      status: 'active',
-      createdAt: '۱۴۰۲/۰۸/۱۰',
-    },
-  ];
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-500">فعال</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-500">در انتظار تایید</Badge>;
-      case 'rejected':
-        return <Badge className="bg-red-500">رد شده</Badge>;
-      case 'sold':
-        return <Badge className="bg-gray-500">فروخته شده</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
-    }
-  };
+  const { user, backendUser } = useAuth();
+  const isGooyaAdviser = backendUser?.agent_profile?.is_goooya_adviser === true;
 
   if (!user || user.type !== 'admin') {
     return null;
   }
 
   return (
-    <div>
-      <PageHeader
-        title="مدیریت املاک"
-        description="بررسی و تایید املاک ثبت شده"
-      />
+    <div className="space-y-6">
+      <div>
+        <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">
+          <Building2 className="h-7 w-7 text-primary" />
+          مدیریت املاک
+        </h1>
+        <p className="mt-2 text-muted-foreground">
+          بررسی آگهی‌ها از مسیر تیکت‌های ثبت ملک انجام می‌شود
+        </p>
+      </div>
 
-      <Card className="mt-6">
-        <CardContent className="pt-6">
-          {properties.length === 0 ? (
-            <div className="text-center py-12">
-              <Building2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="font-semibold text-lg mb-2">ملکی یافت نشد</h3>
-              <p className="text-muted-foreground">
-                هنوز ملکی در سیستم ثبت نشده است
-              </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-right">عنوان</TableHead>
-                  <TableHead className="text-right">مشاور</TableHead>
-                  <TableHead className="text-right">موقعیت</TableHead>
-                  <TableHead className="text-right">قیمت</TableHead>
-                  <TableHead className="text-right">وضعیت</TableHead>
-                  <TableHead className="text-right">تاریخ ثبت</TableHead>
-                  <TableHead className="text-right">عملیات</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {properties.map((property) => (
-                  <TableRow key={property.id}>
-                    <TableCell className="font-medium">{property.title}</TableCell>
-                    <TableCell>{property.agent}</TableCell>
-                    <TableCell>{property.location}</TableCell>
-                    <TableCell>{property.price}</TableCell>
-                    <TableCell>{getStatusBadge(property.status)}</TableCell>
-                    <TableCell>{property.createdAt}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" title="مشاهده">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        {property.status === 'pending' && (
-                          <>
-                            <Button variant="outline" size="sm" className="text-green-500 hover:text-green-600" title="تایید">
-                              <Check className="h-4 w-4" />
-                            </Button>
-                            <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600" title="رد">
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/40 px-4 py-16 text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+          <Building2 className="h-7 w-7 text-primary" />
+        </div>
+        <h3 className="mb-1 font-semibold">فهرست نمونه حذف شد</h3>
+        <p className="mb-5 max-w-sm text-sm text-muted-foreground">
+          این صفحه قبلاً املاک ساختگی نشان می‌داد. تأیید و انتشار آگهی‌ها از تیکت‌های مشاور گویا انجام می‌شود.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {isGooyaAdviser && (
+            <Link href="/admin/tickets">
+              <Button className="gap-2">
+                <FileText className="h-4 w-4" />
+                تیکت‌های ثبت ملک
+              </Button>
+            </Link>
           )}
-        </CardContent>
-      </Card>
+          <Link href="/admin">
+            <Button variant="outline" className="gap-2">
+              <ArrowRight className="h-4 w-4" />
+              بازگشت به داشبورد
+            </Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
-

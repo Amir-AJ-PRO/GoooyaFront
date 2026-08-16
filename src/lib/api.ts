@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { formatApiValidationErrorInline } from '@/lib/apiErrors';
 
 /**
  * Axios instance برای Next.js API Proxy
@@ -13,42 +14,45 @@ export const apiClient = axios.create({
   withCredentials: true, // برای ارسال cookies
 });
 
+// برای FormData نباید Content-Type دستی ست شود تا boundary درست ساخته شود
+apiClient.interceptors.request.use((config) => {
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    const headers = config.headers;
+    if (headers && typeof headers === 'object') {
+      if (typeof (headers as { delete?: (key: string) => void }).delete === 'function') {
+        (headers as { delete: (key: string) => void }).delete('Content-Type');
+      } else {
+        delete (headers as Record<string, unknown>)['Content-Type'];
+        delete (headers as Record<string, unknown>)['content-type'];
+      }
+    }
+  }
+  return config;
+});
+
 /**
  * Helper برای مدیریت خطاهای API
  */
-export const handleApiError = (error: any): string => {
-  if (error.response?.data) {
-    const data = error.response.data;
-    
-    if (typeof data === 'string') return data;
-    if (data.detail) {
-      if (typeof data.detail === 'string') return data.detail;
-      if (Array.isArray(data.detail)) {
-        return data.detail.map((err: any) => 
-          typeof err === 'string' ? err : err.msg || err.message || JSON.stringify(err)
-        ).join(' | ');
-      }
-      if (typeof data.detail === 'object') {
-        return Object.entries(data.detail).map(([field, msg]) => `${field}: ${msg}`).join(' | ');
-      }
+export const handleApiError = (error: unknown): string => {
+  if (error && typeof error === 'object') {
+    const err = error as {
+      response?: { data?: unknown };
+      message?: string;
+    };
+
+    if (err.response?.data !== undefined) {
+      return formatApiValidationErrorInline(
+        err.response.data,
+        err.message || 'خطای نامشخص'
+      );
     }
-    if (data.error) return typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
-    if (data.message) return data.message;
-    
-    if (typeof data === 'object' && Object.keys(data).length > 0) {
-      const errors = [];
-      for (const [field, messages] of Object.entries(data)) {
-        if (Array.isArray(messages)) {
-          errors.push(`${field}: ${(messages as string[]).join(', ')}`);
-        } else if (typeof messages === 'string') {
-          errors.push(`${field}: ${messages}`);
-        }
-      }
-      if (errors.length > 0) return errors.join(' | ');
+
+    if (typeof err.message === 'string' && err.message.trim()) {
+      return err.message;
     }
   }
-  
-  return error.message || 'خطای نامشخص';
+
+  return 'خطای نامشخص';
 };
 
 export default apiClient;
