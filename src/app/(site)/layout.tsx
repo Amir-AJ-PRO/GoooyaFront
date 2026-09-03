@@ -17,11 +17,11 @@ export default function SiteLayout({
       <Header />
       <main className="flex-1 ">
         {children}
-        <div className="fixed bottom-0 right-0 z-50">
-          <AiWidget />
-        </div>
       </main>
       <Footer />
+      <div className="fixed bottom-0 right-0 z-50">
+        <AiWidget />
+      </div>
     </div>
   );
 }

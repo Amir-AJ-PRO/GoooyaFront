@@ -1,7 +1,15 @@
 "use client";
 
-import React, { useState, useRef, useEffect, FormEvent, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  FormEvent,
+  useCallback,
+} from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ThreeDots } from "react-loader-spinner";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -64,6 +72,10 @@ const isInitialChat = (msgs: Message[]): boolean =>
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
+const PROPERTY_PATH_RE = /\/properties\/([^/?#]+)/i;
+
+let messagesMemory: Message[] | null = null;
+
 const parseStoredMessages = (stored: string | null): Message[] | null => {
   if (!stored) return null;
 
@@ -75,37 +87,85 @@ const parseStoredMessages = (stored: string | null): Message[] | null => {
   }
 };
 
-const loadMessages = (): Message[] => {
-  if (typeof window === "undefined") return [WELCOME_MESSAGE];
+const isWelcomeOnly = (msgs: Message[]): boolean =>
+  msgs.length === 1 &&
+  msgs[0]?.role === "ai" &&
+  msgs[0]?.text === WELCOME_MESSAGE.text &&
+  !msgs[0]?.properties;
 
+/** Agent returns absolute goooya.ir URLs; stay on this origin so chat state survives. */
+const getInternalPropertyHref = (propertyUrl: string): string | null => {
+  const match = propertyUrl.match(PROPERTY_PATH_RE);
+  if (match) return `/properties/${match[1]}`;
+  if (propertyUrl.startsWith("/")) return propertyUrl;
+  return null;
+};
+
+const readFromStorages = (): Message[] | null => {
   try {
     const fromLocal = parseStoredMessages(
       localStorage.getItem(CHAT_STORAGE_KEY)
     );
     if (fromLocal) return fromLocal;
 
-    // Migrate chats saved before we switched from sessionStorage.
     const fromSession = parseStoredMessages(
       sessionStorage.getItem(CHAT_STORAGE_KEY)
     );
     if (fromSession) {
-      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(fromSession));
-      sessionStorage.removeItem(CHAT_STORAGE_KEY);
+      try {
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(fromSession));
+        sessionStorage.removeItem(CHAT_STORAGE_KEY);
+      } catch {
+        // ignore migrate failure
+      }
       return fromSession;
     }
   } catch {
     // quota exceeded or private browsing
   }
 
-  return [WELCOME_MESSAGE];
+  return null;
 };
 
-const saveMessages = (msgs: Message[]) => {
+const loadMessages = (): Message[] => {
+  if (messagesMemory) return messagesMemory;
+  if (typeof window === "undefined") return [WELCOME_MESSAGE];
+
+  messagesMemory = readFromStorages() ?? [WELCOME_MESSAGE];
+  return messagesMemory;
+};
+
+const writeToLocalStorage = (msgs: Message[]) => {
   try {
     localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs));
+    return;
+  } catch {
+    // fall through and retry a smaller payload
+  }
+
+  try {
+    const textOnly = msgs.map((msg) => ({
+      role: msg.role,
+      text: msg.text,
+      properties: null as Property[] | null,
+      isError: msg.isError,
+    }));
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(textOnly));
   } catch {
     // quota exceeded or private browsing
   }
+};
+
+const saveMessages = (msgs: Message[]) => {
+  messagesMemory = msgs;
+  if (typeof window === "undefined") return;
+
+  if (isWelcomeOnly(msgs)) {
+    const existing = readFromStorages();
+    if (existing && !isWelcomeOnly(existing)) return;
+  }
+
+  writeToLocalStorage(msgs);
 };
 
 const buildHistory = (msgs: Message[]): WidgetHistoryEntry[] => {
@@ -188,9 +248,13 @@ const PropertyPricing: React.FC<{ property: Property }> = ({ property }) => {
 
 interface PropertySwiperProps {
   properties: Property[];
+  onPropertyOpen?: () => void;
 }
 
-const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
+const PropertySwiper: React.FC<PropertySwiperProps> = ({
+  properties,
+  onPropertyOpen,
+}) => {
   const [current, setCurrent] = useState<number>(0);
   const navLockUntilRef = useRef(0);
   const total = properties.length;
@@ -207,15 +271,23 @@ const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
   };
 
   const p = properties[current];
-
-  const CardWrapper = p.property_url ? "a" : "div";
-  const cardLinkProps = p.property_url
-    ? {
-        href: p.property_url,
-        target: "_blank" as const,
-        rel: "noopener noreferrer",
-      }
-    : {};
+  const internalHref = p.property_url
+    ? getInternalPropertyHref(p.property_url)
+    : null;
+  const CardWrapper: React.ElementType = internalHref
+    ? Link
+    : p.property_url
+      ? "a"
+      : "div";
+  const cardLinkProps = internalHref
+    ? { href: internalHref, onClick: onPropertyOpen }
+    : p.property_url
+      ? {
+          href: p.property_url,
+          target: "_blank" as const,
+          rel: "noopener noreferrer",
+        }
+      : {};
 
   return (
     <div
@@ -237,7 +309,7 @@ const PropertySwiper: React.FC<PropertySwiperProps> = ({ properties }) => {
         <CardWrapper
           {...cardLinkProps}
           className={`relative flex h-[clamp(320px,58svh,460px)] w-full min-w-0 flex-col overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm ${
-            p.property_url
+            internalHref || p.property_url
               ? "cursor-pointer transition-shadow hover:shadow-md"
               : ""
           }`}
@@ -329,7 +401,6 @@ const AiWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isAttention, setIsAttention] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
-  const [isStorageReady, setIsStorageReady] = useState(false);
   const [inputText, setInputText] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [quota, setQuota] = useState<WidgetQuota | null>(null);
@@ -342,6 +413,17 @@ const AiWidget: React.FC = () => {
 
   const quotaExhausted = quota !== null && quota.remaining_messages <= 0;
 
+  const updateMessages = useCallback(
+    (updater: (prev: Message[]) => Message[]) => {
+      setMessages((prev) => {
+        const next = updater(prev);
+        saveMessages(next);
+        return next;
+      });
+    },
+    []
+  );
+
   const refreshQuota = useCallback(async () => {
     const nextQuota = await fetchWidgetQuota();
     if (nextQuota) {
@@ -352,20 +434,14 @@ const AiWidget: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setMessages(loadMessages());
-    setIsStorageReady(true);
   }, []);
 
   useEffect(() => {
-    if (!isStorageReady) return;
-    saveMessages(messages);
-  }, [messages, isStorageReady]);
-
-  useEffect(() => {
     const syncFromOtherTabs = (event: StorageEvent) => {
-      if (event.storageArea !== localStorage) return;
       if (event.key !== CHAT_STORAGE_KEY && event.key !== null) return;
+      messagesMemory = null;
       setMessages(loadMessages());
     };
 
@@ -448,7 +524,7 @@ const AiWidget: React.FC = () => {
     const history = buildHistory(messages);
     const trimmed = userText.trim().slice(0, MAX_USER_INPUT_LENGTH);
 
-    setMessages((prev) => [
+    updateMessages((prev) => [
       ...prev,
       { role: "user", text: trimmed, properties: null },
     ]);
@@ -472,7 +548,7 @@ const AiWidget: React.FC = () => {
           const detail = getWidgetErrorMessage(429, result.data);
 
           toast.warning(detail);
-          setMessages((prev) => [
+          updateMessages((prev) => [
             ...prev,
             { role: "ai", text: detail, properties: null, isError: true },
           ]);
@@ -489,7 +565,7 @@ const AiWidget: React.FC = () => {
         );
 
         toast.error(errorMessage);
-        setMessages((prev) => [
+        updateMessages((prev) => [
           ...prev,
           {
             role: "ai",
@@ -520,7 +596,7 @@ const AiWidget: React.FC = () => {
           ? "نتایج زیر برای شما پیدا شد:"
           : "پاسخی دریافت نشد.");
 
-      setMessages((prev) => [
+      updateMessages((prev) => [
         ...prev,
         { role: "ai", text: explanation, properties },
       ]);
@@ -528,7 +604,7 @@ const AiWidget: React.FC = () => {
       console.error("Error fetching AI response:", error);
       const message = "خطا در پاسخ ایجنت";
       toast.error(message);
-      setMessages((prev) => [
+      updateMessages((prev) => [
         ...prev,
         {
           role: "ai",
@@ -620,7 +696,10 @@ const AiWidget: React.FC = () => {
 
                     {msg.role === "ai" && msg.properties && (
                       <div className="min-w-0 w-full max-w-full">
-                        <PropertySwiper properties={msg.properties} />
+                        <PropertySwiper
+                          properties={msg.properties}
+                          onPropertyOpen={() => setIsOpen(false)}
+                        />
                       </div>
                     )}
                   </div>
