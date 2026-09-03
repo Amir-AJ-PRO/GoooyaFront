@@ -64,25 +64,45 @@ const isInitialChat = (msgs: Message[]): boolean =>
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
+const parseStoredMessages = (stored: string | null): Message[] | null => {
+  if (!stored) return null;
+
+  try {
+    const parsed = JSON.parse(stored) as Message[];
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
 const loadMessages = (): Message[] => {
   if (typeof window === "undefined") return [WELCOME_MESSAGE];
 
   try {
-    const stored = sessionStorage.getItem(CHAT_STORAGE_KEY);
-    if (!stored) return [WELCOME_MESSAGE];
+    const fromLocal = parseStoredMessages(
+      localStorage.getItem(CHAT_STORAGE_KEY)
+    );
+    if (fromLocal) return fromLocal;
 
-    const parsed = JSON.parse(stored) as Message[];
-    return Array.isArray(parsed) && parsed.length > 0
-      ? parsed
-      : [WELCOME_MESSAGE];
+    // Migrate chats saved before we switched from sessionStorage.
+    const fromSession = parseStoredMessages(
+      sessionStorage.getItem(CHAT_STORAGE_KEY)
+    );
+    if (fromSession) {
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(fromSession));
+      sessionStorage.removeItem(CHAT_STORAGE_KEY);
+      return fromSession;
+    }
   } catch {
-    return [WELCOME_MESSAGE];
+    // quota exceeded or private browsing
   }
+
+  return [WELCOME_MESSAGE];
 };
 
 const saveMessages = (msgs: Message[]) => {
   try {
-    sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs));
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs));
   } catch {
     // quota exceeded or private browsing
   }
@@ -341,6 +361,17 @@ const AiWidget: React.FC = () => {
     if (!isStorageReady) return;
     saveMessages(messages);
   }, [messages, isStorageReady]);
+
+  useEffect(() => {
+    const syncFromOtherTabs = (event: StorageEvent) => {
+      if (event.storageArea !== localStorage) return;
+      if (event.key !== CHAT_STORAGE_KEY && event.key !== null) return;
+      setMessages(loadMessages());
+    };
+
+    window.addEventListener("storage", syncFromOtherTabs);
+    return () => window.removeEventListener("storage", syncFromOtherTabs);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
