@@ -10,12 +10,12 @@ export default function SiteLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className=" bg-[#E0E0E0]">
+    <div className="max-w-full overflow-x-clip bg-[#E0E0E0]">
       <Suspense fallback={null}>
         <NavigationProgress />
       </Suspense>
       <Header />
-      <main className="flex-1 ">
+      <main className="min-w-0 flex-1 overflow-x-clip">
         {children}
       </main>
       <Footer />

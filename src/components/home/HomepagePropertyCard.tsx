@@ -88,61 +88,65 @@ function formatPrice(property: PropertyListItem): string {
 export default function HomepagePropertyCard({ property }: HomepagePropertyCardProps) {
   const imageUrl = getImageUrl(property);
   const showGooyaBadge = isGoooyaProperty(property);
+  const roomsLabel =
+    property.rooms > 0
+      ? `${property.rooms.toLocaleString('fa-IR')} خوابه`
+      : '—';
 
   return (
-    <Link href={`/properties/${property.slug}`} className="mx-auto block h-full w-full max-w-[380px] lg:max-w-[360px]">
-      <article className="flex h-full flex-col rounded-2xl bg-white p-3 shadow-sm transition-shadow hover:shadow-md">
-        <div className="relative h-[200px] w-full shrink-0 overflow-hidden bg-gray-100 sm:h-[220px]">
+    <Link href={`/properties/${property.slug}`} className="group block h-full w-full">
+      <article className="flex h-[340px] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition-shadow duration-300 hover:shadow-md">
+        <div className="relative h-[180px] w-full shrink-0 overflow-hidden bg-gray-100">
           <Image
             src={imageUrl}
             alt={property.title}
             fill
-            className="object-cover"
-            sizes="(max-width: 1023px) 100vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 640px) 80vw, (max-width: 1024px) 33vw, 25vw"
           />
 
           {showGooyaBadge && (
-            <div className="absolute left-2 top-2 rounded-md bg-white/95 px-2 py-1 shadow-sm">
+            <div className="absolute left-2.5 top-2.5 rounded-md bg-white/95 px-2 py-1 shadow-sm">
               <Image
                 src="/logo.png"
                 alt="گویا"
-                width={48}
-                height={16}
-                className="h-4 w-auto object-contain"
+                width={44}
+                height={15}
+                className="h-3.5 w-auto object-contain"
               />
             </div>
           )}
         </div>
 
-        <div className="flex flex-1 flex-col gap-3 px-1 pb-2 pt-4 text-right">
-          <h3 className="line-clamp-1 text-lg font-bold text-black sm:text-xl">{property.title}</h3>
+        <div className="flex h-[160px] flex-col px-3.5 pb-3.5 pt-3 text-right">
+          <h3 className="mb-1.5 line-clamp-1 h-5 text-[15px] font-bold leading-5 text-black">
+            {property.title}
+          </h3>
 
-          <div className="flex items-center gap-2 text-sm text-[#374151]">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[#374151]">
-              <MapPin className="h-3 w-3 stroke-[1.5]" />
-            </span>
+          <div className="mb-1.5 flex h-5 items-center gap-1.5 text-xs text-[#4B5563]">
+            <MapPin className="h-3.5 w-3.5 shrink-0 stroke-[1.75]" />
             <span className="line-clamp-1">{getLocationText(property)}</span>
           </div>
 
-          <div className="flex items-center justify-between text-sm text-[#374151]">
-            <div className="flex items-center gap-1.5">
-              <Ruler className="h-4 w-4 shrink-0" />
-              <span>{property.measure} متر مربع</span>
+          <div className="mb-auto flex h-5 items-center justify-between text-xs text-[#4B5563]">
+            <div className="flex min-w-0 items-center gap-1">
+              <Ruler className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{property.measure} متر</span>
             </div>
 
-            {property.rooms > 0 && (
-              <div className="flex items-center gap-1.5">
-                <Bed className="h-4 w-4 shrink-0" />
-                <span>{property.rooms.toLocaleString('fa-IR')} خوابه</span>
-              </div>
-            )}
+            <div className="flex shrink-0 items-center gap-1">
+              <Bed className="h-3.5 w-3.5 shrink-0" />
+              <span>{roomsLabel}</span>
+            </div>
           </div>
 
-          <div className="mt-auto flex items-baseline justify-end gap-1.5 pt-2">
-            <span className="text-xl font-bold text-black sm:text-2xl">{formatPrice(property)}</span>
-            {property.price && (
-              <span className="text-sm font-normal text-black">تومان</span>
-            )}
+          <div className="flex h-8 items-baseline justify-end gap-1 border-t border-black/5 pt-2">
+            <span className="truncate text-base font-bold tracking-tight text-black">
+              {formatPrice(property)}
+            </span>
+            {property.price ? (
+              <span className="shrink-0 text-[11px] font-medium text-[#6B7280]">تومان</span>
+            ) : null}
           </div>
         </div>
       </article>

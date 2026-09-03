@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <div className="home-page">
+    <div className="home-page min-w-0 max-w-full overflow-x-clip">
       <JsonLd data={breadcrumbJsonLd([{ name: 'خانه', path: '/' }])} />
       <TopSection />
       <FeaturedProperties />
