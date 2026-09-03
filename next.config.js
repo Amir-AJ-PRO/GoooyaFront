@@ -63,6 +63,8 @@ const nextConfig = {
   },
 
   images: {
+    // Bypass /_next/image proxy — Docker host often cannot reach ParsPack CDN
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
