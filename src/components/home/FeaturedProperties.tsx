@@ -1,5 +1,9 @@
 'use client';
 
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, A11y } from 'swiper/modules';
+import 'swiper/css';
+
 import { useHomepageProperties } from '@/hooks/usePropertyMutations';
 import HomepagePropertyCard from '@/components/home/HomepagePropertyCard';
 import { Card } from '@/components/ui/card';
@@ -7,22 +11,18 @@ import { Home, AlertCircle, Castle, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-/**
- * کامپوننت نمایش املاک ویژه در صفحه اصلی
- * فقط املاک واقعی از API نمایش داده می‌شود
- */
 function PropertyCardSkeleton() {
   return (
-    <article className="mx-auto h-full w-full max-w-[380px] animate-pulse rounded-2xl bg-white p-3 shadow-sm lg:max-w-[360px]">
-      <div className="h-[200px] w-full bg-gray-200 sm:h-[220px]" />
-      <div className="flex flex-col gap-3 px-1 pb-2 pt-4">
-        <div className="h-5 w-3/4 rounded bg-gray-200" />
-        <div className="h-4 w-full rounded bg-gray-200" />
+    <article className="flex h-[340px] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm">
+      <div className="h-[180px] w-full animate-pulse bg-gray-200" />
+      <div className="flex h-[160px] flex-col gap-2 px-3.5 pb-3.5 pt-3">
+        <div className="h-5 w-3/4 animate-pulse rounded bg-gray-200" />
+        <div className="h-5 w-full animate-pulse rounded bg-gray-200" />
         <div className="flex justify-between">
-          <div className="h-4 w-20 rounded bg-gray-200" />
-          <div className="h-4 w-16 rounded bg-gray-200" />
+          <div className="h-5 w-20 animate-pulse rounded bg-gray-200" />
+          <div className="h-5 w-14 animate-pulse rounded bg-gray-200" />
         </div>
-        <div className="h-7 w-28 self-end rounded bg-gray-200" />
+        <div className="mt-auto h-6 w-24 self-end animate-pulse rounded bg-gray-200" />
       </div>
     </article>
   );
@@ -31,7 +31,7 @@ function PropertyCardSkeleton() {
 export default function FeaturedProperties() {
   const { data: properties, isLoading, isPending, error } = useHomepageProperties();
   const loading = isPending || isLoading;
-  const visibleProperties = properties?.slice(0, 3) ?? [];
+  const items = properties ?? [];
 
   const sectionHeader = (
     <div className="mb-5 mt-8 flex items-center justify-between">
@@ -50,13 +50,13 @@ export default function FeaturedProperties() {
   );
 
   return (
-    <section className="relative z-0 bg-[#E0E0E0]">
+    <section className="overflow-x-clip bg-[#E0E0E0]">
       <div className="container mx-auto px-4">
         {loading ? (
           <>
             {sectionHeader}
-            <div className="mb-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-              {[1, 2, 3].map((item) => (
+            <div className="mb-12 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+              {[1, 2, 3, 4].map((item) => (
                 <PropertyCardSkeleton key={item} />
               ))}
             </div>
@@ -76,14 +76,74 @@ export default function FeaturedProperties() {
               تلاش مجدد
             </Button>
           </Card>
-        ) : visibleProperties.length > 0 ? (
+        ) : items.length > 0 ? (
           <>
             {sectionHeader}
 
-            <div className="mb-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-              {visibleProperties.map((property) => (
-                <HomepagePropertyCard key={property.id} property={property} />
-              ))}
+            <div
+              className="featured-properties-swiper relative mb-12 overflow-hidden [&_.swiper-slide]:h-[340px]"
+              dir="rtl"
+            >
+              <div
+                className={
+                  items.length > 1
+                    ? '[&_.swiper]:overflow-hidden [mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.2)_3%,rgba(0,0,0,0.55)_8%,rgba(0,0,0,0.85)_14%,black_20%,black_100%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.2)_3%,rgba(0,0,0,0.55)_8%,rgba(0,0,0,0.85)_14%,black_20%,black_100%)]'
+                    : '[&_.swiper]:overflow-hidden'
+                }
+              >
+                <Swiper
+                  modules={[Autoplay, A11y]}
+                  dir="rtl"
+                  slidesPerView={1.3}
+                  spaceBetween={12}
+                  grabCursor
+                  watchOverflow
+                  loop={items.length > 4}
+                  autoplay={
+                    items.length > 1
+                      ? {
+                          delay: 4500,
+                          disableOnInteraction: false,
+                          pauseOnMouseEnter: true,
+                        }
+                      : false
+                  }
+                  breakpoints={{
+                    640: {
+                      slidesPerView: 2.4,
+                      spaceBetween: 12,
+                    },
+                    1024: {
+                      slidesPerView: 3.65,
+                      spaceBetween: 16,
+                    },
+                    1280: {
+                      slidesPerView: 4.55,
+                      spaceBetween: 16,
+                    },
+                  }}
+                  className="w-full overflow-hidden"
+                >
+                  {items.map((property) => (
+                    <SwiperSlide key={property.id}>
+                      <HomepagePropertyCard property={property} />
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              </div>
+
+              {/* Blur starts at peek-card start, then intensifies toward the edge */}
+              {items.length > 1 && (
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-y-0 left-0 z-10 w-[22%] sm:w-[18%] lg:w-[16%] xl:w-[14%]"
+                >
+                  <div className="absolute inset-0 backdrop-blur-[0.5px] [mask-image:linear-gradient(to_right,black_0%,rgba(0,0,0,0.5)_55%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_right,black_0%,rgba(0,0,0,0.5)_55%,transparent_100%)]" />
+                  <div className="absolute inset-y-0 left-0 w-[75%] backdrop-blur-[1.5px] [mask-image:linear-gradient(to_right,black_0%,rgba(0,0,0,0.55)_50%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_right,black_0%,rgba(0,0,0,0.55)_50%,transparent_100%)]" />
+                  <div className="absolute inset-y-0 left-0 w-[45%] backdrop-blur-[2.5px] [mask-image:linear-gradient(to_right,black_0%,rgba(0,0,0,0.6)_45%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_right,black_0%,rgba(0,0,0,0.6)_45%,transparent_100%)]" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#E0E0E0]/90 from-[0%] via-[#E0E0E0]/35 via-[45%] to-transparent to-[100%]" />
+                </div>
+              )}
             </div>
           </>
         ) : (
@@ -94,9 +154,7 @@ export default function FeaturedProperties() {
               در حال حاضر ملک ویژه‌ای برای نمایش وجود ندارد
             </p>
             <Link href="/properties">
-              <Button variant="outline">
-                مشاهده تمام املاک
-              </Button>
+              <Button variant="outline">مشاهده تمام املاک</Button>
             </Link>
           </Card>
         )}

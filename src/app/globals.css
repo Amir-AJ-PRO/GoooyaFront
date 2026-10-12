@@ -110,6 +110,12 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-iransans), sans-serif;
@@ -146,6 +152,8 @@ All colors MUST be HSL.
   .home-page {
     --primary: 218 85% 43%;
     --ring: 218 85% 43%;
+    max-width: 100%;
+    overflow-x: clip;
   }
 }
 

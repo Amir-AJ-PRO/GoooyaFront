@@ -119,7 +119,7 @@ export default function RootLayout({
         <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
         <Providers>
           <DevLoginHelper />
-          <div className="min-h-screen flex flex-col">{children}</div>
+          <div className="flex min-h-screen min-w-0 max-w-full flex-col overflow-x-clip">{children}</div>
         </Providers>
       </body>
     </html>
