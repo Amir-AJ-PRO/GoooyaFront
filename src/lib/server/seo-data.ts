@@ -7,6 +7,7 @@ import type { BlogPost, BlogListResponse } from '@/types/blog';
 import type { PaginatedPropertiesResponse } from '@/services/propertyApi';
 import type { PublicAgentProfileResponse } from '@/services/agentPublicProfileApi';
 import type { PaginatedAgentsResponse } from '@/services/agentsPublicApi';
+import type { StoriesBanner, StoriesListResponse, StoryItem } from '@/types/story';
 
 const API = getApiBaseUrl();
 
@@ -108,6 +109,21 @@ export async function fetchBlogListForSeo(
   return fetchJson<BlogListResponse>(
     `${API}/api/blog/api/list/?page=${page}&page_size=${pageSize}`,
     600
+  );
+}
+
+export async function fetchStoriesBannerForSeo(): Promise<StoriesBanner | null> {
+  return fetchJson<StoriesBanner>(`${API}/api/stories/banner/`, 120);
+}
+
+export async function fetchStoriesListForSeo(): Promise<StoriesListResponse | null> {
+  return fetchJson<StoriesListResponse>(`${API}/api/stories/`, 120);
+}
+
+export async function fetchStoryForSeo(slug: string): Promise<StoryItem | null> {
+  return fetchJson<StoryItem>(
+    `${API}/api/stories/${encodeURIComponent(slug)}/`,
+    120
   );
 }
 

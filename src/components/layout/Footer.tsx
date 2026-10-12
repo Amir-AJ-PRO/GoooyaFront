@@ -77,6 +77,11 @@ export default function Footer() {
                   خدمات مهندسی
                 </Link>
               </li>
+              <li>
+                <Link href="/stories" className={linkClass}>
+                  قصه‌های دماوند
+                </Link>
+              </li>
             </ul>
           </div>
 

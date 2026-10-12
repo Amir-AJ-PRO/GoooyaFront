@@ -2,6 +2,7 @@ import FeaturedProperties from '@/components/home/FeaturedProperties';
 import TopSection from '@/components/Threebox/TopSection';
 import AgentHome from '@/components/agent/AgentHome';
 import EnginneringHomepage from '@/components/home/EnginneringHomepage';
+import { StoriesHomeBanner } from '@/features/stories/StoriesHomeBanner';
 import JsonLd from '@/components/seo/JsonLd';
 import {
   DEFAULT_DESCRIPTION,
@@ -34,6 +35,7 @@ export default function Home() {
       <JsonLd data={breadcrumbJsonLd([{ name: 'خانه', path: '/' }])} />
       <TopSection />
       <FeaturedProperties />
+      <StoriesHomeBanner />
       <div>
         <AgentHome />
       </div>

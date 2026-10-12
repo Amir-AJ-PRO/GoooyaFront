@@ -58,6 +58,8 @@ export async function middleware(request: NextRequest) {
     tryGetOrigin(process.env.NEXT_PUBLIC_AGENT_API_URL) ||
     'https://shahrgpt.com';
 
+  const apiOrigin = tryGetOrigin(process.env.NEXT_PUBLIC_API_URL);
+
   const connectSources = [
     "'self'",
     'https://api.goooya.ir',
@@ -65,8 +67,11 @@ export async function middleware(request: NextRequest) {
     'https://shahrgpt.com',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
+    'http://localhost:8003',
+    'http://127.0.0.1:8003',
     'http://localhost:8020',
     'http://127.0.0.1:8020',
+    apiOrigin,
     agentOrigin,
     supportOrigin,
     'ws:',
@@ -82,6 +87,7 @@ export async function middleware(request: NextRequest) {
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
         "font-src 'self' data: https://cdn.jsdelivr.net",
         "img-src 'self' data: blob: https: http:",
+        "media-src 'self' blob: data: https: http:",
         `connect-src ${connectSources.join(' ')}`,
         "frame-src 'none'",
       ].join('; ')
@@ -95,6 +101,7 @@ export async function middleware(request: NextRequest) {
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
         "font-src 'self' data: https:",
         "img-src 'self' data: blob: https:",
+        "media-src 'self' blob: data: https: http: https://c748821.parspack.net",
         `connect-src ${connectSources.join(' ')}`,
         "frame-src 'none'",
       ].join('; ')

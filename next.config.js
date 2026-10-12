@@ -2,20 +2,61 @@
 const path = require('path');
 const crypto = require('crypto');
 
+function originFromEnv(raw, fallback) {
+  try {
+    if (raw && String(raw).trim()) {
+      return new URL(String(raw).trim()).origin;
+    }
+  } catch {
+    // ignore invalid URL
+  }
+  return fallback;
+}
+
+function imagePatternFromUrl(raw) {
+  try {
+    if (!raw || !String(raw).trim()) return null;
+    const parsed = new URL(String(raw).trim());
+    const pattern = {
+      protocol: parsed.protocol.replace(':', ''),
+      hostname: parsed.hostname,
+      pathname: '/**',
+    };
+    if (parsed.port) {
+      pattern.port = parsed.port;
+    }
+    return pattern;
+  } catch {
+    return null;
+  }
+}
+
+const apiOrigin = originFromEnv(
+  process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE,
+  'https://api.goooya.ir'
+);
+const localApiImagePattern = imagePatternFromUrl(
+  process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE
+);
+
 const ContentSecurityPolicy = `
   default-src 'self';
   script-src 'self' 'unsafe-inline' 'unsafe-eval';
   style-src 'self' 'unsafe-inline';
-  img-src 'self' data: blob: https://api.goooya.ir https://c748821.parspack.net https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://unpkg.com;
+  img-src 'self' data: blob: ${apiOrigin} https://api.goooya.ir https://c748821.parspack.net https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://unpkg.com;
   connect-src 'self'
+    ${apiOrigin}
     https://api.goooya.ir
     https://shahrgpt.goooya.ir
     https://shahrgpt.com
     http://localhost:8000
+    http://localhost:8003
+    http://127.0.0.1:8003
     https://localhost:7255
     http://127.0.0.1:7070
     ws:
     wss:;
+  media-src 'self' blob: data: ${apiOrigin} https://api.goooya.ir https://c748821.parspack.net http://127.0.0.1:8003 http://localhost:8003;
   font-src 'self' data:;
   frame-src 'self' https:;
   frame-ancestors 'self';
@@ -64,9 +105,22 @@ const nextConfig = {
 
   images: {
     remotePatterns: [
+      ...(localApiImagePattern ? [localApiImagePattern] : []),
       {
         protocol: 'https',
         hostname: 'api.goooya.ir',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '8003',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8003',
         pathname: '/**',
       },
       {

@@ -5,6 +5,7 @@ import {
   fetchBlogListForSeo,
   fetchCitiesForSeo,
   fetchPropertiesPageForSeo,
+  fetchStoriesListForSeo,
 } from '@/lib/server/seo-data';
 
 export const revalidate = 300;
@@ -52,9 +53,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/become-agent`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${baseUrl}/ai-search`, lastModified: now, changeFrequency: 'monthly', priority: 0.55 },
     { url: `${baseUrl}/support`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${baseUrl}/stories`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
   ];
 
-  const [propertyPages, agentPages, blogPages, cities] = await Promise.all([
+  const [propertyPages, agentPages, blogPages, cities, stories] = await Promise.all([
     collectPaginatedUrls(async (page) => {
       const data = await fetchPropertiesPageForSeo(page, 100);
       if (!data) return null;
@@ -95,6 +97,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       };
     }),
     fetchCitiesForSeo(),
+    fetchStoriesListForSeo(),
   ]);
 
   const cityPages: MetadataRoute.Sitemap = cities.map((city) => ({
@@ -104,5 +107,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...propertyPages, ...agentPages, ...blogPages, ...cityPages];
+  const storyPages: MetadataRoute.Sitemap = (stories?.results ?? []).map((story) => ({
+    url: `${baseUrl}/stories/${story.slug}`,
+    lastModified: story.updated_at ? new Date(story.updated_at) : now,
+    changeFrequency: 'weekly',
+    priority: 0.65,
+  }));
+
+  return [
+    ...staticPages,
+    ...propertyPages,
+    ...agentPages,
+    ...blogPages,
+    ...cityPages,
+    ...storyPages,
+  ];
 }
