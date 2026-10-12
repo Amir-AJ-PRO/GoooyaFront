@@ -3,6 +3,7 @@ import TopSection from '@/components/Threebox/TopSection';
 import AgentHome from '@/components/agent/AgentHome';
 import EnginneringHomepage from '@/components/home/EnginneringHomepage';
 import { StoriesHomeBanner } from '@/features/stories/StoriesHomeBanner';
+import { StoriesFloatingMascot } from '@/features/stories/StoriesFloatingMascot';
 import { ClubHomeBanner } from '@/features/club/ClubHomeBanner';
 import JsonLd from '@/components/seo/JsonLd';
 import {
@@ -34,6 +35,7 @@ export default function Home() {
   return (
     <div className="home-page min-w-0 max-w-full overflow-x-clip">
       <JsonLd data={breadcrumbJsonLd([{ name: 'خانه', path: '/' }])} />
+      <StoriesFloatingMascot />
       <TopSection />
       <FeaturedProperties />
       <StoriesHomeBanner />
