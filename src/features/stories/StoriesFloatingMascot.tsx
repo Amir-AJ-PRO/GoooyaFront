@@ -11,10 +11,10 @@ const MASCOT_SRC = '/assets/stories/stories-asal-mascot.webm';
 /** مثبت = چرخش به راست، منفی = چرخش به چپ */
 const MASCOT_ROTATE_DEG = 22;
 const MASCOT_WIDTH_MOBILE_PX = 60;
-const MASCOT_WIDTH_DESKTOP_PX = 40;
+const MASCOT_WIDTH_DESKTOP_PX = 60;
 /** منفی‌تر = بیشتر از لبه چپ صفحه بیرون می‌رود و دیده نمی‌شود */
 const MASCOT_LEFT_MOBILE_PX = -15;
-const MASCOT_LEFT_DESKTOP_PX = -18;
+const MASCOT_LEFT_DESKTOP_PX = -15;
 /** هر چند میلی‌ثانیه یک‌بار جلب توجه کند */
 const MASCOT_NUDGE_EVERY_MS = 5000;
 const MASCOT_NUDGE_DURATION_MS = 2400;
