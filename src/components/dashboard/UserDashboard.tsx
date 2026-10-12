@@ -13,6 +13,7 @@ import {
   UserRound,
   Clock,
   Sparkles,
+  Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -102,6 +103,12 @@ export default function UserDashboard() {
   ];
 
   const quickActions = [
+    {
+      title: "گویا کلاب",
+      description: "امتیاز، قرعه‌کشی و ماجرای داستانی",
+      href: "/user/club",
+      icon: Trophy,
+    },
     {
       title: "جستجوی املاک",
       description: "آگهی‌های جدید را بررسی کنید",

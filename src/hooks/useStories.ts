@@ -2,13 +2,27 @@
  * React Query hooks برای انیمیشن‌های داستانی گویا
  */
 
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+} from '@tanstack/react-query';
 import {
   fetchStories,
   fetchStoriesBanner,
   fetchStoryBySlug,
+  markStoryWatched,
+  submitStoryAnswer,
 } from '@/services/storiesService';
-import type { StoriesBanner, StoriesListResponse, StoryItem } from '@/types/story';
+import type {
+  StoriesBanner,
+  StoriesListResponse,
+  StoryAnswerPayload,
+  StoryAnswerResponse,
+  StoryDetail,
+  StoryWatchResponse,
+} from '@/types/story';
 
 export const storiesQueryKeys = {
   all: ['stories'] as const,
@@ -44,20 +58,77 @@ export function useStories(): UseQueryResult<StoriesListResponse, Error> {
 }
 
 /**
- * جزئیات یک انیمیشن با اسلاگ
+ * جزئیات یک قسمت با سوالات
  */
 export function useStory(
   slug: string,
   options?: { enabled?: boolean }
-): UseQueryResult<StoryItem, Error> {
+): UseQueryResult<StoryDetail, Error> {
   return useQuery({
     queryKey: storiesQueryKeys.detail(slug),
     queryFn: () => fetchStoryBySlug(slug),
     enabled: (options?.enabled ?? true) && Boolean(slug),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
     retry: (failureCount, error) => {
       if (error.name === 'StoryNotFoundError') return false;
       return failureCount < 2;
+    },
+  });
+}
+
+/**
+ * ثبت تماشای کامل
+ */
+export function useMarkStoryWatched(slug: string) {
+  const queryClient = useQueryClient();
+  return useMutation<StoryWatchResponse, Error, void>({
+    mutationFn: () => markStoryWatched(slug),
+    onSuccess: (data) => {
+      queryClient.setQueryData<StoryDetail>(
+        storiesQueryKeys.detail(slug),
+        (prev) =>
+          prev
+            ? {
+                ...prev,
+                has_watched: data.has_watched,
+                can_answer: true,
+              }
+            : prev
+      );
+      void queryClient.invalidateQueries({ queryKey: ['club'] });
+    },
+  });
+}
+
+/**
+ * ارسال پاسخ سوال
+ */
+export function useSubmitStoryAnswer(slug: string) {
+  const queryClient = useQueryClient();
+  return useMutation<StoryAnswerResponse, Error, StoryAnswerPayload>({
+    mutationFn: (payload) => submitStoryAnswer(slug, payload),
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData<StoryDetail>(
+        storiesQueryKeys.detail(slug),
+        (prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            questions: prev.questions.map((q) =>
+              q.id === variables.question_id
+                ? {
+                    ...q,
+                    answered: true,
+                    selected_option: data.selected_option,
+                    is_correct: data.is_correct,
+                    correct_option: data.correct_option,
+                  }
+                : q
+            ),
+          };
+        }
+      );
+      void queryClient.invalidateQueries({ queryKey: ['club'] });
     },
   });
 }

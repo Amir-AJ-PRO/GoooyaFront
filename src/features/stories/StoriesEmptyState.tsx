@@ -2,23 +2,32 @@
 
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import type { StoryItem } from '@/types/story';
 import { CHAR, CharacterImg, STORY_CAST } from './StoriesCastArt';
+import { StoriesStoryline } from './StoriesStoryline';
 
 type StoriesEmptyStateProps = {
-  variant: 'empty' | 'error';
+  variant: 'empty' | 'error' | 'storyline';
   message?: string;
   onRetry?: () => void;
+  stories?: StoryItem[];
+  onSelectStory?: (story: StoryItem) => void;
 };
 
 /**
- * کارت خالی با کاراکترها — جای هر کاراکتر با top/right/bottom/left اینلاین
+ * پنل کاراکترها — اسکلت ثابت؛ فقط محتوای داخل باکس سفید شرطی است
  */
 export function StoriesEmptyState({
   variant,
   message,
   onRetry,
+  stories = [],
+  onSelectStory,
 }: StoriesEmptyStateProps) {
   const isError = variant === 'error';
+  const showCastChrome = !isError;
+  const hasStoryline =
+    variant === 'storyline' && stories.length > 0 && Boolean(onSelectStory);
 
   return (
     <div
@@ -26,7 +35,7 @@ export function StoriesEmptyState({
       style={{ paddingTop: isError ? 0 : 56 }}
     >
       {/* ========== شروع کاراکتر توتک ========== */}
-      {!isError ? (
+      {showCastChrome ? (
         <CharacterImg
           src={CHAR.tutakSit}
           style={{
@@ -44,9 +53,13 @@ export function StoriesEmptyState({
       ) : null}
       {/* ========== پایان کاراکتر توتک ========== */}
 
-      <div className="relative z-0 overflow-visible rounded-2xl bg-white px-5 py-10 text-center shadow-soft sm:px-10 sm:py-12">
+      <div
+        className={`relative z-0 overflow-visible rounded-2xl bg-white px-5 text-center shadow-soft ${
+          hasStoryline ? 'pb-3 pt-8' : 'py-8'
+        }`}
+      >
         {/* ========== شروع کاراکتر عسلک ========== */}
-        {!isError ? (
+        {showCastChrome ? (
           <CharacterImg
             src={CHAR.asalak}
             style={{
@@ -57,14 +70,14 @@ export function StoriesEmptyState({
               top: 'auto',
               left: 'auto',
               right: '12px',
-              bottom: '12px',
+              bottom: hasStoryline ? '8px' : '12px',
               filter: 'drop-shadow(0 8px 12px rgba(55, 58, 80, 0.18))',
             }}
           />
         ) : null}
         {/* ========== پایان کاراکتر عسلک ========== */}
 
-        {!isError ? (
+        {showCastChrome ? (
           <ul className="mb-5 flex flex-wrap items-center justify-center gap-2">
             {STORY_CAST.map((member) => (
               <li
@@ -78,25 +91,31 @@ export function StoriesEmptyState({
           </ul>
         ) : null}
 
-        <h2 className="mb-3 text-xl font-bold leading-snug text-[#373A50] sm:text-2xl">
-          {isError ? 'بارگذاری قصه‌ها ممکن نشد' : 'به‌زودی ماجرا شروع می‌شود...'}
-        </h2>
-        <p className="mx-auto max-w-md text-[13px] leading-7 text-[#717171] sm:text-sm">
-          {isError
-            ? message ||
-              'مشکلی در دریافت انیمیشن‌ها پیش آمده است. کمی بعد دوباره تلاش کنید.'
-            : 'آقای توتک و خانواده‌اش؛ خانم حلوا لوز و عسلک، دنبال یک خانهٔ جدید می‌گردند. به‌زودی این ماجرا را همین‌جا تماشا می‌کنید.'}
-        </p>
-        {isError && onRetry ? (
-          <Button
-            type="button"
-            onClick={onRetry}
-            className="mt-6 rounded-xl bg-[#2A86FE] px-5 text-white hover:bg-[#1F3C88]"
-          >
-            <RefreshCw className="h-4 w-4" aria-hidden="true" />
-            تلاش مجدد
-          </Button>
-        ) : null}
+        {hasStoryline && onSelectStory ? (
+          <StoriesStoryline stories={stories} onSelectStory={onSelectStory} />
+        ) : (
+          <>
+            <h2 className="mb-3 text-xl font-bold leading-snug text-[#373A50] sm:text-2xl">
+              {isError ? 'بارگذاری قصه‌ها ممکن نشد' : 'به‌زودی ماجرا شروع می‌شود...'}
+            </h2>
+            <p className="mx-auto max-w-md text-[13px] leading-7 text-[#717171] sm:text-sm">
+              {isError
+                ? message ||
+                  'مشکلی در دریافت انیمیشن‌ها پیش آمده است. کمی بعد دوباره تلاش کنید.'
+                : 'آقای توتک و خانواده‌اش؛ خانم حلوا لوز و عسلک، دنبال یک خانهٔ جدید می‌گردند. به‌زودی این ماجرا را همین‌جا تماشا می‌کنید.'}
+            </p>
+            {isError && onRetry ? (
+              <Button
+                type="button"
+                onClick={onRetry}
+                className="mt-6 rounded-xl bg-[#2A86FE] px-5 text-white hover:bg-[#1F3C88]"
+              >
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                تلاش مجدد
+              </Button>
+            ) : null}
+          </>
+        )}
       </div>
     </div>
   );

@@ -5,18 +5,16 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useStories, useStoriesBanner, useStory } from '@/hooks/useStories';
 import { isStoriesBannerVisible } from '@/services/storiesService';
+import type { StoryItem } from '@/types/story';
 import { CHAR, CharacterImg, STORY_CAST } from './StoriesCastArt';
 import { StoriesBanner } from './StoriesBanner';
 import { StoriesBannerSkeleton, StoriesExploreSkeleton } from './StoriesSkeleton';
 import { StoriesEmptyState } from './StoriesEmptyState';
-import { StoriesGrid } from './StoriesGrid';
-import { StoriesRail } from './StoriesRail';
-import { StoryPlayer } from './StoryPlayer';
+import { StoryModal } from './StoryModal';
 import { getSeenStorySlugs, markStorySeen } from './seenStories';
 
 /**
- * صفحه Explore + مدال ریلز
- * باز شدن فقط با index محلی — بدون وابستگی به router
+ * صفحه Explore — پنل کاراکترها همیشه؛ سوایپر خط داستانی وقتی انیمیشن فعال باشد
  */
 export function StoriesPageClient() {
   const searchParams = useSearchParams();
@@ -77,6 +75,14 @@ export function StoriesPageClient() {
     [stories, syncUrl]
   );
 
+  const openByStory = useCallback(
+    (story: StoryItem) => {
+      const idx = stories.findIndex((item) => item.id === story.id);
+      if (idx >= 0) openByIndex(idx);
+    },
+    [openByIndex, stories]
+  );
+
   const closePlayer = useCallback(() => {
     setActiveIndex(null);
     syncUrl(null);
@@ -130,7 +136,7 @@ export function StoriesPageClient() {
             {/* ========== پایان کاراکتر خانم حلوا لوز ========== */}
           </h1>
           <p className="mt-2 max-w-xl text-[13px] leading-7 text-[#717171] sm:text-sm">
-            روی هر ریلز بزنید تا در مدال پخش شود
+            روی کاور هر قسمت بزنید تا در مدال پخش شود
           </p>
           <ul className="mt-4 flex flex-wrap gap-2">
             {STORY_CAST.map((member) => (
@@ -157,26 +163,18 @@ export function StoriesPageClient() {
         ) : stories.length === 0 ? (
           <StoriesEmptyState variant="empty" />
         ) : (
-          <div className="space-y-8">
-            <StoriesRail
-              stories={stories}
-              seenSlugs={seenSlugs}
-              onSelect={openByIndex}
-            />
-            <StoriesGrid
-              stories={stories}
-              seenSlugs={seenSlugs}
-              onSelect={openByIndex}
-            />
-          </div>
+          <StoriesEmptyState
+            variant="storyline"
+            stories={stories}
+            onSelectStory={openByStory}
+          />
         )}
       </div>
 
-      {showPlayer && activeIndex !== null ? (
-        <StoryPlayer
-          stories={stories}
-          activeIndex={activeIndex}
-          onChangeIndex={openByIndex}
+      {showPlayer && activeIndex !== null && stories[activeIndex] ? (
+        <StoryModal
+          story={stories[activeIndex]}
+          episodeNumber={activeIndex + 1}
           onClose={closePlayer}
           onSeen={onSeen}
         />

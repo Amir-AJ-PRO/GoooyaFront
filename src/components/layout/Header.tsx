@@ -16,6 +16,7 @@ import {
   FileText,
   Briefcase,
   Heart,
+  Trophy,
 } from "lucide-react";
 import { useState, memo, type ComponentType } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -51,6 +52,7 @@ type NavIconComponent = ComponentType<{ className?: string }>;
 const navItems: { name: string; path: string; icon: NavIconComponent }[] = [
   { name: "املاک", path: "/properties", icon: PropertyNavIcon },
   { name: "مشاورین", path: "/agents", icon: ConsultantNavIcon },
+  { name: "گویا کلاب", path: "/user/club", icon: Trophy },
   { name: "خدمات مهندسی", path: "/engineering", icon: EngineeringNavIcon },
   { name: "مقالات", path: "/blog", icon: ArticleNavIcon },
   { name: "تماس با ما", path: "/contact", icon: ContactNavIcon },
@@ -92,6 +94,7 @@ const Header = memo(() => {
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
+              const isClub = item.path === "/user/club";
               return (
                 <Link
                   key={item.path}
@@ -100,7 +103,9 @@ const Header = memo(() => {
                   title={item.name}
                   className={cn(
                     "header-nav-link group inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-1.5 py-1 text-[14px] transition-all duration-200",
-                    active
+                    isClub
+                      ? "bg-[#D4AF37]/10 font-bold text-[#725B12] hover:bg-[#D4AF37]/20"
+                      : active
                       ? "font-bold text-[#251785]"
                       : "font-medium text-[#111111] hover:bg-[#251785]/[0.08] hover:text-[#251785]"
                   )}
@@ -108,7 +113,9 @@ const Header = memo(() => {
                   <Icon
                     className={cn(
                       "header-nav-icon h-5 w-5 shrink-0 transition-colors duration-200",
-                      active
+                      isClub
+                        ? "text-[#D4AF37]"
+                        : active
                         ? "text-[#251785]"
                         : "text-[#111111] group-hover:text-[#251785]"
                     )}
@@ -211,6 +218,14 @@ const Header = memo(() => {
                         </Link>
                       </DropdownMenuItem>
                     )}
+                    {user.type !== 'admin' && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/user/club" className="cursor-pointer">
+                          <Trophy className="ml-2 h-4 w-4 text-[#D4AF37]" />
+                          <span>گویا کلاب</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     {isGooyaAdviser && (
                       <DropdownMenuItem asChild>
                         <Link href="/admin/tickets" className="cursor-pointer">
@@ -297,16 +312,27 @@ const Header = memo(() => {
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
+              const isClub = item.path === "/user/club";
               return (
                 <Link key={item.path} href={item.path} onClick={() => setMobileMenuOpen(false)} prefetch={true}>
                   <Button
                     variant="ghost"
                     className={cn(
                       "w-full justify-start gap-2 text-[#111111] hover:bg-[#251785]/[0.08] hover:text-[#251785]",
-                      active && "bg-[#251785]/[0.08] font-semibold text-[#251785]"
+                      active && "bg-[#251785]/[0.08] font-semibold text-[#251785]",
+                      isClub && "bg-[#D4AF37]/10 font-bold text-[#725B12]"
                     )}
                   >
-                    <Icon className={cn("h-[20px] w-[20px]", active ? "text-[#251785]" : "text-[#111111]")} />
+                    <Icon
+                      className={cn(
+                        "h-[20px] w-[20px]",
+                        isClub
+                          ? "text-[#D4AF37]"
+                          : active
+                            ? "text-[#251785]"
+                            : "text-[#111111]"
+                      )}
+                    />
                     {item.name}
                   </Button>
                 </Link>

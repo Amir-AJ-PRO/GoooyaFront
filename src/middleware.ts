@@ -65,6 +65,8 @@ export async function middleware(request: NextRequest) {
     'https://api.goooya.ir',
     'https://shahrgpt.goooya.ir',
     'https://shahrgpt.com',
+    'https://c748821.parspack.net',
+    'https://*.parspack.net',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'http://localhost:8003',

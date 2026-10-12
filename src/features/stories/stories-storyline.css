@@ -1,0 +1,10 @@
+/* عرض ثابت اسلایدها — جلوگیری از له شدن کارت در Swiper auto */
+.stories-storyline-swiper .swiper-slide {
+  width: 240px !important;
+  height: auto !important;
+  box-sizing: border-box;
+}
+
+.stories-storyline-swiper .swiper-wrapper {
+  align-items: stretch;
+}

@@ -20,9 +20,20 @@ import {
 interface LoginModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** توضیح سفارشی بالای فرم */
+  description?: string;
+  /** بعد از ورود به پنل هدایت نشود (مثلاً برگشت به مدال داستان) */
+  redirectOnSuccess?: boolean;
+  onSuccess?: () => void;
 }
 
-export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
+export default function LoginModal({
+  open,
+  onOpenChange,
+  description,
+  redirectOnSuccess = true,
+  onSuccess,
+}: LoginModalProps) {
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpCode, setOtpCode] = useState('');
@@ -134,10 +145,12 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
           });
           
           onOpenChange(false);
-          
-          // هدایت به پنل مناسب بر اساس نوع کاربر
-          const redirectPath = data.user.is_agent ? '/agent' : '/user';
-          router.push(redirectPath);
+          onSuccess?.();
+
+          if (redirectOnSuccess) {
+            const redirectPath = data.user.is_agent ? '/agent' : '/user';
+            router.push(redirectPath);
+          }
         }
       }
     );
@@ -170,10 +183,9 @@ export default function LoginModal({ open, onOpenChange }: LoginModalProps) {
             {step === 'phone' ? 'ورود / ثبت نام' : 'کد تایید'}
           </DialogTitle>
           <DialogDescription className="text-center">
-            {step === 'phone' 
-              ? 'شماره تلفن خود را وارد کنید' 
-              : `کد تایید به شماره ${phoneNumber} ارسال شد`
-            }
+            {step === 'phone'
+              ? description || 'شماره تلفن خود را وارد کنید'
+              : `کد تایید به شماره ${phoneNumber} ارسال شد`}
           </DialogDescription>
         </DialogHeader>
 

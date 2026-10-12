@@ -3,6 +3,7 @@ import TopSection from '@/components/Threebox/TopSection';
 import AgentHome from '@/components/agent/AgentHome';
 import EnginneringHomepage from '@/components/home/EnginneringHomepage';
 import { StoriesHomeBanner } from '@/features/stories/StoriesHomeBanner';
+import { ClubHomeBanner } from '@/features/club/ClubHomeBanner';
 import JsonLd from '@/components/seo/JsonLd';
 import {
   DEFAULT_DESCRIPTION,
@@ -36,6 +37,7 @@ export default function Home() {
       <TopSection />
       <FeaturedProperties />
       <StoriesHomeBanner />
+      <ClubHomeBanner />
       <div>
         <AgentHome />
       </div>
