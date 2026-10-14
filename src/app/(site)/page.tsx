@@ -5,6 +5,7 @@ import EnginneringHomepage from '@/components/home/EnginneringHomepage';
 import { StoriesHomeBanner } from '@/features/stories/StoriesHomeBanner';
 import { StoriesFloatingMascot } from '@/features/stories/StoriesFloatingMascot';
 import { ClubHomeBanner } from '@/features/club/ClubHomeBanner';
+import { MonthlyLotteryModal } from '@/features/club/MonthlyLotteryModal';
 import JsonLd from '@/components/seo/JsonLd';
 import {
   DEFAULT_DESCRIPTION,
@@ -36,6 +37,7 @@ export default function Home() {
     <div className="home-page min-w-0 max-w-full overflow-x-clip">
       <JsonLd data={breadcrumbJsonLd([{ name: 'خانه', path: '/' }])} />
       <StoriesFloatingMascot />
+      <MonthlyLotteryModal />
       <TopSection />
       <FeaturedProperties />
       <StoriesHomeBanner />

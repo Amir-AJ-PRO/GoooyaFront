@@ -26,6 +26,7 @@ import {
 import Image from 'next/image';
 import {
   MapPin,
+  MapPinned,
   Bed,
   Square,
   Calendar,
@@ -656,21 +657,22 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                     <Link
                       href={`/locations/${locationId}`}
                       prefetch
-                      className="group relative overflow-hidden rounded-2xl border border-[#DCE8F8] bg-white p-4 shadow-[0_1px_3px_rgba(55,58,80,0.06)] transition duration-300 hover:-translate-y-0.5 hover:border-[#2A86FE]/45 hover:shadow-[0_10px_24px_rgba(42,134,254,0.14)]"
+                      className="group flex items-center gap-3 rounded-lg border border-primary/15 bg-primary/5 p-3 transition-colors hover:border-primary/30 hover:bg-primary/10"
                     >
-                      <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-l from-[#2A86FE] to-[#6EB3FF]" />
-                      <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[#2A86FE]/10 text-[#2A86FE]">
-                        <Building2 className="h-5 w-5" />
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <MapPinned className="h-5 w-5" />
                       </span>
-                      <span className="mb-1 block text-[11px] font-medium text-[#717171]">
-                        درباره این منطقه
-                      </span>
-                      <span className="mb-4 block truncate text-[15px] font-bold text-[#373A50]">
-                        {locationName}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2A86FE]">
-                        بیشتر بخوانید
-                        <ArrowRight className="h-3.5 w-3.5 transition group-hover:-translate-x-0.5" />
+                      <span className="min-w-0 flex-1 text-right">
+                        <span className="block text-xs text-muted-foreground">
+                          درباره منطقه
+                        </span>
+                        <span className="mt-0.5 block truncate text-sm font-bold text-foreground">
+                          {locationName}
+                        </span>
+                        <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary">
+                          بیشتر بخوانید
+                          <ArrowRight className="h-3 w-3 transition-transform group-hover:-translate-x-0.5" />
+                        </span>
                       </span>
                     </Link>
                   ) : null}
@@ -679,21 +681,22 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
                     <Link
                       href={`/cities/${cityId}`}
                       prefetch
-                      className="group relative overflow-hidden rounded-2xl border border-[#F0E6C8] bg-white p-4 shadow-[0_1px_3px_rgba(55,58,80,0.06)] transition duration-300 hover:-translate-y-0.5 hover:border-[#D4AF37]/55 hover:shadow-[0_10px_24px_rgba(212,175,55,0.18)]"
+                      className="group flex items-center gap-3 rounded-lg border border-[#373A50]/15 bg-[#373A50]/[0.04] p-3 transition-colors hover:border-[#373A50]/25 hover:bg-[#373A50]/[0.07]"
                     >
-                      <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-l from-[#D4AF37] to-[#F0D78C]" />
-                      <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[#D4AF37]/15 text-[#B8962E]">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#373A50]/10 text-[#373A50]">
                         <MapPin className="h-5 w-5" />
                       </span>
-                      <span className="mb-1 block text-[11px] font-medium text-[#717171]">
-                        درباره این شهر
-                      </span>
-                      <span className="mb-4 block truncate text-[15px] font-bold text-[#373A50]">
-                        {cityName}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2A86FE]">
-                        بیشتر بخوانید
-                        <ArrowRight className="h-3.5 w-3.5 transition group-hover:-translate-x-0.5" />
+                      <span className="min-w-0 flex-1 text-right">
+                        <span className="block text-xs text-muted-foreground">
+                          درباره شهر
+                        </span>
+                        <span className="mt-0.5 block truncate text-sm font-bold text-foreground">
+                          {cityName}
+                        </span>
+                        <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[#373A50]">
+                          بیشتر بخوانید
+                          <ArrowRight className="h-3 w-3 transition-transform group-hover:-translate-x-0.5" />
+                        </span>
                       </span>
                     </Link>
                   ) : null}

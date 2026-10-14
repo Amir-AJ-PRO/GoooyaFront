@@ -1,0 +1,54 @@
+@keyframes monthly-lottery-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes monthly-lottery-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.monthly-lottery-backdrop {
+  animation: monthly-lottery-backdrop-in 0.35s ease-out both;
+}
+
+.monthly-lottery-card {
+  animation: monthly-lottery-card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.monthly-lottery-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  opacity: 0.12;
+  mix-blend-mode: soft-light;
+}
+
+.monthly-lottery-cta-primary {
+  background: linear-gradient(135deg, #c9a227 0%, #f0d78c 42%, #d4af37 70%, #a8892a 100%);
+  box-shadow:
+    0 8px 22px rgba(212, 175, 55, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.monthly-lottery-cta-primary:hover {
+  filter: brightness(1.05);
+  box-shadow:
+    0 10px 26px rgba(212, 175, 55, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .monthly-lottery-backdrop,
+  .monthly-lottery-card {
+    animation: none;
+  }
+}
