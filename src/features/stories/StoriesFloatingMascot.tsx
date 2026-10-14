@@ -6,7 +6,18 @@ import { createPortal } from 'react-dom';
 import { usePrefersReducedMotion } from './usePrefersReducedMotion';
 import './stories-floating-mascot.css';
 
-const MASCOT_SRC = '/assets/stories/stories-asal-mascot.webm';
+const MASCOT_SRC_WEBM = '/assets/stories/stories-asal-mascot.webm';
+/** WebP شفاف — فقط برای iOS (Safari شفافیت WebM را پشتیبانی نمی‌کند) */
+const MASCOT_SRC_IOS = '/assets/asal-ios.webp';
+
+/** تشخیص iPhone / iPad / iPod (شامل iPadOS که خود را Mac معرفی می‌کند) */
+function isAppleTouchDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  if (/iPad|iPhone|iPod/i.test(ua)) return true;
+  // iPadOS 13+: desktop UA + touch
+  return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+}
 
 /** مثبت = چرخش به راست، منفی = چرخش به چپ */
 const MASCOT_ROTATE_DEG = 22;
@@ -33,6 +44,7 @@ let hintCursor = 0;
  */
 export function StoriesFloatingMascot() {
   const [mounted, setMounted] = useState(false);
+  const [isIos, setIsIos] = useState(false);
   const [nudging, setNudging] = useState(false);
   const [hint, setHint] = useState<(typeof MASCOT_HINTS)[number]>(
     MASCOT_HINTS[0]
@@ -41,6 +53,7 @@ export function StoriesFloatingMascot() {
   const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
+    setIsIos(isAppleTouchDevice());
     setMounted(true);
   }, []);
 
@@ -91,15 +104,24 @@ export function StoriesFloatingMascot() {
       }
     >
       <span className="stories-asal-figure">
-        <video
-          className="stories-asal-mascot-video"
-          src={MASCOT_SRC}
-          autoPlay={!reducedMotion}
-          muted
-          loop={!reducedMotion}
-          playsInline
-          preload="metadata"
-        />
+        {isIos ? (
+          <img
+            className="stories-asal-mascot-video"
+            src={MASCOT_SRC_IOS}
+            alt=""
+            draggable={false}
+          />
+        ) : (
+          <video
+            className="stories-asal-mascot-video"
+            src={MASCOT_SRC_WEBM}
+            autoPlay={!reducedMotion}
+            muted
+            loop={!reducedMotion}
+            playsInline
+            preload="metadata"
+          />
+        )}
       </span>
       <span className="stories-asal-hint" aria-hidden="true">
         <span className="stories-asal-hint-spark">✦</span>
