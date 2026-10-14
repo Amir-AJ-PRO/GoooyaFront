@@ -42,6 +42,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/cities" className={linkClass}>
+                  شهرها و مناطق
+                </Link>
+              </li>
+              <li>
                 <Link href="/about" className={linkClass}>
                   درباره ما
                 </Link>

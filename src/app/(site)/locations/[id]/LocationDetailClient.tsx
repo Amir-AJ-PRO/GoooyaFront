@@ -4,11 +4,10 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchProperties } from '@/hooks/useSearch';
 import type { LocationDetail } from '@/types/location';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import type { PropertyListItem } from '@/types/property';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import PropertyCard from '@/components/cards/PropertyCard';
+import { CkHtmlContent } from '@/components/content/CkHtmlContent';
 import {
   Building2,
   MapPin,
@@ -23,7 +22,7 @@ interface LocationDetailClientProps {
   location: LocationDetail;
 }
 
-const DESCRIPTION_PREVIEW_LENGTH = 160;
+const DESCRIPTION_PREVIEW_LENGTH = 220;
 const EXPAND_MIN_DELTA = 40;
 
 function stripHtml(input: string): string {
@@ -34,7 +33,9 @@ function formatPrice(value: number): string {
   return new Intl.NumberFormat('fa-IR').format(value);
 }
 
-export default function LocationDetailClient({ location }: LocationDetailClientProps) {
+export default function LocationDetailClient({
+  location,
+}: LocationDetailClientProps) {
   const [expanded, setExpanded] = useState(false);
 
   const rawDescription = location.description?.trim() || '';
@@ -50,7 +51,7 @@ export default function LocationDetailClient({ location }: LocationDetailClientP
   const previewText = useMemo(() => {
     if (!plainDescription) return '';
     if (!canToggleDescription) return plainDescription;
-    return plainDescription.slice(0, DESCRIPTION_PREVIEW_LENGTH).trimEnd() + '...';
+    return `${plainDescription.slice(0, DESCRIPTION_PREVIEW_LENGTH).trimEnd()}...`;
   }, [plainDescription, canToggleDescription]);
 
   const { data, isLoading, error } = useSearchProperties(
@@ -63,111 +64,121 @@ export default function LocationDetailClient({ location }: LocationDetailClientP
     { enabled: true }
   );
 
-  const properties = (data?.results || []) as any[];
+  const properties = (data?.results || []) as PropertyListItem[];
 
   const iframeHtml = location.iframe?.trim() || '';
   const canRenderIframe = iframeHtml.startsWith('<iframe');
 
   return (
     <div className="container mx-auto px-4 py-10">
-      <div className="mb-6">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">
-          <ArrowRight className="h-4 w-4" />
-          بازگشت به صفحه اصلی
+      <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-[#717171]">
+        <Link href="/cities" className="transition hover:text-[#2A86FE]">
+          شهرها و مناطق
         </Link>
+        <span>/</span>
+        <Link
+          href={`/cities/${location.city}`}
+          className="transition hover:text-[#2A86FE]"
+        >
+          {location.city_name}
+        </Link>
+        <span>/</span>
+        <span className="text-[#373A50]">{location.name}</span>
       </div>
 
-      <Card className="mb-8">
-        <CardHeader>
-          <h1 className="text-2xl md:text-3xl font-semibold leading-none tracking-tight flex items-center gap-2">
-            <MapPin className="h-6 w-6 text-primary" />
-            املاک {location.name}
-            <span className="text-muted-foreground text-base font-normal">
-              ({location.city_name})
-            </span>
+      <article className="mb-8 overflow-hidden rounded-2xl bg-white shadow-sm">
+        <div className="border-b border-black/5 px-5 py-5 sm:px-7 sm:py-6">
+          <h1 className="flex flex-wrap items-center gap-2 text-2xl font-bold text-[#373A50] md:text-3xl">
+            <MapPin className="h-6 w-6 shrink-0 text-[#2A86FE]" />
+            درباره منطقه {location.name}
           </h1>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            {location.city_province && (
-              <Badge variant="secondary">
-                استان: {location.city_province}
-              </Badge>
-            )}
-            <Badge variant="secondary" className="gap-2">
-              <Building2 className="h-4 w-4" />
-              {location.properties_count} ملک
-            </Badge>
-            {location.land_use && (
-              <Badge variant="secondary" className="gap-2">
-                <LandPlot className="h-4 w-4" />
-                کاربری: {location.land_use}
-              </Badge>
-            )}
-            {typeof location.average_price === 'number' && (
-              <Badge variant="secondary" className="gap-2">
-                <Coins className="h-4 w-4" />
-                میانگین قیمت: {formatPrice(location.average_price)} تومان
-              </Badge>
-            )}
+          <p className="mt-2 text-sm text-[#717171]">
+            شهر{' '}
+            <Link
+              href={`/cities/${location.city}`}
+              className="font-medium text-[#2A86FE] hover:underline"
+            >
+              {location.city_name}
+            </Link>
+          </p>
+
+          <div className="mt-4 flex flex-wrap gap-2 text-xs sm:text-sm">
+            {location.city_province ? (
+              <span className="rounded-lg bg-[#F3F4F6] px-2.5 py-1 text-[#4B5563]">
+                استان {location.city_province}
+              </span>
+            ) : null}
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#F3F4F6] px-2.5 py-1 text-[#4B5563]">
+              <Building2 className="h-3.5 w-3.5" />
+              {location.properties_count.toLocaleString('fa-IR')} ملک
+            </span>
+            {location.land_use ? (
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#F3F4F6] px-2.5 py-1 text-[#4B5563]">
+                <LandPlot className="h-3.5 w-3.5" />
+                کاربری {location.land_use}
+              </span>
+            ) : null}
+            {typeof location.average_price === 'number' ? (
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#F3F4F6] px-2.5 py-1 text-[#4B5563]">
+                <Coins className="h-3.5 w-3.5" />
+                میانگین {formatPrice(location.average_price)} تومان
+              </span>
+            ) : null}
           </div>
+        </div>
 
-          <Separator />
-
+        <div className="space-y-6 px-5 py-5 sm:px-7 sm:py-6">
           {plainDescription ? (
-            <div className="leading-8 text-sm md:text-base text-foreground">
+            <div>
               {expanded || !canToggleDescription ? (
                 isHtmlDescription ? (
-                  <div
-                    className="prose prose-sm md:prose max-w-none"
-                    dangerouslySetInnerHTML={{ __html: rawDescription }}
-                  />
+                  <CkHtmlContent html={rawDescription} />
                 ) : (
-                  plainDescription
+                  <p className="text-sm leading-8 text-[#373A50] md:text-base">
+                    {plainDescription}
+                  </p>
                 )
               ) : (
-                previewText
+                <p className="text-sm leading-8 text-[#373A50] md:text-base">
+                  {previewText}
+                </p>
               )}
 
-              {canToggleDescription && (
+              {canToggleDescription ? (
                 <div className="mt-4">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setExpanded((v) => !v)}
-                    className="gap-2"
                   >
                     {expanded ? 'نمایش کمتر' : 'ادامه مطلب'}
                   </Button>
                 </div>
-              )}
+              ) : null}
             </div>
           ) : (
-            <p className="text-muted-foreground">
+            <p className="text-sm text-[#717171]">
               توضیحی برای این منطقه ثبت نشده است.
             </p>
           )}
 
-          {canRenderIframe && (
-            <>
-              <Separator />
-              <div>
-                <div className="flex items-center gap-2 mb-3 text-sm font-medium">
-                  <MapPinned className="h-4 w-4 text-primary" />
-                  نقشه منطقه
-                </div>
-                <div
-                  className="w-full overflow-hidden rounded-lg border bg-white [&_iframe]:w-full [&_iframe]:h-[320px]"
-                  dangerouslySetInnerHTML={{ __html: iframeHtml }}
-                />
+          {canRenderIframe ? (
+            <div>
+              <div className="mb-3 flex items-center gap-2 text-sm font-medium text-[#373A50]">
+                <MapPinned className="h-4 w-4 text-[#2A86FE]" />
+                نقشه منطقه
               </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+              <div
+                className="w-full overflow-hidden rounded-xl border border-[#E5E7EB] bg-white [&_iframe]:h-[320px] [&_iframe]:w-full"
+                dangerouslySetInnerHTML={{ __html: iframeHtml }}
+              />
+            </div>
+          ) : null}
+        </div>
+      </article>
 
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <h2 className="text-xl md:text-2xl font-bold">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h2 className="text-xl font-bold text-[#373A50] md:text-2xl">
           املاک منطقه {location.name}
         </h2>
         <Link href={`/properties?location=${location.id}`}>
@@ -180,28 +191,22 @@ export default function LocationDetailClient({ location }: LocationDetailClientP
 
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <Loader2 className="h-10 w-10 animate-spin text-[#2A86FE]" />
         </div>
       ) : error ? (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-6">
-            <p className="text-red-700 text-sm">
-              خطا در دریافت املاک این منطقه: {error.message}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-6 text-sm text-red-700">
+          خطا در دریافت املاک این منطقه: {error.message}
+        </div>
       ) : properties.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Building2 className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">
-              در حال حاضر ملکی برای این منطقه موجود نیست.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl bg-white px-4 py-12 text-center shadow-sm">
+          <Building2 className="mx-auto mb-3 h-10 w-10 text-[#9CA3AF]" />
+          <p className="text-sm text-[#717171]">
+            در حال حاضر ملکی برای این منطقه موجود نیست.
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {properties.map((p: any) => (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {properties.map((p) => (
             <PropertyCard key={p.id} property={p} />
           ))}
         </div>

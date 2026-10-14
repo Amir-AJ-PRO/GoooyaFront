@@ -22,12 +22,19 @@ type StoryCardProps = {
   onSelect: (story: StoryItem) => void;
 };
 
+const LONG_PRESS_MS = 320;
+
 /**
  * کارت داستان — ظاهر حرفه‌ای، تامنیل ثابت، بدون برچسب قسمت
+ * روی موبایل: لمس طولانی روی تصویر = همان حالت hover دسکتاپ + پیش‌نمایش
  */
 function StoryCard({ story, onSelect }: StoryCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const longPressTimerRef = useRef<number>(0);
+  const suppressNextClickRef = useRef(false);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const [previewing, setPreviewing] = useState(false);
+  const [isHot, setIsHot] = useState(false);
 
   const thumbnail = story.cover ? getMediaUrl(story.cover) : '';
   const playbackUrl = getStoryVideoElementSrc(story);
@@ -60,41 +67,122 @@ function StoryCard({ story, onSelect }: StoryCardProps) {
     }
   }, [playbackUrl]);
 
-  useEffect(() => () => stopPreview(), [stopPreview]);
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = 0;
+    }
+  }, []);
+
+  const endMediaInteraction = useCallback(
+    (fromLongPress: boolean) => {
+      clearLongPressTimer();
+      if (fromLongPress) {
+        suppressNextClickRef.current = true;
+      }
+      setIsHot(false);
+      stopPreview();
+    },
+    [clearLongPressTimer, stopPreview]
+  );
+
+  useEffect(
+    () => () => {
+      clearLongPressTimer();
+      stopPreview();
+    },
+    [clearLongPressTimer, stopPreview]
+  );
 
   return (
     <div
       onClick={() => {
+        if (suppressNextClickRef.current) {
+          suppressNextClickRef.current = false;
+          return;
+        }
+        setIsHot(false);
         stopPreview();
         onSelect(story);
       }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
+          setIsHot(false);
           stopPreview();
           onSelect(story);
         }
       }}
       role="button"
       tabIndex={0}
-      className="group flex cursor-pointer select-none flex-col overflow-hidden rounded-2xl border border-[#E8E8EC] bg-white text-right shadow-[0_1px_2px_rgba(55,58,80,0.04)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#2A86FE]/25 hover:shadow-[0_12px_28px_rgba(55,58,80,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2A86FE]/40"
+      data-hot={isHot ? 'true' : 'false'}
+      className={`group flex cursor-pointer select-none flex-col overflow-hidden rounded-2xl border bg-white text-right shadow-[0_1px_2px_rgba(55,58,80,0.04)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2A86FE]/40 hover:-translate-y-0.5 hover:border-[#2A86FE]/25 hover:shadow-[0_12px_28px_rgba(55,58,80,0.12)] data-[hot=true]:-translate-y-0.5 data-[hot=true]:border-[#2A86FE]/25 data-[hot=true]:shadow-[0_12px_28px_rgba(55,58,80,0.12)] ${
+        isHot ? 'border-[#2A86FE]/25' : 'border-[#E8E8EC]'
+      }`}
       style={{ width: CARD_WIDTH_PX, minWidth: CARD_WIDTH_PX, maxWidth: CARD_WIDTH_PX }}
       aria-label={`پخش ${story.title}`}
     >
       <div
-        className="relative w-full shrink-0 overflow-hidden bg-[#F3F4F6]"
+        className="relative w-full shrink-0 touch-manipulation overflow-hidden bg-[#F3F4F6]"
         style={{ height: 148 }}
         onMouseEnter={() => {
+          setIsHot(true);
           void startPreview();
         }}
-        onMouseLeave={stopPreview}
+        onMouseLeave={() => {
+          setIsHot(false);
+          stopPreview();
+        }}
+        onTouchStart={(e) => {
+          const touch = e.touches[0];
+          touchStartRef.current = touch
+            ? { x: touch.clientX, y: touch.clientY }
+            : null;
+          clearLongPressTimer();
+          suppressNextClickRef.current = false;
+          longPressTimerRef.current = window.setTimeout(() => {
+            setIsHot(true);
+            void startPreview();
+            suppressNextClickRef.current = true;
+          }, LONG_PRESS_MS);
+        }}
+        onTouchMove={(e) => {
+          const start = touchStartRef.current;
+          const touch = e.touches[0];
+          if (!start || !touch) return;
+          const moved =
+            Math.abs(touch.clientX - start.x) > 12 ||
+            Math.abs(touch.clientY - start.y) > 12;
+          if (moved) {
+            clearLongPressTimer();
+            if (isHot) {
+              setIsHot(false);
+              stopPreview();
+            }
+            suppressNextClickRef.current = false;
+          }
+        }}
+        onTouchEnd={() => {
+          touchStartRef.current = null;
+          const wasLongPress = suppressNextClickRef.current;
+          endMediaInteraction(wasLongPress);
+        }}
+        onTouchCancel={() => {
+          touchStartRef.current = null;
+          endMediaInteraction(suppressNextClickRef.current);
+        }}
+        onContextMenu={(e) => {
+          if (isHot || suppressNextClickRef.current) {
+            e.preventDefault();
+          }
+        }}
       >
         {thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={thumbnail}
             alt={story.title}
-            className={`h-full w-full object-cover transition-[transform,opacity] duration-500 ease-out group-hover:scale-[1.04] ${
+            className={`h-full w-full object-cover transition-[transform,opacity] duration-500 ease-out group-hover:scale-[1.04] group-data-[hot=true]:scale-[1.04] ${
               previewing ? 'opacity-0' : 'opacity-100'
             }`}
             draggable={false}
@@ -126,15 +214,17 @@ function StoryCard({ story, onSelect }: StoryCardProps) {
           />
         ) : null}
 
-        {/* گرادیان پایین تامنیل */}
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/35 to-transparent"
           aria-hidden="true"
         />
 
-        {/* دکمه پخش نرم روی هاور */}
         {!previewing ? (
-          <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#373A50] opacity-0 shadow-md backdrop-blur-sm transition-all duration-300 group-hover:opacity-100">
+          <span
+            className={`pointer-events-none absolute left-1/2 top-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#373A50] shadow-md backdrop-blur-sm transition-all duration-300 group-hover:opacity-100 group-data-[hot=true]:opacity-100 ${
+              isHot ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
             <Play className="mr-[-1px] h-3.5 w-3.5 fill-current" aria-hidden="true" />
           </span>
         ) : null}

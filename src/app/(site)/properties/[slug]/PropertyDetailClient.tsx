@@ -290,6 +290,15 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
     : (anyProperty.location && anyProperty.location.name
       ? anyProperty.location.name
       : '');
+  const cityIdRaw =
+    typeof anyProperty.city === 'object' && anyProperty.city?.id != null
+      ? Number(anyProperty.city.id)
+      : typeof anyProperty.city === 'number'
+        ? anyProperty.city
+        : typeof anyProperty.city_id === 'number'
+          ? anyProperty.city_id
+          : null;
+  const cityId = cityIdRaw != null && Number.isFinite(cityIdRaw) ? cityIdRaw : null;
   const locationId = typeof anyProperty.location === 'object' && anyProperty.location?.id != null
     ? Number(anyProperty.location.id)
     : (typeof anyProperty.location === 'number' ? anyProperty.location : null);
@@ -526,17 +535,44 @@ export default function PropertyDetailClient({ slug }: PropertyDetailClientProps
             <CardContent className="p-6">
               <h1 className="text-3xl font-bold mb-4">{property.title}</h1>
 
-              <div className="flex items-center gap-2 text-muted-foreground mb-6">
-                <MapPin className="h-5 w-5" />
+              <div className="mb-6 flex items-center gap-2 text-muted-foreground">
+                <MapPin className="h-5 w-5 shrink-0" />
                 <span>
                   {cityName}
                   {locationName && ` - ${locationName}`}
                 </span>
               </div>
 
-              {property.address && (
-                <div className="bg-muted p-4 rounded-lg">
-                  <p className="text-sm">{property.address}</p>
+              {(property.address ||
+                cityId ||
+                (locationId != null && Number.isFinite(locationId))) && (
+                <div className="space-y-3 rounded-lg bg-muted p-4">
+                  {property.address ? (
+                    <p className="text-sm">{property.address}</p>
+                  ) : null}
+                  {(cityId ||
+                    (locationId != null && Number.isFinite(locationId))) && (
+                    <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                      {locationId != null &&
+                      Number.isFinite(locationId) &&
+                      locationName ? (
+                        <Link
+                          href={`/locations/${locationId}`}
+                          className="font-medium text-[#2A86FE] transition hover:underline"
+                        >
+                          درباره منطقه ({locationName})
+                        </Link>
+                      ) : null}
+                      {cityId && cityName ? (
+                        <Link
+                          href={`/cities/${cityId}`}
+                          className="font-medium text-[#2A86FE] transition hover:underline"
+                        >
+                          درباره شهر ({cityName})
+                        </Link>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>

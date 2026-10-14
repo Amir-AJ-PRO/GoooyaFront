@@ -26,10 +26,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const location = await getLocationById(locationId);
     const place = [location.name, location.city_name].filter(Boolean).join('، ');
     return buildPageMetadata({
-      title: `املاک ${place}`,
+      title: `درباره منطقه ${location.name}`,
       description:
         truncateText(stripHtml(location.description)) ||
-        `آگهی خرید، فروش و اجاره ملک در ${place}. مشاهده قیمت و مشخصات ملک‌های این محله در گویا.`,
+        `اطلاعات منطقه ${place} و آگهی‌های خرید، فروش و اجاره ملک در گویا.`,
       path: `/locations/${location.id}`,
       keywords: ['املاک', location.name, location.city_name, 'خرید خانه', 'اجاره ملک'].filter(Boolean),
     });
@@ -57,7 +57,7 @@ export default async function LocationPage({ params }: PageProps) {
         <JsonLd
           data={breadcrumbJsonLd([
             { name: 'خانه', path: '/' },
-            { name: 'املاک', path: '/properties' },
+            { name: 'شهرها و مناطق', path: '/cities' },
             { name: location.city_name || 'شهر', path: `/cities/${location.city}` },
             { name: location.name, path: `/locations/${location.id}` },
           ])}

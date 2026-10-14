@@ -3,21 +3,19 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchProperties } from '@/hooks/useSearch';
+import { useLocations } from '@/hooks/useLocations';
 import type { CityDetail } from '@/types/city';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import type { PropertyListItem } from '@/types/property';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import PropertyCard from '@/components/cards/PropertyCard';
+import { CkHtmlContent } from '@/components/content/CkHtmlContent';
 import { Building2, MapPin, Users, ArrowRight, Loader2 } from 'lucide-react';
 
 interface CityDetailClientProps {
   city: CityDetail;
 }
 
-// پیش‌نمایش کوتاه‌تر تا «ادامه مطلب» واقعاً تفاوت ایجاد کند
-const DESCRIPTION_PREVIEW_LENGTH = 160;
-// اگر اختلاف متن خیلی کم باشد، دکمه ادامه مطلب را نمایش نمی‌دهیم
+const DESCRIPTION_PREVIEW_LENGTH = 220;
 const EXPAND_MIN_DELTA = 40;
 
 function formatPopulation(population: number): string {
@@ -41,12 +39,16 @@ export default function CityDetailClient({ city }: CityDetailClientProps) {
   const canToggleDescription =
     plainDescription.length > DESCRIPTION_PREVIEW_LENGTH + EXPAND_MIN_DELTA;
 
-  const hasLongDescription = canToggleDescription;
   const previewText = useMemo(() => {
     if (!plainDescription) return '';
     if (!canToggleDescription) return plainDescription;
-    return plainDescription.slice(0, DESCRIPTION_PREVIEW_LENGTH).trimEnd() + '...';
+    return `${plainDescription.slice(0, DESCRIPTION_PREVIEW_LENGTH).trimEnd()}...`;
   }, [plainDescription, canToggleDescription]);
+
+  const { data: locations = [], isLoading: locationsLoading } = useLocations(
+    city.id,
+    { enabled: true }
+  );
 
   const { data, isLoading, error } = useSearchProperties(
     {
@@ -58,84 +60,114 @@ export default function CityDetailClient({ city }: CityDetailClientProps) {
     { enabled: true }
   );
 
-  const properties = (data?.results || []) as any[];
+  const properties = (data?.results || []) as PropertyListItem[];
 
   return (
     <div className="container mx-auto px-4 py-10">
-      <div className="mb-6">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">
+      <div className="mb-6 flex flex-wrap items-center gap-3 text-sm">
+        <Link
+          href="/cities"
+          className="inline-flex items-center gap-2 text-[#717171] transition hover:text-[#2A86FE]"
+        >
           <ArrowRight className="h-4 w-4" />
-          بازگشت به صفحه اصلی
+          شهرها و مناطق
         </Link>
       </div>
 
-      <Card className="mb-8">
-        <CardHeader>
-          <h1 className="text-2xl md:text-3xl font-semibold leading-none tracking-tight flex items-center gap-2">
-            <MapPin className="h-6 w-6 text-primary" />
-            املاک {city.name}
+      <article className="mb-8 overflow-hidden rounded-2xl bg-white shadow-sm">
+        <div className="border-b border-black/5 px-5 py-5 sm:px-7 sm:py-6">
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-[#373A50] md:text-3xl">
+            <MapPin className="h-6 w-6 shrink-0 text-[#2A86FE]" />
+            درباره شهر {city.name}
           </h1>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            {city.province && (
-              <Badge variant="secondary">
-                استان: {city.province}
-              </Badge>
-            )}
-            <Badge variant="secondary" className="gap-2">
-              <Building2 className="h-4 w-4" />
-              {city.locations_count} منطقه
-            </Badge>
-            {typeof city.population === 'number' && (
-              <Badge variant="secondary" className="gap-2">
-                <Users className="h-4 w-4" />
-                جمعیت: {formatPopulation(city.population)}
-              </Badge>
-            )}
+
+          <div className="mt-4 flex flex-wrap gap-2 text-xs sm:text-sm">
+            {city.province ? (
+              <span className="rounded-lg bg-[#F3F4F6] px-2.5 py-1 text-[#4B5563]">
+                استان {city.province}
+              </span>
+            ) : null}
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#F3F4F6] px-2.5 py-1 text-[#4B5563]">
+              <Building2 className="h-3.5 w-3.5" />
+              {city.locations_count.toLocaleString('fa-IR')} منطقه
+            </span>
+            {typeof city.population === 'number' ? (
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#F3F4F6] px-2.5 py-1 text-[#4B5563]">
+                <Users className="h-3.5 w-3.5" />
+                جمعیت {formatPopulation(city.population)}
+              </span>
+            ) : null}
           </div>
+        </div>
 
-          <Separator />
-
+        <div className="px-5 py-5 sm:px-7 sm:py-6">
           {plainDescription ? (
-            <div className="leading-8 text-sm md:text-base text-foreground">
-              {/* در حالت expanded باید کل متن (بدون هیچ برش) نمایش داده شود */}
+            <div>
               {expanded || !canToggleDescription ? (
                 isHtmlDescription ? (
-                  <div
-                    className="prose prose-sm md:prose max-w-none"
-                    dangerouslySetInnerHTML={{ __html: rawDescription }}
-                  />
+                  <CkHtmlContent html={rawDescription} />
                 ) : (
-                  plainDescription
+                  <p className="text-sm leading-8 text-[#373A50] md:text-base">
+                    {plainDescription}
+                  </p>
                 )
               ) : (
-                previewText
+                <p className="text-sm leading-8 text-[#373A50] md:text-base">
+                  {previewText}
+                </p>
               )}
 
-              {canToggleDescription && (
+              {canToggleDescription ? (
                 <div className="mt-4">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setExpanded((v) => !v)}
-                    className="gap-2"
                   >
                     {expanded ? 'نمایش کمتر' : 'ادامه مطلب'}
                   </Button>
                 </div>
-              )}
+              ) : null}
             </div>
           ) : (
-            <p className="text-muted-foreground">
+            <p className="text-sm text-[#717171]">
               توضیحی برای این شهر ثبت نشده است.
             </p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </article>
 
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <h2 className="text-xl md:text-2xl font-bold">
+      <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold text-[#373A50] md:text-2xl">
+          مناطق {city.name}
+        </h2>
+        {locationsLoading ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="h-8 w-8 animate-spin text-[#2A86FE]" />
+          </div>
+        ) : locations.length === 0 ? (
+          <p className="rounded-2xl bg-white px-4 py-8 text-center text-sm text-[#717171] shadow-sm">
+            منطقه‌ای برای این شهر ثبت نشده است.
+          </p>
+        ) : (
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {locations.map((loc) => (
+              <li key={loc.id}>
+                <Link
+                  href={`/locations/${loc.id}`}
+                  className="flex items-center gap-2 rounded-2xl bg-white px-4 py-3.5 text-sm font-medium text-[#373A50] shadow-sm transition hover:text-[#2A86FE] hover:shadow-md"
+                >
+                  <Building2 className="h-4 w-4 shrink-0 text-[#9CA3AF]" />
+                  <span className="truncate">درباره منطقه {loc.name}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h2 className="text-xl font-bold text-[#373A50] md:text-2xl">
           املاک شهر {city.name}
         </h2>
         <Link href={`/properties?city=${city.id}`}>
@@ -148,28 +180,22 @@ export default function CityDetailClient({ city }: CityDetailClientProps) {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <Loader2 className="h-10 w-10 animate-spin text-[#2A86FE]" />
         </div>
       ) : error ? (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-6">
-            <p className="text-red-700 text-sm">
-              خطا در دریافت املاک این شهر: {error.message}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-6 text-sm text-red-700">
+          خطا در دریافت املاک این شهر: {error.message}
+        </div>
       ) : properties.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Building2 className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">
-              در حال حاضر ملکی برای این شهر موجود نیست.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl bg-white px-4 py-12 text-center shadow-sm">
+          <Building2 className="mx-auto mb-3 h-10 w-10 text-[#9CA3AF]" />
+          <p className="text-sm text-[#717171]">
+            در حال حاضر ملکی برای این شهر موجود نیست.
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {properties.map((p: any) => (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {properties.map((p) => (
             <PropertyCard key={p.id} property={p} />
           ))}
         </div>
