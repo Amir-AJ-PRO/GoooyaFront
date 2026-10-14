@@ -75,10 +75,10 @@
 @keyframes monthly-lottery-prize-shine {
   0%,
   100% {
-    text-shadow: 0 0 0 transparent;
+    opacity: 1;
   }
   50% {
-    text-shadow: 0 0 10px rgba(212, 175, 55, 0.35);
+    opacity: 0.82;
   }
 }
 
@@ -159,20 +159,111 @@
   animation-delay: 0.9s;
 }
 
+.monthly-lottery-media {
+  border: 0;
+  border-bottom: 0;
+  box-shadow: none;
+  outline: none;
+}
+
 .monthly-lottery-img {
   position: relative;
   z-index: 1;
+  display: block;
+  border: 0;
+  outline: none;
+}
+
+/* سرمه‌ای دقیق بک‌گراند کارت هدیه در عکس */
+.monthly-lottery-body {
+  --lottery-navy: #0a0a23;
+  border: 0 !important;
+  border-top: 0 !important;
+  box-shadow: none;
+}
+
+.monthly-lottery-eyebrow {
+  color: var(--lottery-navy);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.monthly-lottery-eyebrow svg {
+  color: #c9a227;
+}
+
+.monthly-lottery-title {
+  margin: 0;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+  color: #0a0a23;
+}
+
+.monthly-lottery-title-emoji {
+  display: inline-block;
+  animation: monthly-lottery-spark 1.6s ease-in-out infinite;
 }
 
 .monthly-lottery-prize {
-  animation: monthly-lottery-prize-shine 2.2s ease-in-out infinite;
+  margin: 0.35rem 0 0;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: #0a0a23;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.monthly-lottery-desc {
+  margin: 0.55rem 0 0;
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.75;
+  color: #1a1a1a;
+}
+
+.monthly-lottery-actions {
+  margin-top: 1.5rem;
+}
+
+.monthly-lottery-cta-secondary {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  padding: 0.4rem 0.75rem;
+  font-size: 11px;
+  font-weight: 600;
+  color: #333333;
+  cursor: pointer;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.monthly-lottery-cta-secondary:hover {
+  color: #0a0a23;
+  opacity: 0.85;
 }
 
 .monthly-lottery-cta-primary {
   position: relative;
   z-index: 1;
   overflow: hidden;
-  color: #0b0c1e !important;
+  /* متن دکمه = سرمه‌ای عکس */
+  color: #0a0a23 !important;
+  font-family: var(--font-iransans), IRANSansX, Tahoma, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
   background: linear-gradient(
     110deg,
     #a8892a 0%,
@@ -190,8 +281,9 @@
 }
 
 .monthly-lottery-cta-primary:hover,
-.monthly-lottery-cta-primary:visited {
-  color: #0b0c1e !important;
+.monthly-lottery-cta-primary:visited,
+.monthly-lottery-cta-primary:focus {
+  color: #0a0a23 !important;
   filter: brightness(1.08);
   transform: translateY(-1px);
 }

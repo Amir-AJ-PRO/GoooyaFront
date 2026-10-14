@@ -96,7 +96,7 @@ export function MonthlyLotteryModal({
     >
       <div
         dir="rtl"
-        className="monthly-lottery-card relative w-full overflow-hidden rounded-2xl border border-[#D4AF37]/55 bg-[#0B0C1E] text-white shadow-[0_20px_50px_rgba(0,0,0,0.55)]"
+        className="monthly-lottery-card relative w-full overflow-hidden rounded-2xl border border-[#D4AF37]/55 bg-[#0A0A23] text-white shadow-[0_20px_50px_rgba(0,0,0,0.55)]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="monthly-lottery-glow" aria-hidden="true" />
@@ -115,7 +115,7 @@ export function MonthlyLotteryModal({
           <X className="h-3.5 w-3.5" strokeWidth={2.5} />
         </button>
 
-        <div className="relative h-[132px] w-full overflow-hidden bg-[#0B0C1E] sm:h-[148px]">
+        <div className="monthly-lottery-media relative h-[132px] w-full overflow-hidden bg-white sm:h-[148px]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={GIFT_CARD_SRC}
@@ -125,43 +125,37 @@ export function MonthlyLotteryModal({
           />
         </div>
 
-        <div className="relative bg-white/10 px-3.5 pb-3.5 pt-4 backdrop-blur-md supports-[backdrop-filter]:bg-white/[0.08]">
-          <div className="mb-1 flex items-center justify-center gap-1 text-[#F0D78C]">
-            <Sparkles className="h-3.5 w-3.5 animate-pulse" />
-            <span className="text-[10px] font-bold tracking-wide">
-              قرعه‌کشی ویژه گویا
-            </span>
-            <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+        <div className="monthly-lottery-body relative -mt-px border-0 bg-white px-3.5 pb-4 pt-4 shadow-none">
+          <div className="monthly-lottery-eyebrow mb-1.5 flex items-center justify-center gap-1.5">
+            <Sparkles className="h-3 w-3 shrink-0" />
+            <span>قرعه‌کشی ویژه گویا</span>
+            <Sparkles className="h-3 w-3 shrink-0" />
           </div>
 
-          <h2
-            id={titleId}
-            className="text-center text-[13px] font-bold leading-6 text-white"
-          >
-            برنده ویژه مشارکت 🎉
+          <h2 id={titleId} className="monthly-lottery-title">
+            برنده ویژه مشارکت
+            <span className="monthly-lottery-title-emoji" aria-hidden="true">
+              {' '}
+              🎉
+            </span>
           </h2>
-          <p className="monthly-lottery-prize mt-0.5 text-center text-[16px] font-bold text-[#F0D78C]">
-            ۲٬۰۰۰٬۰۰۰ تومان
-          </p>
-          <p
-            id={descId}
-            className="mt-1.5 text-center text-[11px] leading-5 text-white/80"
-          >
-            در گویا کلاب فعال باش و شانس خودت رو برای این گیفت‌کارت چند برابر کن.
+          <p className="monthly-lottery-prize">۲٬۰۰۰٬۰۰۰ تومان</p>
+          <p id={descId} className="monthly-lottery-desc">
+            در گویا کلاب فعال باش و شانس خودت رو برای این گیفت‌کارت چند برابر کن
           </p>
 
-          <div className="mt-3 flex flex-col gap-1">
+          <div className="monthly-lottery-actions flex flex-col gap-1">
             <Link
               href={CLUB_HREF}
               onClick={dismiss}
-              className="monthly-lottery-cta-primary inline-flex w-full items-center justify-center rounded-lg px-3 py-2.5 text-center text-[12px] font-bold"
+              className="monthly-lottery-cta-primary inline-flex w-full items-center justify-center rounded-lg px-3 py-2.5 text-center"
             >
               ورود به گویا کلاب
             </Link>
             <button
               type="button"
               onClick={dismiss}
-              className="inline-flex w-full items-center justify-center rounded-lg px-3 py-1.5 text-[11px] font-medium text-white/55 transition hover:text-white/90"
+              className="monthly-lottery-cta-secondary"
             >
               بعداً یادآوری کن
             </button>
