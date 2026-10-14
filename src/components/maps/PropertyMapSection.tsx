@@ -2,10 +2,8 @@
 
 import { Component, type ReactNode } from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { MapPinned } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useLocationDetail } from '@/hooks/useLocationDetail';
 import { useLocations } from '@/hooks/useLocations';
 import { useGeocode } from '@/hooks/useGeocode';
@@ -149,18 +147,9 @@ export default function PropertyMapSection({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex flex-wrap items-center justify-between gap-3 text-xl">
-          <span className="flex items-center gap-2">
-            <MapPinned className="h-5 w-5 text-primary" />
-            موقعیت ملک
-          </span>
-          {resolvedLocationId ? (
-            <Button asChild variant="outline" size="sm" className="gap-2">
-              <Link href={`/locations/${resolvedLocationId}`}>
-                مشاهده منطقه
-              </Link>
-            </Button>
-          ) : null}
+        <CardTitle className="flex items-center gap-2 text-xl">
+          <MapPinned className="h-5 w-5 text-primary" />
+          موقعیت ملک
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">

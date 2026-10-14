@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import LocationDetailClient from './LocationDetailClient';
+import LocationDetailPageClient from './LocationDetailPageClient';
 import { getLocationById } from '@/services/locationService';
 import JsonLd from '@/components/seo/JsonLd';
 import { breadcrumbJsonLd, buildPageMetadata, stripHtml, truncateText } from '@/lib/seo';
@@ -31,12 +31,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         truncateText(stripHtml(location.description)) ||
         `اطلاعات منطقه ${place} و آگهی‌های خرید، فروش و اجاره ملک در گویا.`,
       path: `/locations/${location.id}`,
-      keywords: ['املاک', location.name, location.city_name, 'خرید خانه', 'اجاره ملک'].filter(Boolean),
+      keywords: [
+        'املاک',
+        location.name,
+        location.city_name,
+        'خرید خانه',
+        'اجاره ملک',
+      ].filter(Boolean),
     });
   } catch {
     return buildPageMetadata({
-      title: 'املاک محله',
-      description: 'مشاهده آگهی‌های ملک بر اساس محله در پلتفرم گویا.',
+      title: 'درباره منطقه',
+      description: 'مشاهده اطلاعات محله و آگهی‌های ملک در پلتفرم گویا.',
       path: `/locations/${locationId}`,
     });
   }
@@ -50,22 +56,16 @@ export default async function LocationPage({ params }: PageProps) {
     notFound();
   }
 
-  try {
-    const location = await getLocationById(locationId);
-    return (
-      <>
-        <JsonLd
-          data={breadcrumbJsonLd([
-            { name: 'خانه', path: '/' },
-            { name: 'شهرها و مناطق', path: '/cities' },
-            { name: location.city_name || 'شهر', path: `/cities/${location.city}` },
-            { name: location.name, path: `/locations/${location.id}` },
-          ])}
-        />
-        <LocationDetailClient location={location} />
-      </>
-    );
-  } catch {
-    notFound();
-  }
+  return (
+    <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: 'خانه', path: '/' },
+          { name: 'شهرها و مناطق', path: '/cities' },
+          { name: 'جزئیات منطقه', path: `/locations/${locationId}` },
+        ])}
+      />
+      <LocationDetailPageClient locationId={locationId} />
+    </>
+  );
 }
