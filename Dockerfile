@@ -7,34 +7,24 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # -------- deps: install dependencies --------
 FROM base AS deps
 
-# use faster npm mirror
-RUN npm config set registry https://mirror-npm.runflare.com \
+# mirror config for Liara (IR)
+RUN npm config set registry https://npm-mirror.liara.ir \
  && npm config set strict-ssl false \
  && npm config set fetch-retries 5 \
- && npm config set fetch-retry-mintimeout 20000
+ && npm config set fetch-retry-mintimeout 20000 \
+ && npm config set fetch-retry-maxtimeout 120000
 
 COPY package.json package-lock.json ./
 
-# install dependencies (including dev for build)
-RUN npm ci --include=dev --no-fund --no-audit
-
-# optional audit fix
-ARG NPM_AUDIT_FIX=true
-ARG NPM_AUDIT_FIX_FORCE=false
-
-RUN if [ "$NPM_AUDIT_FIX" = "true" ]; then \
-      if [ "$NPM_AUDIT_FIX_FORCE" = "true" ]; then \
-        npm audit fix --force || true; \
-      else \
-        npm audit fix || true; \
-      fi; \
-    fi
-
+# npm ci از فیلد resolved در lockfile می‌خواند؛ URLهای قدیمی (runflare/npmjs) را به لیارا عوض کن
+RUN sed -i \
+      -e 's|https://mirror-npm.runflare.com|https://npm-mirror.liara.ir|g' \
+      -e 's|https://registry.npmjs.org|https://npm-mirror.liara.ir|g' \
+      package-lock.json \
+ && npm ci --include=dev --no-fund --no-audit
 
 # -------- builder: build Next.js --------
 FROM base AS builder
-
-ENV NODE_ENV=production
 
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_SUPPORT_API_BASE_URL
@@ -43,12 +33,12 @@ ARG API_BASE
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_SUPPORT_API_BASE_URL=$NEXT_PUBLIC_SUPPORT_API_BASE_URL
 ENV API_BASE=$API_BASE
+ENV PATH=/app/node_modules/.bin:$PATH
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 RUN npm run build
-
 
 # -------- runner: production runtime --------
 FROM node:20-slim AS runner
