@@ -115,50 +115,61 @@ export function MonthlyLotteryModal({
           <X className="h-3.5 w-3.5" strokeWidth={2.5} />
         </button>
 
-        <div className="monthly-lottery-media relative h-[132px] w-full overflow-hidden bg-white sm:h-[148px]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={GIFT_CARD_SRC}
-            alt=""
-            className="monthly-lottery-img h-full w-full select-none object-contain object-center"
-            draggable={false}
-          />
-        </div>
-
-        <div className="monthly-lottery-body relative -mt-px border-0 bg-white px-3.5 pb-4 pt-4 shadow-none">
-          <div className="monthly-lottery-eyebrow mb-1.5 flex items-center justify-center gap-1.5">
-            <Sparkles className="h-3 w-3 shrink-0" />
-            <span>قرعه‌کشی ویژه گویا</span>
-            <Sparkles className="h-3 w-3 shrink-0" />
+        {/* dir=ltr تا در دسکتاپ عکس چپ و متن راست بماند */}
+        <div className="monthly-lottery-layout" dir="ltr">
+          <div className="monthly-lottery-media relative overflow-hidden bg-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={GIFT_CARD_SRC}
+              alt=""
+              className="monthly-lottery-img select-none"
+              draggable={false}
+            />
           </div>
 
-          <h2 id={titleId} className="monthly-lottery-title">
-            برنده ویژه مشارکت
-            <span className="monthly-lottery-title-emoji" aria-hidden="true">
-              {' '}
-              🎉
-            </span>
-          </h2>
-          <p className="monthly-lottery-prize">۲٬۰۰۰٬۰۰۰ تومان</p>
-          <p id={descId} className="monthly-lottery-desc">
-            در گویا کلاب فعال باش و شانس خودت رو برای این گیفت‌کارت چند برابر کن
-          </p>
+          <div
+            className="monthly-lottery-body relative border-0 bg-white shadow-none"
+            dir="rtl"
+          >
+            <div className="monthly-lottery-eyebrow mb-1.5 flex items-center justify-center gap-1.5">
+              <Sparkles className="h-3 w-3 shrink-0 md:h-3.5 md:w-3.5" />
+              <span>قرعه‌کشی ویژه گویا</span>
+              <Sparkles className="h-3 w-3 shrink-0 md:h-3.5 md:w-3.5" />
+            </div>
 
-          <div className="monthly-lottery-actions flex flex-col gap-1">
-            <Link
-              href={CLUB_HREF}
-              onClick={dismiss}
-              className="monthly-lottery-cta-primary inline-flex w-full items-center justify-center rounded-lg px-3 py-2.5 text-center"
+            <h2 id={titleId} className="monthly-lottery-title">
+              برنده ویژه مشارکت
+              <span className="monthly-lottery-title-emoji" aria-hidden="true">
+                {' '}
+                🎉
+              </span>
+            </h2>
+            <p
+              className="monthly-lottery-prize"
+              data-text="۲٬۰۰۰٬۰۰۰ تومان"
             >
-              ورود به گویا کلاب
-            </Link>
-            <button
-              type="button"
-              onClick={dismiss}
-              className="monthly-lottery-cta-secondary"
-            >
-              بعداً یادآوری کن
-            </button>
+              ۲٬۰۰۰٬۰۰۰ تومان
+            </p>
+            <p id={descId} className="monthly-lottery-desc">
+              در گویا کلاب فعال باش و شانس خودت رو برای این گیفت‌کارت چند برابر کن
+            </p>
+
+            <div className="monthly-lottery-actions flex flex-col gap-1">
+              <Link
+                href={CLUB_HREF}
+                onClick={dismiss}
+                className="monthly-lottery-cta-primary inline-flex w-full items-center justify-center rounded-lg px-3 py-2.5 text-center"
+              >
+                ورود به گویا کلاب
+              </Link>
+              <button
+                type="button"
+                onClick={dismiss}
+                className="monthly-lottery-cta-secondary"
+              >
+                بعداً یادآوری کن
+              </button>
+            </div>
           </div>
         </div>
       </div>
